@@ -1,0 +1,159 @@
+<%- include('partials/header.ejs') %>
+<!-- content start -->
+
+<div class="main">
+  <div class="d-flex head justify-content-between">
+    <h2 class="heading" id="roleNameHeading">
+      <i class="bi bi-arrow-left-short"></i> Actions
+    </h2>
+
+    <div>
+      <button
+        class="btn btn-add ml-auto"
+        id="add_newResources"
+        data-toggle="modal"
+        data-target="#myModal2"
+      >
+        <a href="#" style="color: azure">Add New Actions</a>
+      </button>
+    </div>
+  </div>
+  <form>
+    <div class="content" name="add_name" id="add_name">
+      <table
+        id="roles"
+        class="table table-striped add-button"
+        style="width: 100%"
+      >
+        <thead>
+          <tr>
+            <th class="text-center" style="border-radius: 30px 0px 0px 0px">
+              Sr. No.
+            </th>
+
+            <th class="text-center">Existing Actions</th>
+            <th
+              class="text-center"
+              style="border-radius: 0px 30px 0px 0px"
+            ></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% for(let i=0; i < action.length; i++) { %>
+          <tr>
+            <td class="text-center" width="5%"><%= i + 1 %></td>
+            <td class="text-center" width="15%">
+              <%= action[i].action.toLowerCase() %>
+            </td>
+            <td class="text-center" width="5%"></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  <%- include ('partials/footer.ejs') %>
+</div>
+
+<div class="modal fade" id="myModal2" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="add_role_nameForm">
+        <div class="modal-header">
+          <h4 class="modal-title">Add New Actions</h4>
+        </div>
+        <div class="m-2 form-main">
+          <form id="addform" class="form-inline">
+            <div class="form-group">
+              <h6 for="fname" class="pb-2">Actions Name :</h6>
+              <input
+                type="text"
+                id="action_name"
+                class="form-control"
+                name="action_name"
+                onkeypress="validateInput(event)"
+              />
+            </div>
+          </form>
+          <span id="addform" class="form-inline"></span>
+          <span class="form-group"></span>
+        </div>
+        <div class="modal-footer">
+          <input
+            id="add_btn2"
+            type="submit"
+            class="form-control btnAddModal ml-1 w-25"
+            value="Add"
+          />
+          <button
+            type="button"
+            onclick="closeModal()"
+            class="btn btnCloseModal btn-default"
+            data-dismiss="modal"
+          >
+            Close
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+  crossorigin="anonymous"
+></script>
+
+<!-- add actions -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const handleAddBtn = async () => {
+      const ActionNameInput = document.querySelector("#action_name");
+      const actionName = ActionNameInput.value.trim();
+
+      if (!actionName) {
+        alert("Please fill in the resource name.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/admin/newactionsadd", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: actionName,
+          }),
+        });
+
+        if (response.status === 200) {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    const addBtn = document.querySelector("#add_btn2");
+    addBtn.addEventListener("click", handleAddBtn);
+  });
+
+  function closeModal() {
+    window.location.reload();
+  }
+</script>
+
+<script>
+  function validateInput(event) {
+    var key = event.key;
+    var regex = /^[a-zA-Z]+$/;
+    if (!regex.test(key)) {
+      event.preventDefault();
+      alert("Please enter only alphabetic characters.");
+    }
+  }
+</script>

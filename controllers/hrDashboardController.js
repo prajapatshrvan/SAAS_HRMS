@@ -1,0 +1,242 @@
+const mongoose = require("mongoose");
+const Employee = require("../models/Employee.model");
+const Attendance = require("../models/Attendance.model");
+const Leave = require("../models/Leave.model");
+const Asset = require("../models/Asset.model");
+const moment = require("moment");
+
+module.exports.Empdata = async (req, res) => {
+  try {
+    const startOfMonth = moment().startOf("month").toDate();
+    const endOfMonth = moment().endOf("month").toDate();
+
+    const empCount = await Employee.countDocuments({ status: "completed" });
+
+    const newOnboarding = await Employee.countDocuments({
+      status: "completed",
+      createdAt: {
+        $gte: startOfMonth,
+        $lte: endOfMonth
+      }
+    });
+
+    const offboarding = await Employee.countDocuments({
+      status: "InNoticePeriod",
+      updatedAt: {
+        $gte: startOfMonth,
+        $lte: endOfMonth
+      }
+    });
+
+    res.status(200).json({
+      totalEmployeeCount: empCount,
+      totalnewOnboarding: newOnboarding,
+      totaloffOnboarding: offboarding
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
+  }
+};
+
+module.exports.OnboardingStatus = async (req, res) => {
+  try {
+    const empCompleted = await Employee.countDocuments({ status: "completed" });
+    const empinprocess = await Employee.countDocuments({ status: "approved" });
+    const emppending = await Employee.countDocuments({ status: "pending" });
+
+    return res.status(200).json({
+      Completed: empCompleted,
+      InProcess: empinprocess,
+      Pending: emppending
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports.empAttendaceStaus = async (req, res) => {
+  try {
+    const currentDate = moment().format("YYYY-MM-DD");
+    const totalpresent = await Attendance.countDocuments({
+      status: true,
+      date: { $gte: currentDate, $lt: moment(currentDate).add(1, "days") }
+    });
+
+    const totalabsent = await Attendance.countDocuments({
+      status: false,
+      date: { $gte: currentDate, $lt: moment(currentDate).add(1, "days") }
+    });
+
+    const totalLeaveToday = await Leave.countDocuments({
+      status: "approved",
+      $or: [
+        { start_date: { $lte: currentDate }, end_date: { $gte: currentDate } },
+        { start_date: currentDate, end_date: currentDate }
+      ]
+    });
+
+    return res.status(200).json({
+      Present: totalpresent,
+      Absent: totalabsent,
+      OnLeave: totalLeaveToday
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports.allAssetStatus = async (req, res) => {
+  try {
+    const invertoryCount = await Asset.countDocuments({ status: "unassigned" });
+    const assetAssignedCount = await Asset.countDocuments({ status: "unassigned" });
+    const assetrepairCount = await Asset.countDocuments({ status: "repair" });
+
+    return res.status(200).json({
+      Inventory: invertoryCount,
+      Assign: assetAssignedCount,
+      Repair: assetrepairCount
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports.departmentCount = async (req, res) => {
+  try {
+    const hrCount = await Employee.countDocuments({ department: "HR" });
+    const adminCount = await Employee.countDocuments({ department: "ADMIN" });
+    const salesCount = await Employee.countDocuments({ department: "SALES" });
+    const itCount = await Employee.countDocuments({ department: "IT" });
+    const logisticCount = await Employee.countDocuments({ department: "LOGISTIC" });
+    const payrollCount = await Employee.countDocuments({ department: "PAYROLL" });
+    const accountCount = await Employee.countDocuments({ department: "ACCOUNTS" });
+    const operationsCount = await Employee.countDocuments({ department: "OPERATION MANAGER" });
+
+    return res.status(200).json({
+      departments: ["HR", "ADMIN", "SALES", "IT", "LOGISTIC", "PAYROLL", "ACCOUNTS", "OPERATIONS"],
+      series: [hrCount, adminCount, salesCount, itCount, logisticCount, payrollCount, accountCount, operationsCount]
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports.list = async (req, res) => {
+  try {
+    const emplist = await Employee.find();
+    return res.status(200).json({
+      List: emplist
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports.yearlydata = async (req, res) => {
+  try {
+    let { year } = req.body;
+
+    if (!year) {
+      year = new Date().getFullYear();
+    }
+
+    if (isNaN(year) || year < 1900 || year > 2100) {
+      return res.status(400).json({ message: "Invalid year provided" });
+    }
+
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+
+    // Aggregation for Onboarding
+    const onboardingData = await Employee.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: startOfYear,
+            $lte: endOfYear
+          },
+          status: "completed"
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    const formattedOnboardingData = Array(12).fill(0);
+    onboardingData.forEach((data) => {
+      formattedOnboardingData[data._id - 1] = data.count;
+    });
+
+    // Aggregation for OffBoarding
+    const offboardingData = await Employee.aggregate([
+      {
+        $match: {
+          updatedAt: {
+            $gte: startOfYear,
+            $lte: endOfYear
+          },
+          status: "InNoticePeriod"
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    const formattedOffboardingData = Array(12).fill(0);
+    offboardingData.forEach((data) => {
+      formattedOffboardingData[data._id - 1] = data.count;
+    });
+
+    return res.status(200).json({
+      year,
+      series: [
+        {
+          name: "Onboarding",
+          data: formattedOnboardingData
+        },
+        {
+          name: "OffBoarding",
+          data: formattedOffboardingData
+        }
+      ]
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
