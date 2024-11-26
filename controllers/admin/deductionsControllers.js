@@ -4,11 +4,14 @@ module.exports.salarySlab = async (req, res) => {
   try {
     const { minimum, maximum, hra, pf, insurance, tax } = req.body;
 
-    const salaryExist = await Salaryslab.findOne({ maximum: minimum, maximum: maximum });
+    const salaryExist = await Salaryslab.findOne({
+      minimum: minimum,
+      maximum: maximum
+    });
 
     if (salaryExist) {
       return res.status(400).json({
-        message: "slab Already exist",
+        message: "slab Already exist"
       });
     }
     const salary = new Salaryslab({
@@ -17,13 +20,13 @@ module.exports.salarySlab = async (req, res) => {
       hra,
       pf,
       insurance,
-      tax,
+      tax
     });
 
     await salary.save();
 
     return res.status(201).json({
-      message: "slab create successfully",
+      message: "slab create successfully"
     });
   } catch (error) {
     console.log(error);
@@ -41,10 +44,10 @@ module.exports.salarySlabupdate = async (req, res) => {
       hra,
       pf,
       insurance,
-      tax,
+      tax
     });
     return res.status(201).json({
-      message: "slab update successfully",
+      message: "slab update successfully"
     });
   } catch (error) {
     console.log(error);
@@ -60,7 +63,7 @@ module.exports.salarySlabDelete = async (req, res) => {
 
     return res.status(200).json({
       message: "slab delete successfully",
-      data: salary,
+      data: salary
     });
   } catch (error) {
     console.log(error);

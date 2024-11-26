@@ -5,12 +5,12 @@ const auth = async (req, res, next) => {
   const password = req.session.password;
 
   if (!username || !password) {
-    return res.redirect("/admin/login");
+    return res.redirect("/login");
   }
   try {
     const user = await Adminauth.findOne({ username: username });
     if (!user) {
-      return res.redirect("/admin/login");
+      return res.redirect("/login");
     }
     next();
   } catch (error) {

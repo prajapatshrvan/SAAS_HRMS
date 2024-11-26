@@ -1,5 +1,5 @@
-<%- include('partials/header.ejs') %>
-  <!-- content start -->
+<!-- <%- include('partials/header.ejs') %>
+  content start
 
   <div class="main">
     <div class="d-flex head justify-content-between">
@@ -56,8 +56,8 @@
 
 
 
-    <%- include ('partials/footer.ejs') %>
-  </div>
+    <%- include ('partials/footer.ejs') %> -->
+<!-- </div>
 
   <div class="modal fade" id="myModal" role="dialog">
     <div class="modal-dialog">
@@ -82,11 +82,9 @@
         </form>
       </div>
     </div>
-  </div>
+  </div> -->
 
-
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
     crossorigin="anonymous"></script>
 
@@ -99,10 +97,10 @@
         alert("Please enter only alphabetic characters.");
       }
     }
-  </script>
+  </script> -->
 
-  <!-- add resourcses -->
-  <script>
+<!-- add resourcses -->
+<!-- <script>
     document.addEventListener("DOMContentLoaded", () => {
       const handleAddBtn = async () => {
         const resourceNameInput = document.querySelector("#resource_name");
@@ -142,4 +140,324 @@
     });
 
 
+  </script> -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/head.ejs') %>
+  <body>
+    <%- include('partials/header.ejs') %>
+
+    <main id="main" class="main">
+      <section class="role-secation overflow-auto">
+        <div class="container-fluid">
+          <div
+            class="row justify-content-between align-items-center border-bottom-coustem gap-y25"
+          >
+            <div class="col-sm-6">
+              <div class="pagetitle">
+                <h2>
+                  <span><i class="fa-solid fa-arrow-left-long"></i></span>
+                  Resources View
+                  <span class="text-primary"> (<%- role %>) </span>
+                </h2>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="dispaly_coustem-type">
+                <button
+                  onclick="history.back()"
+                  type="button"
+                  class="button_modal_back"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                >
+                  <span><i class="fa-solid fa-arrow-left"></i></span> Back
+                </button>
+                <button
+                  type="button"
+                  class="button_modal margin_cous"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                  onclick="disableExistingResources()"
+                >
+                  Add New Resources
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <table
+                class="w-100 table table-striped table-bordered table-hover table-responsive"
+              >
+                <thead class="table_head">
+                  <tr>
+                    <th width="110">Sr. No.</th>
+                    <th width="300">Resources</th>
+                    <th width="700">Actions</th>
+                    <th width="300">Change</th>
+                  </tr>
+                </thead>
+                <tbody class="table-body">
+                  <% if (!resources || resources.length===0) { %> <% } else { %>
+                  <% var counter=1; %> <% resources.forEach(data=> { %> <%
+                  data.resources.forEach(resource=> { %>
+                  <tr>
+                    <td><%= counter++ %></td>
+                    <td><%= resource.name.toLowerCase() %></td>
+                    <td>
+                      <% if (Array.isArray(resource.actions)) { const
+                      uniqueActions = [...new Set(resource.actions)];
+                      actionsString = uniqueActions.join(", "); %> <%=
+                      actionsString %> <% } else { %> <% } %>
+                    </td>
+                    <td>
+                      <button
+                        class="edit-btn-list"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#staticBackdrope"
+                        onclick="editRole('<%= resource.name %>', '<%= data.role_name %>', '<%= JSON.stringify(resource.actions.map(String)) %>','<%= resource._id %>')"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                  <% }); %> <% }); %> <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <a
+      href="#"
+      class="back-to-top d-flex align-items-center justify-content-center"
+      ><i class="fa-solid fa-arrow-up"></i
+    ></a>
+
+    <!-- JS Files -->
+    <%- include('partials/footer.ejs') %>
+
+    <!-- Modal -->
+    <div
+      class="modal fade coustem-modal"
+      id="staticBackdrop"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Add New Rosources
+            </h3>
+          </div>
+          <div class="modal-body modal_seclect">
+            <form id="addform">
+              <div class="mb-3">
+                <label for="rosources" class="mb-2 heading_lable"
+                  >Rosources Name :</label
+                >
+                <select
+                  id="rosources"
+                  name="role"
+                  class="form-select form-control"
+                >
+                  <option value="" selected>Select</option>
+
+                  <% newresourceslist.forEach(data=> { %>
+                  <option value="<%= data.resources.toLowerCase() %>">
+                    <%= data.resources.toLowerCase() %>
+                  </option>
+                  <% }); %>
+                </select>
+                <input
+                  type="hidden"
+                  id="role_Name"
+                  class="form-control mx-sm-3"
+                  name="role"
+                />
+              </div>
+              <div class="position-relative">
+                <label
+                  for="multiple-select-field"
+                  class="mb-2 fs-18 fw-500 text-secondary"
+                  >Actions :</label
+                >
+                <select
+                  class="form-select form-control multipale_option"
+                  id="multiple-select-field"
+                  data-placeholder="Select"
+                  multiple
+                >
+                  <option value="" disabled>Select</option>
+                  <% action.forEach(data=> { %>
+                  <option value="<%= data.action %>"><%= data.action %></option>
+                  <% } ); %>
+                </select>
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="button_modal_success">Add</button>
+            <button type="button" class="btn_close" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        $("#multiple-select-field").select2({
+          theme: "bootstrap-5",
+          width: "100%",
+          placeholder: $("#multiple-select-field").data("placeholder"),
+          closeOnSelect: false
+        });
+      });
+    </script>
+
+    <!-- modal -->
+
+    <!-- Modal2 -->
+    <div
+      class="modal fade"
+      id="staticBackdrope"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Edit Resources
+            </h3>
+          </div>
+          <div class="modal-body modal_seclect">
+            <form id="">
+              <div class="form-main">
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading"
+                    >Resources Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="roleId"
+                    class="form-control input_flid"
+                    name="roleid"
+                    value="ADMIN"
+                  />
+                </div>
+                <div class="position-relative">
+                  <label
+                    for="multiple-select-field"
+                    class="mb-2 fs-18 fw-500 text-secondary"
+                    >Actions :</label
+                  >
+                  <select
+                    class="form-select form-control multipale_option"
+                    id="multiple-select-fieldw"
+                    data-placeholder="Select"
+                    multiple
+                  >
+                    <option value="" disabled>Select</option>
+                    <% action.forEach(data=> { %>
+                    <option value="<%= data.action %>">
+                      <%= data.action %>
+                    </option>
+                    <% } ); %>
+                  </select>
+                  <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="button_modal_success">Submit</button>
+            <button type="button" class="btn_close" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#multiple-select-fieldw").select2({
+          theme: "bootstrap-5",
+          width: "100%",
+          placeholder: $("#multiple-select-fieldw").data("placeholder"),
+          closeOnSelect: false
+        });
+      });
+    </script>
+
+    <!-- modal2 -->
+  </body>
+
+  <script>
+    function editRole(resourceName, id, resources, _id) {
+      const select = document.getElementById("resources_select1");
+      const selectedOptions = Array.from(select.selectedOptions).map(
+        (option) => option.value
+      );
+
+      const submitBtn = document.getElementById("add_btn");
+      submitBtn.disabled = true;
+      const resourceArray = JSON.parse(resources);
+      document.getElementById("roleId").value = id;
+
+      resourceArray.forEach((element) => {
+        const optionHTML =
+          '<option value="' + element + '" selected>' + element + "</option>";
+        select.innerHTML += optionHTML;
+      });
+
+      window.editId = _id;
+      document.getElementById("role_input1").value = resourceName;
+
+      select.addEventListener("change", function () {
+        submitBtn.disabled = false;
+      });
+    }
   </script>
+
+  <script>
+    function disableExistingResources() {
+      var existingNames = document.querySelectorAll("#role_input option");
+      var resourceNames = document.querySelectorAll("td.text-center");
+
+      existingNames.forEach(function (option) {
+        resourceNames.forEach(function (resource) {
+          if (option.value.trim() === resource.textContent.trim()) {
+            option.disabled = true;
+          }
+        });
+      });
+    }
+  </script>
+</html>
+
+// module.exports.addDepartment = async (req, res) => { // try { // const {
+type, value } = req.body; // if (!type || !value) { // return res //
+.status(400) // .json({ error: "Type and value are required fields." }); // } //
+const exitDepart = await Department.findOne({ value: value }); // if
+(exitDepart) { // return res.status(400).json({ message: "Department already
+exist" }); // } // const department = new Department({ // type: type, // value:
+value // }); // await department.save(); // return res.status(201).json({
+message: "value add successfull" }); // } catch (error) { //
+res.status(500).json({ error: error.message }); // } // };

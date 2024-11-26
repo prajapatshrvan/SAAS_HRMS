@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/head.ejs') %>
+  <body>
+    <%- include('partials/header.ejs') %>
+    <main id="main" class="main">
+      <section class="role-secation overflow-auto">
+        <div class="container-fluid">
+          <div
+            class="row justify-content-between align-items-center border-bottom-coustem gap-y25"
+          >
+            <div class="col-sm-6">
+              <div class="pagetitle">
+                <h2>
+                  <span><i class="fa-solid fa-arrow-left-long"></i></span>
+                  Metadata List
+                </h2>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="dispaly_coustem-type">
+                <button
+                  type="button"
+                  class="button_modal"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                >
+                  Add New
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <table
+                class="w-100 table table-striped table-bordered table-hover table-responsive"
+              >
+                <thead class="table_head">
+                  <tr>
+                    <th width="110">No.</th>
+                    <th width="500">Value</th>
+                    <th width="500">Type</th>
+                  </tr>
+                </thead>
+                <tbody class="table-body">
+                  <% metadata.forEach((data, index) => { %>
+                  <tr>
+                    <td><%= (currentPage - 1) * 10 + index + 1 %></td>
+                    <td><%= data.value %></td>
+                    <td><%= data.type %></td>
+                  </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-controls mt-3">
+            <ul class="pagination">
+              <% if (currentPage > 1) { %>
+              <li class="page-item">
+                <a
+                  class="page-link"
+                  href="?page=<%= currentPage - 1 %>&limit=10"
+                >
+                  Previous
+                </a>
+              </li>
+              <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
+              <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <a class="page-link" href="?page=<%= i %>&limit=10"><%= i %></a>
+              </li>
+              <% } %> <% if (currentPage < totalPages) { %>
+              <li class="page-item">
+                <a
+                  class="page-link"
+                  href="?page=<%= currentPage + 1 %>&limit=10"
+                >
+                  Next
+                </a>
+              </li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <a
+      href="#"
+      class="back-to-top d-flex align-items-center justify-content-center"
+      ><i class="fa-solid fa-arrow-up"></i
+    ></a>
+
+    <%- include('partials/footer.ejs') %>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="staticBackdrop"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Add New
+            </h3>
+          </div>
+          <div class="modal-body">
+            <form id="add_Form">
+              <div class="form-main">
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading">Type : </label>
+                  <input
+                    type="text"
+                    id="type"
+                    class="form-control input_flid"
+                    name="role"
+                    onkeypress=""
+                  />
+                </div>
+
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading">Value : </label>
+                  <input
+                    type="text"
+                    id="value"
+                    class="form-control input_flid"
+                    name="role"
+                    onkeypress=""
+                  />
+                </div>
+
+                <div class="modal-footer">
+                  <button type="submit" class="button_modal_success">
+                    Add New
+                  </button>
+                  <button
+                    type="button"
+                    class="btn_close"
+                    data-bs-dismiss="modal"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- modal -->
+
+    <!-- Modal2 -->
+    <div
+      class="modal fade"
+      id="staticBackdrope"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Edit Role
+            </h3>
+          </div>
+          <div class="modal-body">
+            <form id="editForm">
+              <div class="form-main">
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading"
+                    >Role Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="edit_role"
+                    class="form-control input_flid"
+                    name="role"
+                    value="ADMIN"
+                  />
+                  <input
+                    type="hidden"
+                    id="roleId"
+                    class="form-control input_flid"
+                    name="roleId"
+                    placeholder=" "
+                    disabled
+                  />
+                </div>
+
+                <div class="modal-footer">
+                  <button
+                    type="submit"
+                    id="edit_btn"
+                    class="button_modal_success"
+                  >
+                    Submit
+                  </button>
+                  <button
+                    type="button"
+                    class="btn_close"
+                    data-bs-dismiss="modal"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- modal2 -->
+  </body>
+
+  <script>
+    const form = document.getElementById("add_Form");
+    form.addEventListener("submit", submitHandler);
+    function submitHandler(event) {
+      event.preventDefault();
+      const type = document.querySelector("#type").value;
+      const value = document.querySelector("#value").value;
+
+      if (!type) {
+        alert("Please fill in the type");
+        return;
+      }
+      if (!value) {
+        alert("Please fill in the Value");
+        return;
+      }
+
+      console.log(type, value);
+
+      fetch("/admin_metadata", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ type: type, value: value })
+      })
+        .then((response) => response.json())
+        .then((res) => {
+          console.log(res, "res");
+          if (res.status === "success") {
+            alert(res.message);
+            window.location.reload();
+          } else {
+            alert(res.message);
+            window.location.reload();
+          }
+        })
+        .catch((error) => {
+          console.error("Request failed:", error);
+        });
+    }
+  </script>
+
+  <script>
+    function editRole(roleName, id, inherits) {
+      document.getElementById("edit_role").value = roleName;
+      document.getElementById("roleId").value = id;
+
+      const inheritsArray = JSON.parse(inherits);
+
+      const checkboxes = document.querySelectorAll(".checkbox_inherit");
+      checkboxes.forEach((checkbox) => {
+        checkbox.disabled = false;
+      });
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = inheritsArray.includes(checkbox.value);
+      });
+
+      checkboxes.forEach((checkbox) => {
+        if (checkbox.value === roleName) {
+          checkbox.disabled = true;
+        }
+      });
+    }
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("editForm");
+
+      const handleAddBtn1 = async (e) => {
+        e.preventDefault();
+
+        const checkboxes = document.querySelectorAll(
+          'input[type="checkbox"]:checked'
+        );
+        const selectedValues = Array.from(checkboxes).map(
+          (checkbox) => checkbox.value
+        );
+        const id = document.querySelector('input[name="roleId"]').value;
+
+        try {
+          const response = await fetch(`/editinherits/${id}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ inherits: selectedValues })
+          });
+
+          if (response.status === 200) {
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      };
+
+      document
+        .getElementById("edit_btn")
+        .addEventListener("click", handleAddBtn1);
+    });
+  </script>
+</html>

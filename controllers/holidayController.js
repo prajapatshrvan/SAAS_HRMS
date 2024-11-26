@@ -1,7 +1,7 @@
 const Holiday = require("../models/Holiday.model");
 const ApiCRUDController = require("../controllers/ApiCrudController");
 const moment = require("moment");
-const { getResourcesForUser } = require("../utility/permit_utilities/user_permits_utility.js");
+const getResourcesForUser = require("../utility/generatePassword.js");
 
 // module.exports.addBulkHoliday = async (req, res) => {
 //   try {
@@ -84,21 +84,29 @@ const { getResourcesForUser } = require("../utility/permit_utilities/user_permit
 
 module.exports.addBulkHoliday = async (req, res) => {
   try {
-    const userRoleMapping = {
-      _id: req.user.userObjectId,
-      userId: req.user.userId,
-      role: req.user.role_name,
-      inherits: req.user.userInheritedRoles
-    };
+    // const userRoleMapping = {
+    //   _id: req.user.userObjectId,
+    //   userId: req.user.userId,
+    //   role: req.user.role_name,
+    //   inherits: req.user.userInheritedRoles
+    // };
+    // const userResources = await getResourcesForUser(userRoleMapping);
 
-    const userResources = await getResourcesForUser(userRoleMapping);
+    // if (
+    //   !userResources &&
+    //   !userResources["holidays"] &&
+    //   !userResources["holidays"].includes("create")
+    // ) {
+    //   return res.status(403).json({ message: "Access denied" });
+    // }
 
-    // Check if the user has the required permissions
-    if (!userResources || !userResources["holidays"] || !userResources["holidays"].includes("create")) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    const { year: requestedYear, country: requestedCountry, state: requestedState, holiday_name, date } = req.body;
+    const {
+      year: requestedYear,
+      country: requestedCountry,
+      state: requestedState,
+      holiday_name,
+      date
+    } = req.body;
 
     if (!requestedCountry) {
       return res.status(400).json({ message: "Please select country" });
@@ -136,7 +144,9 @@ module.exports.addBulkHoliday = async (req, res) => {
 
     // Format the date and determine the day of the week
     const formattedDate = validDate.toISOString().split("T")[0];
-    const dayOfWeek = validDate.toLocaleDateString("en-US", { weekday: "long" });
+    const dayOfWeek = validDate.toLocaleDateString("en-US", {
+      weekday: "long"
+    });
 
     // Create and save the new holiday
     const newHoliday = new Holiday({
@@ -163,35 +173,67 @@ module.exports.addBulkHoliday = async (req, res) => {
 
 module.exports.UpdateHoliday = async (req, res) => {
   try {
+    const userRoleMapping = {
+      _id: req.user.userObjectId,
+      userId: req.user.userId,
+      role: req.user.role_name,
+      inherits: req.user.userInheritedRoles
+    };
+
+    const userResources = await getResourcesForUser(userRoleMapping);
+
+    // Check if the user has the required permissions
+    if (
+      !userResources &&
+      !userResources["holidays"] &&
+      !userResources["holidays"].includes("edit")
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const id = req.query.id;
     const { country, state, year, holiday_status, holiday } = req.body;
 
-    if (!country || !state || !year || !holiday || !Array.isArray(holiday) || holiday.length === 0) {
+    if (
+      !country ||
+      !state ||
+      !year ||
+      !holiday ||
+      !Array.isArray(holiday) ||
+      holiday.length === 0
+    ) {
       return res.status(400).json({
         message: "Invalid or incomplete request data"
       });
     }
 
-    const holidaysWithDay = holiday.map((h) => {
+    const holidaysWithDay = holiday.map(h => {
       const [month, day] = h.date.split("-");
       if (isNaN(month) || isNaN(day)) {
         return { ...h, date: null, day: "Invalid Date" };
       }
 
       const formattedDate = `${month}-${day}`;
-      const dayOfWeek = new Date(`${year}-${formattedDate}`).toLocaleDateString("en-US", { weekday: "long" });
+      const dayOfWeek = new Date(
+        `${year}-${formattedDate}`
+      ).toLocaleDateString("en-US", { weekday: "long" });
 
       return { ...h, date: formattedDate, day: dayOfWeek };
     });
 
-    const validHolidays = holidaysWithDay.filter((h) => h.date !== null);
+    const validHolidays = holidaysWithDay.filter(h => h.date !== null);
 
     if (validHolidays.length === 0) {
       return res.status(400).json({
         message: "No valid dates provided"
       });
     }
-    const updateFields = { country, state, year, holiday_status, holiday: validHolidays };
+    const updateFields = {
+      country,
+      state,
+      year,
+      holiday_status,
+      holiday: validHolidays
+    };
     await Holiday.findByIdAndUpdate(id, { $set: updateFields });
     return res.status(200).json({
       message: "Update Data Sucessfully"
@@ -208,7 +250,9 @@ module.exports.deleteHoliday = async (req, res) => {
   try {
     const { date } = req.body;
     if (!date) {
-      return res.status(400).json({ message: "Missing 'date' field in the request body" });
+      return res
+        .status(400)
+        .json({ message: "Missing 'date' field in the request body" });
     }
     const holiday = await Holiday.findOneAndDelete({ date });
     if (!holiday) {
@@ -248,7 +292,6 @@ module.exports.HolidayStatus = async (req, res) => {
 module.exports.List = async (req, res) => {
   try {
     const { holiday_status, year, country, state } = req.query;
-
     // Set default values if not provided
     const currentYear = moment().format("YYYY");
     const defaultYear = year || currentYear;

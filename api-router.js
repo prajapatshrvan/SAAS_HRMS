@@ -5,7 +5,7 @@ const employee = require("./routers/employee.router");
 const location = require("./routers/location.router");
 const asset = require("./routers/asset.router");
 const AttendaceDashboard = require("./routers/dashboardAttendance.Router");
-const metaData = require("./routers/metadata.router");
+
 const holiday = require("./routers/holiday.router");
 const resources = require("./routers/newresourcesRouter");
 const action = require("./routers/actionRouter");
@@ -21,8 +21,9 @@ const salary = require("./routers/salary.router");
 const employeedashboard = require("./routers/employeeDashboard.router");
 const hrdashboard = require("./routers/hrdashboad.router");
 const headerAndfooter = require("./routers/header.footer.router");
+const metaData = require("./routers/metadata.router");
 
-const apiRouter = (app) => {
+const apiRouter = app => {
   app.use(user);
   app.use(adminrole);
   app.use(leave);

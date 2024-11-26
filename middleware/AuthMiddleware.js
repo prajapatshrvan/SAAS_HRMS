@@ -1,6 +1,9 @@
 const Employee = require("../models/Employee.model");
 const { Auth_Middleware } = require("../AppConstants");
 const jwt = require("jsonwebtoken");
+const {
+  getResourcesForUser
+} = require("../utility/permit_utilities/user_permits_utility.js");
 
 const auth = async (req, res, next) => {
   try {
@@ -42,19 +45,33 @@ const auth = async (req, res, next) => {
   next();
 };
 
-function checkAccess(resourceName, action) {
-  return (req, res, next) => {
-    const userResources = req.userResources;
-    const user = Employee.findById(req.user.userObjectId);
-    console.log(req.userResources);
+const checkAccess = (resourceName, action) => {
+  return async (req, res, next) => {
+    try {
+      const userRoleMapping = {
+        _id: req.user.userObjectId,
+        userId: req.user.userId,
+        role: req.user.role_name,
+        inherits: req.user.userInheritedRoles
+      };
+      const userResources = await getResourcesForUser(userRoleMapping);
+      console.log(userResources);
 
-    if (userResources[resourceName] && userResources[resourceName].includes(action)) {
-      return next();
+      if (
+        userResources &&
+        userResources[resourceName] &&
+        userResources[resourceName].includes(action)
+      ) {
+        return next();
+      }
+
+      return res.status(403).json({ message: "Access denied" });
+    } catch (error) {
+      console.error("Error in checkAccessMiddleware:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-
-    return res.status(403).json({ message: "Access denied" });
   };
-}
+};
 
 module.exports = {
   auth,

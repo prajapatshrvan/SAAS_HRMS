@@ -11,21 +11,21 @@ const { create } = apiHandler;
 const { readAllandPopulate } = apiHandlerUSER;
 
 const checkLeaves = (attendance, leaves) => {
-  return attendance.map((item) => {
+  return attendance.map(item => {
     let newItem = { ...item };
     delete newItem.__v;
 
     // Simplify date creation
     let date = new Date(item.date);
-    date.setHours(0, 0, 0, 0); // normalize the time
+    date.setHours(0, 0, 0, 0);
 
     let leaveFound = false;
 
     for (let leave of leaves) {
       let startDate = new Date(leave.start_date);
       let endDate = new Date(leave.end_date);
-      startDate.setHours(0, 0, 0, 0); // normalize the time
-      endDate.setHours(0, 0, 0, 0); // normalize the time
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
 
       if (startDate <= date && endDate >= date) {
         leaveFound = true;
@@ -56,7 +56,7 @@ const checkLeaves = (attendance, leaves) => {
   });
 };
 
-const removeUnnecessaryFields = (data) => {
+const removeUnnecessaryFields = data => {
   const {
     documentDob,
     originalDob,
@@ -109,7 +109,11 @@ const attendance = async (req, res, next) => {
       start_date: { $lte: endOfDay },
       end_date: { $gte: startOfDay }
     });
-    if (element.empid === undefined || element.date === undefined || element.status === undefined) {
+    if (
+      element.empid === undefined ||
+      element.date === undefined ||
+      element.status === undefined
+    ) {
       return res.status(400).send("Please provide valid employee details");
     }
 
@@ -117,12 +121,23 @@ const attendance = async (req, res, next) => {
 
     const attendanceDate = new Date(element.date);
 
-    if (currentDate.getTime() - attendanceDate.getTime() < 7 * 24 * 60 * 60 * 1000) {
+    if (
+      currentDate.getTime() - attendanceDate.getTime() <
+      7 * 24 * 60 * 60 * 1000
+    ) {
       const existingAttendance = await Attendance.findOne({
         empid: element.empid,
         date: {
-          $gte: new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate()),
-          $lt: new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate() + 1)
+          $gte: new Date(
+            attendanceDate.getFullYear(),
+            attendanceDate.getMonth(),
+            attendanceDate.getDate()
+          ),
+          $lt: new Date(
+            attendanceDate.getFullYear(),
+            attendanceDate.getMonth(),
+            attendanceDate.getDate() + 1
+          )
         }
       });
 
@@ -132,8 +147,16 @@ const attendance = async (req, res, next) => {
             {
               empid: element.empid,
               date: {
-                $gte: new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate()),
-                $lt: new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate() + 1)
+                $gte: new Date(
+                  attendanceDate.getFullYear(),
+                  attendanceDate.getMonth(),
+                  attendanceDate.getDate()
+                ),
+                $lt: new Date(
+                  attendanceDate.getFullYear(),
+                  attendanceDate.getMonth(),
+                  attendanceDate.getDate() + 1
+                )
               }
             },
             { $set: { status: element.status } }
@@ -143,7 +166,11 @@ const attendance = async (req, res, next) => {
           return res.status(500).send("Internal Server Error");
         }
       } else {
-        let data = { empid: element.empid, date: attendanceDate.toISOString(), status: element.status };
+        let data = {
+          empid: element.empid,
+          date: attendanceDate.toISOString(),
+          status: element.status
+        };
         try {
           await create(data);
         } catch (error) {
@@ -162,12 +189,31 @@ const attendanceReport = async (req, res, next) => {
   let leaveFilters = {
     input: "$leaves",
     as: "leave",
-    cond: { $and: [{ $or: [{ $eq: ["$$leave.status", "approved"] }, { $eq: ["$$leave.status", "cancelled"] }] }] }
+    cond: {
+      $and: [
+        {
+          $or: [
+            { $eq: ["$$leave.status", "approved"] },
+            { $eq: ["$$leave.status", "cancelled"] }
+          ]
+        }
+      ]
+    }
   };
 
-  let collections = [{ name: "leaves", key: "empid", as: "leaves", local: "_id", filters: leaveFilters }];
+  let collections = [
+    {
+      name: "leaves",
+      key: "empid",
+      as: "leaves",
+      local: "_id",
+      filters: leaveFilters
+    }
+  ];
 
-  let match = [{ $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }];
+  let match = [
+    { $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }
+  ];
 
   const reportData = await readAllandPopulate(collections, undefined, match);
 
@@ -188,8 +234,16 @@ const attendanceReport = async (req, res, next) => {
     firstDateOfMonth = new Date(yearInt, monthInt, 1);
     lastDateOfMonth = new Date(yearInt, monthInt + 1, 0);
   } else {
-    firstDateOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    lastDateOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    firstDateOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    lastDateOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
   }
 
   const formatDateToISOString = (date, startOfDay = true) => {
@@ -247,12 +301,31 @@ const attendanceWeekReport = async (req, res, next) => {
       input: "$leaves",
       as: "leave",
       cond: {
-        $and: [{ $or: [{ $eq: ["$$leave.status", "approved"] }, { $eq: ["$$leave.status", "cancelled"] }] }]
+        $and: [
+          {
+            $or: [
+              { $eq: ["$$leave.status", "approved"] },
+              { $eq: ["$$leave.status", "cancelled"] }
+            ]
+          }
+        ]
       }
     };
-    let collections = [{ name: "leaves", key: "empid", as: "leaves", local: "_id", filters: leaveFilters }];
+    let collections = [
+      {
+        name: "leaves",
+        key: "empid",
+        as: "leaves",
+        local: "_id",
+        filters: leaveFilters
+      }
+    ];
 
-    let match = [{ $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }];
+    let match = [
+      {
+        $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] }
+      }
+    ];
 
     const reportData = await readAllandPopulate(collections, undefined, match);
 
@@ -289,7 +362,7 @@ const attendanceWeekReport = async (req, res, next) => {
   }
 };
 
-const getStartAndEndOfDay = (dateStr) => {
+const getStartAndEndOfDay = dateStr => {
   const inputDate = new Date(dateStr);
   const startOfDay = new Date(inputDate);
   startOfDay.setHours(0, 0, 0, 0);
@@ -304,12 +377,31 @@ const todayAttendanceData = async (req, res, next) => {
       input: "$leaves",
       as: "leave",
       cond: {
-        $and: [{ $or: [{ $eq: ["$$leave.status", "approved"] }, { $eq: ["$$leave.status", "cancelled"] }] }]
+        $and: [
+          {
+            $or: [
+              { $eq: ["$$leave.status", "approved"] },
+              { $eq: ["$$leave.status", "cancelled"] }
+            ]
+          }
+        ]
       }
     };
-    let collections = [{ name: "leaves", key: "empid", as: "leaves", local: "_id", filters: leaveFilters }];
+    let collections = [
+      {
+        name: "leaves",
+        key: "empid",
+        as: "leaves",
+        local: "_id",
+        filters: leaveFilters
+      }
+    ];
 
-    let match = [{ $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }];
+    let match = [
+      {
+        $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] }
+      }
+    ];
 
     const reportData = await readAllandPopulate(collections, undefined, match);
 
@@ -349,12 +441,31 @@ const TotalEmployee = async (req, res, next) => {
       input: "$leaves",
       as: "leave",
       cond: {
-        $and: [{ $or: [{ $eq: ["$$leave.status", "approved"] }, { $eq: ["$$leave.status", "cancelled"] }] }]
+        $and: [
+          {
+            $or: [
+              { $eq: ["$$leave.status", "approved"] },
+              { $eq: ["$$leave.status", "cancelled"] }
+            ]
+          }
+        ]
       }
     };
-    let collections = [{ name: "leaves", key: "empid", as: "leaves", local: "_id", filters: leaveFilters }];
+    let collections = [
+      {
+        name: "leaves",
+        key: "empid",
+        as: "leaves",
+        local: "_id",
+        filters: leaveFilters
+      }
+    ];
 
-    let match = [{ $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }];
+    let match = [
+      {
+        $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] }
+      }
+    ];
 
     const reportData = await readAllandPopulate(collections, undefined, match);
 
@@ -385,19 +496,31 @@ const TotalEmployee = async (req, res, next) => {
 
     const TotalEmployees = modifiedData.length;
     let Present = modifiedData.reduce((count, element) => {
-      return count + element.attendance.filter((record) => record.leave_type === "P").length;
+      return (
+        count +
+        element.attendance.filter(record => record.leave_type === "P").length
+      );
     }, 0);
 
     let Absent = modifiedData.reduce((count, element) => {
-      return count + element.attendance.filter((record) => record.leave_type === "A").length;
+      return (
+        count +
+        element.attendance.filter(record => record.leave_type === "A").length
+      );
     }, 0);
 
     let OnLeave = modifiedData.reduce((count, element) => {
-      return count + element.attendance.filter((record) => record.leave_type === "L").length;
+      return (
+        count +
+        element.attendance.filter(record => record.leave_type === "L").length
+      );
     }, 0);
 
     let HalfDay = modifiedData.reduce((count, element) => {
-      return count + element.attendance.filter((record) => record.leave_type === "H").length;
+      return (
+        count +
+        element.attendance.filter(record => record.leave_type === "H").length
+      );
     }, 0);
 
     res.status(200).json({
@@ -416,8 +539,6 @@ const updateAttendance = async (req, res, next) => {
   try {
     const updateby = req.user.userObjectId;
     const { empid, date, status } = req.body;
-
-    console.log(req.body);
 
     if (!empid || !date || !updateby || status === undefined) {
       return res.status(400).json({ message: "All fields are required" });
@@ -452,10 +573,16 @@ const updateAttendance = async (req, res, next) => {
     }
 
     const currentDate = new Date();
-    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
 
     if (dateObj < startOfMonth || dateObj > currentDate) {
-      return res.status(403).json({ message: "Cannot update attendance record outside of the current month" });
+      return res.status(403).json({
+        message: "Cannot update attendance record outside of the current month"
+      });
     }
 
     attendanceRecord.updateby = updateby;

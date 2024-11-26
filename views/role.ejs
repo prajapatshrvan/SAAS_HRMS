@@ -1,384 +1,345 @@
-<%- include('partials/header.ejs') %>
-  <!-- content start -->
-  <div class="main">
-    <div class="d-flex head">
-      <h2 class="heading"><i class="bi bi-arrow-left-short"></i> Roles List</h2>
-      <button class="btn btn-add ml-auto " id="add_newRole" data-toggle="modal" data-target="#myModal">
-        <i class="mr-2"></i>Add New
-      </button>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/head.ejs') %>
+  <body>
+    <%- include('partials/header.ejs') %>
+    <main id="main" class="main">
+      <section class="role-secation overflow-auto">
+        <div class="container-fluid">
+          <div
+            class="row justify-content-between align-items-center border-bottom-coustem gap-y25"
+          >
+            <div class="col-sm-6">
+              <div class="pagetitle">
+                <h2>
+                  <span><i class="fa-solid fa-arrow-left-long"></i></span> Roles
+                  List
+                </h2>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="dispaly_coustem-type">
+                <button
+                  type="button"
+                  class="button_modal"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                >
+                  Add New
+                </button>
+              </div>
+            </div>
+          </div>
 
-    <div class="content">
-      <div style="overflow-y: auto">
-        <table id="roles" class="table table-striped  add-button" style="width: 100%">
-          <thead>
-            <tr>
-              <th class="text-center" style="border-radius: 30px 0px 0px 0px;">Role Id</th>
-              <th class="text-center">Role Name</th>
-              <th class="text-center">Inherited Roles</th>
-              <th class="text-center" style="border-radius: 0px 30px 0px 0px;"></th>
-
-            </tr>
-          </thead>
-          <tbody>
-            <% if (!roles || roles.length===0) { %>
-              <% } else { %>
-                <% roles.forEach((data,roleId)=> { %>
+          <div class="row mt-3">
+            <div class="col-12">
+              <table
+                class="w-100 table table-striped table-bordered table-hover table-responsive"
+              >
+                <thead class="table_head">
                   <tr>
-                    <td class="text-center" width="15%">
-                      <%= roleId +1 %>
-                    </td>
-                    <td class="text-center" width="15%">
-                      <%= data.role_name.toUpperCase() %>
-                    </td>
-                    <td class="text-center" width="15%">
-                      <%= data.inherits %>
-                    </td>
-                    <td class="text-center" width="15%">
-                      <button class="edit-btn" id="Edit_btn" data-toggle="modal" data-target="#myModal2"
-                        onclick="editRole('<%= data.role_name %>', '<%= data._id %>', '<%= JSON.stringify(data.inherits) %>')">Edit</button>
+                    <th width="110">Role Id</th>
+                    <th width="300">Role Name</th>
+                    <th width="700">Inherited Roles</th>
+                    <th width="300">Change</th>
+                  </tr>
+                </thead>
+                <tbody class="table-body">
+                  <% if (!roles || roles.length===0) { %> <% } else { %> <%
+                  roles.forEach((data,roleId)=> { %>
+                  <tr>
+                    <td><%= roleId +1 %></td>
+                    <td><%= data.role_name.toUpperCase() %></td>
+                    <td><%= data.inherits %></td>
+                    <td>
+                      <button
+                        class="edit-btn-list"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#staticBackdrope"
+                        onclick="editRole('<%= data.role_name %>', '<%= data._id %>', '<%= JSON.stringify(data.inherits) %>')"
+                      >
+                        Edit
+                      </button>
                     </td>
                   </tr>
+                  <% }); %> <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-                  <% }); %>
-                    <% } %>
-          </tbody>
+    <a
+      href="#"
+      class="back-to-top d-flex align-items-center justify-content-center"
+      ><i class="fa-solid fa-arrow-up"></i
+    ></a>
 
-        </table>
-      </div>
-    </div>
+    <%- include('partials/footer.ejs') %>
 
-
-
-    <div class="modal fade" id="myModal" role="dialog" aria-hidden="true" data-bs-toggle="modal" data-backdrop="static">
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="staticBackdrop"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
-          <form id="add_role_nameForm">
-            <div class="modal-header">
-              <h4 class="modal-title">Add New Role</h4>
-            </div>
-            <div class="m-2 form-main">
-              <form id="addform" class="form-inline">
-                <div class="form-group">
-                  <h6 for="fname" class="ml-3">Role Name : </h6>
-                  <input type="text" id="role_input" class="form-control mx-sm-3" name="role"
-                    onkeypress="validateInput(event)" />
-
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Add New Role
+            </h3>
+          </div>
+          <div class="modal-body">
+            <form id="add_Form">
+              <div class="form-main">
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading"
+                    >Role Name :
+                  </label>
+                  <input
+                    type="text"
+                    id="role_name"
+                    class="form-control input_flid"
+                    name="role"
+                    onkeypress=""
+                  />
                 </div>
-              </form>
-              <span id="addform" class="form-inline"></span>
-              <span class="form-group"></span>
-              <div>
-                <h6 for="fname" class="ml-3">Inherits : </h6>
-              </div>
-              <div class="row pt-2 checkboxes-main">
-                <% role.forEach(role=> { %>
-                  <div class="d-flex col-lg-6 checkboxAddRole   align-items-center justify-content-between">
-                    <label for="<%= role.role %>" class="mb-0">
-                      <%= role.role %>
-                    </label>
-
-                  </div>
-                  <div class="d-flex col-lg-6 checkboxAddRole   align-items-center justify-content-between">
-
-                    <input type="checkbox" class="checkbox-adrole" id="<%= role.role %>" name="<%= role.role %>"
-                      value="<%= role.role %>">
+                <div>
+                  <h6 for="fname" class="ml-3 text-secondary fw-500 fs-18">
+                    Inherits :
+                  </h6>
+                </div>
+                <div class="row pt-2 checkboxes-main">
+                  <% role.forEach(role=> { %>
+                  <div class="d-flex col-sm-6 checkbox-heading">
+                    <label for="<%= role.role %>" class="mb-0"
+                      ><%= role.role %></label
+                    >
+                    <input
+                      type="checkbox"
+                      class="checkbox-adrole ml-2"
+                      id="<%= role.role %>"
+                      name="<%= role.role %>"
+                      value="<%= role.role %>"
+                    />
                   </div>
                   <% }); %>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="submit" class="button_modal_success">
+                    Add New
+                  </button>
+                  <button
+                    type="button"
+                    class="btn_close"
+                    data-bs-dismiss="modal"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-
-
-            </div>
-            <div class="modal-footer">
-              <input id="add_btn" type="submit" class="form-control  add_btn2 ml-1 w-25" value="Add" />
-              <button type="button" onclick="closeModal()" class="btn btnCloseModal btn-default" data-dismiss="modal">
-                Close
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
+    <!-- modal -->
 
-  <div class="modal fade" id="myModal2" role="dialog" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Edit Role</h4>
-        </div>
-        <div class="m-2">
-          <form id="addform" class="form-inline">
-            <br class="form-group">
-            <h6 for="fname" class="ml-3">Role Name : </h6>
-            <input type="text" id="role_input1" class="form-control mx-sm-3" name="role" placeholder=" " disabled />
-            <input type="hidden" id="roleId" class="form-control mx-sm-3" name="roleId" placeholder=" " disabled />
-          </form>
-
-          <span id="addform1" class="form-inline"></span>
-          <span class="form-group"></span>
-          <div class="pt-3">
-            <h6 for="fname" class="ml-3">Inherits: </h6>
+    <!-- Modal2 -->
+    <div
+      class="modal fade"
+      id="staticBackdrope"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Edit Role
+            </h3>
           </div>
-          <div class=" row checkboxes-main">
-
-            <% role.forEach(role=> { %>
-              <div class="d-flex col-lg-6 checkboxAddRole   align-items-center justify-content-between">
-                <label for="<%= role.role %>" class="mb-0">
-                  <%= role.role %>
-                </label>
-
+          <div class="modal-body">
+            <form id="editForm">
+              <div class="form-main">
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading"
+                    >Role Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="edit_role"
+                    class="form-control input_flid"
+                    name="role"
+                    value="ADMIN"
+                  />
+                  <input
+                    type="hidden"
+                    id="roleId"
+                    class="form-control input_flid"
+                    name="roleId"
+                    placeholder=" "
+                    disabled
+                  />
+                </div>
+                <div>
+                  <h6 class="ml-3 text-secondary fw-500 fs-18">Inherits:</h6>
+                </div>
+                <div class="row pt-2 checkboxes-main">
+                  <% role.forEach(role=> { %>
+                  <div class="d-flex col-sm-6 checkbox-heading">
+                    <label for="<%= role.role %>" class="mb-0"
+                      ><%= role.role %></label
+                    >
+                    <input type="checkbox" class="checkbox_inherit
+                    checkbox-adrole ml-2"/ id="<%= role.role %>"
+                    name="<%=role.role %>" value="<%= role.role %>" />
+                  </div>
+                  <% }); %>
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="submit"
+                    id="edit_btn"
+                    class="button_modal_success"
+                  >
+                    Submit
+                  </button>
+                  <button
+                    type="button"
+                    class="btn_close"
+                    data-bs-dismiss="modal"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-              <div class="d-flex col-lg-6 checkboxAddRole   align-items-center justify-content-between">
-
-                <input type="checkbox" class="checkbox-inherit" id="<%= role.role %>" name="<%= role.role %>"
-                  value="<%= role.role %>">
-              </div>
-              <% }); %>
-
-
+            </form>
           </div>
-
-          </form>
-        </div>
-
-        <div class="modal-footer">
-          <input id="add_btn1" type="submit" class="form-control add_btn2 ml-1 w-25" value="submit">
-          <button type="button" onclick="closeModal()" class="btn btnCloseModal btn-default" data-dismiss="modal">
-            Close
-          </button>
         </div>
       </div>
     </div>
-  </div>
 
+    <!-- modal2 -->
+  </body>
 
+  <script>
+    const form = document.getElementById("add_Form");
+    form.addEventListener("submit", submitHandler);
+    function submitHandler(event) {
+      event.preventDefault();
+      const role = document.querySelector("#role_name").value;
+      if (!role) {
+        alert("Please fill in the role name");
+        return;
+      }
 
-  <%- include ('partials/footer.ejs') %>
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      const selectedValues = [];
 
-    <!-- <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const roleInput = ["HR", "ADMIN", "USER", "DEVELOPER", "SALES", "OWNER"];
-        const roleInputField = document.getElementById("role_input");
-        const errorDiv = document.getElementById("error");
-        const roleform = document.getElementById("add_role_nameForm");
-        const AddBtn = document.getElementById("add_btn");
-
-        roleInputField.addEventListener("input", function() {
-            const enteredRole = this.value.toUpperCase();
-            if (!roleInput.includes(enteredRole)) {
-                errorDiv.style.display = "block";
-                AddBtn.disabled= true;
-
-                
-            } else {
-                errorDiv.style.display = "none";
-                AddBtn.disabled= false;
-            }
-        });
- 
-    });
-</script> -->
-
-    <script>
-      function validateInput(event) {
-        var key = event.key;
-        var regex = /^[a-zA-Z]+$/;
-        if (!regex.test(key)) {
-          event.preventDefault();
-          alert("Please enter only alphabetic characters.");
+      checkboxes.forEach((checkbox) => {
+        console.log(checkbox.checked, checkbox);
+        if (checkbox.checked) {
+          selectedValues.push(checkbox.value);
         }
-      }
-
-
-      function closeModal() {
-        document.getElementById('role_input').value = '';
-        const selectvalue = document.querySelectorAll('.checkbox-adrole');
-        selectvalue.forEach((checkbox) => {
-          checkbox.checked = false;
-        });
-
-      }
-
-
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const enableSubmitbtn = () => {
-          const checkboxes3 = document.querySelectorAll(".checkbox-inherit");
-          let anyChecked = false;
-          checkboxes3.forEach((checkbox) => {
-            if (checkbox.checked) {
-              anyChecked = true;
-            }
-          });
-
-          const submitbtn = document.getElementById("add_btn1");
-          submitbtn.disabled = !anyChecked;
-        };
-
-        enableSubmitbtn();
-
-        const checkboxes2 = document.querySelectorAll(".checkbox-inherit");
-        checkboxes2.forEach((checkbox) => {
-          checkbox.addEventListener("change", enableSubmitbtn);
-        });
       });
 
-    </script>
-
-
-    <!-- addrole fatch api -->
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const handleAddBtn = async (e) => {
-
-
-          const roleInput = document.querySelector("#role_input");
-          const role = roleInput.value;
-
-          if (!role) {
-            alert("Please fill in the role name.");
-            return;
+      fetch("/addrole", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ role: role, inherits: selectedValues })
+      })
+        .then((response) => response.json())
+        .then((res) => {
+          console.log(res, "res");
+          if (res.status === "success") {
+            alert(res.message);
+            window.location.reload();
+          } else {
+            alert(res.message);
+            window.location.reload();
           }
+        })
+        .catch((error) => {
+          console.error("Request failed:", error);
+        });
+    }
+  </script>
 
-          const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-          const selectedValues = [];
-          checkboxes.forEach((checkbox) => {
-            if (checkbox.checked) {
-              selectedValues.push(checkbox.value);
-            }
-          });
+  <script>
+    function editRole(roleName, id, inherits) {
+      document.getElementById("edit_role").value = roleName;
+      document.getElementById("roleId").value = id;
 
-          try {
-            const response = await fetch("/admin/addrole", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ role: role, inherits: selectedValues }),
-            });
+      const inheritsArray = JSON.parse(inherits);
 
-            if (response.status === 200) {
-              window.location.reload();
-            }
-          } catch (error) {
-            console.error("Error:", error);
-          }
-        };
-
-        const addBtn = document.querySelector("#add_btn");
-        addBtn.addEventListener("click", handleAddBtn);
-
+      const checkboxes = document.querySelectorAll(".checkbox_inherit");
+      checkboxes.forEach((checkbox) => {
+        checkbox.disabled = false;
       });
 
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const enableCheckboxes = () => {
-          const roleInput = document.querySelector("#role_input");
-          const role = roleInput.value;
-
-          const checkboxes = document.querySelectorAll('.checkbox-adrole');
-          checkboxes.forEach((checkbox) => {
-            checkbox.disabled = !role;
-          });
-        };
-
-        const roleInput = document.querySelector("#role_input");
-        roleInput.addEventListener("input", enableCheckboxes);
-
-        enableCheckboxes();
-
-
-        const addNewRoleBtn = document.querySelector("#add_newRole");
-        addNewRoleBtn.addEventListener("click", () => {
-          const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-          checkboxes.forEach((checkbox) => {
-            checkbox.disabled = true;
-          });
-        });
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = inheritsArray.includes(checkbox.value);
       });
 
-
-
-
-    </script>
-
-
-
-
-
-    <!-- editrole fatch api -->
-    <script>
-      $(document).ready(function () {
-        const form = $("#addform1");
-
-        const handleaddBtn1 = async (e) => {
-          e.preventDefault();
-
-          const checkboxes = $('input[type="checkbox"]:checked');
-          const selectedValues = checkboxes.map((index, checkbox) => $(checkbox).val()).get();
-          const id = $('input[name="roleId"]').val();
-
-          try {
-            const response = await fetch(`/admin/editinherits/${id}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ inherits: selectedValues }),
-            });
-
-            if (response.status === 200) {
-              window.location.reload();
-            }
-          } catch (error) {
-            console.error("Error:", error);
-          }
-        };
-
-        $("#add_btn1").on("click", handleaddBtn1);
+      checkboxes.forEach((checkbox) => {
+        if (checkbox.value === roleName) {
+          checkbox.disabled = true;
+        }
       });
+    }
+  </script>
 
-    </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("editForm");
 
+      const handleAddBtn1 = async (e) => {
+        e.preventDefault();
 
-    <script>
-      function editRole(roleName, id, inherits) {
-        document.getElementById("role_input1").value = roleName;
-        document.getElementById("roleId").value = id;
+        const checkboxes = document.querySelectorAll(
+          'input[type="checkbox"]:checked'
+        );
+        const selectedValues = Array.from(checkboxes).map(
+          (checkbox) => checkbox.value
+        );
+        const id = document.querySelector('input[name="roleId"]').value;
 
-        const inheritsArray = JSON.parse(inherits);
+        try {
+          const response = await fetch(`/editinherits/${id}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ inherits: selectedValues })
+          });
 
-
-        const checkboxes = document.querySelectorAll('.checkbox-inherit');
-        checkboxes.forEach(checkbox => {
-          checkbox.disabled = false;
-        });
-
-
-
-        checkboxes.forEach(checkbox => {
-          checkbox.checked = false;
-          if (inheritsArray.includes(checkbox.value)) {
-            checkbox.checked = true;
+          if (response.status === 200) {
+            window.location.reload();
           }
-        });
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      };
 
-
-        checkboxes.forEach(function (checkbox) {
-          if (checkbox.value === roleName) {
-            checkbox.disabled = true;
-          }
-        });
-      }
-
-
-    </script>
-
-
-    <script src="https://code.jquery.com/jquery-3.7.1.js"
-      integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap5-toggle@5.0.4/js/bootstrap5-toggle.ecmas.min.js"></script>
-
-    </div>
+      document
+        .getElementById("edit_btn")
+        .addEventListener("click", handleAddBtn1);
+    });
+  </script>
+</html>

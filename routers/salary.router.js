@@ -19,7 +19,9 @@ cron.schedule("0 0 26 * *", async () => {
     await salary.createSalary(
       {},
       {
-        status: (code) => ({ json: (response) => console.log(`Status: ${code}`, response) })
+        status: code => ({
+          json: response => console.log(`Status: ${code}`, response)
+        })
       }
     );
   } catch (error) {

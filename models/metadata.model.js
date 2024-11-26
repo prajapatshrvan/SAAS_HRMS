@@ -3,20 +3,20 @@ const mongoose = require("mongoose");
 const metadataSchema = new mongoose.Schema({
   key: {
     type: Number,
-    required: true,
+    required: true
   },
   value: {
     type: String,
-    required: true,
+    required: true
   },
   isActive: {
     type: Boolean,
-    required: true,
+    default: true
   },
   type: {
     type: String,
-    required: true,
-  },
+    required: true
+  }
 });
 const metaData = mongoose.model("metaData", metadataSchema);
 module.exports = metaData;

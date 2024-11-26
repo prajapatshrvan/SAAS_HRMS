@@ -6,7 +6,7 @@ const {
   attendanceReport,
   attendanceWeekReport,
   todayAttendanceData,
-  TotalEmployee,
+  TotalEmployee
 } = require("../controllers/attendanceController.js");
 const router = require("express").Router();
 

@@ -1,187 +1,146 @@
-<%- include('partials/header.ejs') %>
-<!-- content start -->
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/head.ejs') %>
 
-<div class="main">
-  <div class="d-flex head justify-content-between">
-    <h2 class="heading">
-      <i class="bi bi-arrow-left-short"></i>Resources View<span
-        id="roleNameHeading"
-        class="headingspan"
-      ></span>
-    </h2>
+  <body>
+    <!-- ======= Header ======= -->
+    <%- include('partials/header.ejs') %>
 
-    <div>
-      <button class="btn btn-add ml-auto">
-        <a href="/permission" style="color: azure">
-          <i class="bi bi-arrow-left-short"></i>BACK</a
-        >
-      </button>
-      <button
-        class="btn btn-add ml-auto"
-        id="add_newResources"
-        data-toggle="modal"
-        data-target="#myModal2"
-        onclick="disableExistingResources()"
-      >
-        <a href="#" style="color: azure">Add New Resources</a>
-      </button>
-    </div>
-  </div>
-  <form>
-    <div class="content" name="add_name" id="add_name">
-      <table
-        id="roles"
-        class="table table-striped add-button"
-        style="width: 100%"
-      >
-        <thead>
-          <tr>
-            <th class="text-center" style="border-radius: 30px 0px 0px 0px">
-              Sr. No.
-            </th>
-            <th class="text-center">Resources</th>
-            <th class="text-center">Actions</th>
-            <th
-              class="text-center"
-              style="border-radius: 0px 30px 0px 0px"
-            ></th>
-          </tr>
-        </thead>
+    <!-- ======= Sidebar ======= -->
 
-        <tbody>
-          <% if (!resources || resources.length===0) { %> <% } else { %> <% var
-          counter=1; %> <% resources.forEach(data=> { %> <%
-          data.resources.forEach(resource=> { %>
-
-          <tr>
-            <td class="text-center" width="5%"><%= counter++ %></td>
-            <td class="text-center" width="10%">
-              <%= resource.name.toLowerCase() %>
-            </td>
-            <td class="text-center" width="15%">
-              <% if (Array.isArray(resource.actions)) { const uniqueActions =
-              [...new Set(resource.actions)]; actionsString =
-              uniqueActions.join(", "); %> <%= actionsString %> <% } else { %>
-              <% } %>
-            </td>
-
-            <td class="text-center" width="5%">
-              <button
-                class="editBtn2"
-                data-toggle="modal"
-                data-target="#myModal"
-                onclick="editRole('<%= resource.name %>',  '<%= data.role_name %>', '<%= JSON.stringify(resource.actions.map(String)) %>','<%= resource._id %>')"
-              >
-                Edit
-              </button>
-            </td>
-          </tr>
-          <% }); %> <% }); %> <% } %>
-        </tbody>
-      </table>
-    </div>
-  </form>
-
-  <div
-    class="modal fade"
-    id="myModal"
-    role="dialog"
-    aria-hidden="true"
-    data-backdrop="static"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div id="add_role_nameForm">
-          <div class="modal-header">
-            <h4 class="modal-title">Edit Resources</h4>
-          </div>
-          <div class="m-2 form-main">
-            <form id="addform1" class="form-inline">
-              <br class="form-group" />
-              <h6 for="fname" class="ml-3">Resources Name:</h6>
-              <input
-                type="text"
-                id="role_input1"
-                class="form-control mx-sm-3"
-                name="role"
-                placeholder=" "
-                disabled
-              />
-              <input
-                type="hidden"
-                id="roleId"
-                class="form-control mx-sm-3"
-                name="roleid"
-                placeholder=" "
-                disabled
-              />
-            </form>
-            <span id="addform" class="form-inline"></span>
-
-            <div class="p-5 row checkboxes-main1">
-              <select
-                id="resources_select1"
-                name="skills"
-                multiple=""
-                class="label ui selection fluid dropdown"
-              >
-                <option value="" disabled>Select</option>
-                <% action.forEach(data=> { %>
-                <option value="<%= data.action %>"><%= data.action %></option>
-                <% } ); %>
-              </select>
+    <main id="main" class="main">
+      <section class="role-secation overflow-auto">
+        <div class="container-fluid">
+          <div
+            class="row justify-content-between align-items-center border-bottom-coustem gap-y25"
+          >
+            <div class="col-sm-6">
+              <div class="pagetitle">
+                <h2>
+                  <span><i class="fa-solid fa-arrow-left-long"></i></span>
+                  Resources View
+                  <span class="text-primary" > (<%- role %>)</span>
+                </h2>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="dispaly_coustem-type">
+                <button
+                  onclick="history.back()"
+                  type="button"
+                  class="button_modal_back"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                >
+                  <span><i class="fa-solid fa-arrow-left"></i></span> Back
+                </button>
+                <button
+                  type="button"
+                  id="add_newResources"
+                  class="button_modal margin_cous"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                 
+                >
+                  Add New Resources
+                </button>
+              </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <input
-              id="add_btn"
-              type="submit"
-              class="form-control addbtn ml-1 w-25"
-              value="submit"
-              disabled
-            />
-            <button
-              type="button"
-              onclick="closeModal()"
-              class="btn btn-default btnCloseModal"
-              data-dismiss="modal"
-            >
-              Close
-            </button>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <table
+                class="w-100 table table-striped table-bordered table-hover table-responsive"
+              >
+                <thead class="table_head">
+                  <tr>
+                    <th width="110">Sr. No.</th>
+                    <th width="300">Resources</th>
+                    <th width="700">Actions</th>
+                    <th width="300">Change</th>
+                  </tr>
+                </thead>
+                <tbody class="table-body">
+                  <% if (!resources || resources.length===0) { %> <% } else { %>
+                  <% var counter=1; %> <% resources.forEach(data=> { %> <%
+                  data.resources.forEach(resource=> { %>
+                  <tr>
+                    <td><%= counter++ %></td>
+                    <td><%= resource.name.toLowerCase() %></td>
+                    <td>
+                      <% if (Array.isArray(resource.actions)) { const
+                      uniqueActions = [...new Set(resource.actions)];
+                      actionsString = uniqueActions.join(", "); %> <%=
+                      actionsString %> <% } else { %> <% } %>
+                    </td>
+                    <td>
+                      <button
+                        class="edit-btn-list"
+                        id="editBtn2"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#staticBackdrope"
+                        onclick="editRole('<%= resource.name %>', '<%= data.role_name %>', '<%= JSON.stringify(resource.actions.map(String)) %>','<%= resource._id %>')"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                  <% }); %> <% }); %> <% } %>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+      </section>
+    </main>
 
-  <div
-    class="modal fade"
-    id="myModal2"
-    role="dialog"
-    aria-hidden="true"
-    data-backdrop="static"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="add_role_nameForm2">
+    <a
+      href="#"
+      class="back-to-top d-flex align-items-center justify-content-center"
+      ><i class="fa-solid fa-arrow-up"></i
+    ></a>
+
+    <!-- JS Files -->
+    <script src="framework/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="framework/bootstrap/js/jquery.min.js"></script>
+    <script src="framework/bootstrap/js/select2.min.js"></script>
+    <script src="framework/js/main.js"></script>
+
+    <!-- Modal -->
+    <div
+      class="modal fade coustem-modal"
+      id="staticBackdrop"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">Add New Rosources</h4>
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Add New Rosources
+            </h3>
           </div>
-          <div class="m-2 form-main">
-            <form id="addform" class="form-inline">
-              <div class="form-group">
-                <h6 for="fname" class="ml-3">Rosources Name :</h6>
-
+          <div class="modal-body modal_seclect">
+            <form action="">
+              <div class="mb-3">
+                <label for="rosources" class="mb-2 heading_lable"
+                  >Rosources Name :</label
+                >
                 <select
                   id="role_input"
                   name="role"
-                  class="form-select form-control mx-sm-3"
-                  aria-label="Default select example"
+                  class="form-select form-control"
                 >
-                  <option value="" selected>Select</option>
-
+                  <option value="" selected="">Select</option>
                   <% newresourceslist.forEach(data=> { %>
-                  <option value="<%= data.resources.toLowerCase() %>">
+                  <option
+                    value="<%= data.resources.toLowerCase() %>"
+                  >
                     <%= data.resources.toLowerCase() %>
                   </option>
                   <% }); %>
@@ -194,258 +153,271 @@
                   name="role"
                 />
               </div>
-            </form>
-            <span id="addform" class="form-inline"></span>
-            <span class="form-group"></span>
-            <div>
-              <h6 for="fname" class="ml-3">Actions :</h6>
-            </div>
-            <div class="pl-4 row checkboxes-main1">
-              <select
-                id="resources_select"
-                name="skills"
-                multiple=""
-                class="label ui selection fluid dropdown"
-              >
+              <div class="position-relative">
+                <label
+                  for="multiple-select-field"
+                  class="mb-2 fs-18 fw-500 text-secondary"
+                  >Actions :</label
+                >
+                <select
+                  class="form-select form-control multipale_option"
+                  id="multiple-select-field"
+                  data-placeholder="Select"
+                  multiple
+                >
                 <option value="" disabled>Select</option>
                 <% action.forEach(data=> { %>
                 <option value="<%= data.action %>"><%= data.action %></option>
                 <% } ); %>
               </select>
-            </div>
+                </select>
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+              </div>
+            </form>
           </div>
           <div class="modal-footer">
-            <input
-              id="add_btn1"
-              type="submit"
-              class="form-control btnAddModal ml-1 w-25"
-              value="Add"
-            />
-            <button
-              type="button"
-              onclick="closeModal()"
-              class="btn btnCloseModal btn-default"
-              data-dismiss="modal"
-            >
+            <button id="add_btn" type="submit" class="button_modal_success">Add</button>
+            <button type="button" class="btn_close" data-bs-dismiss="modal">
               Close
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- modal -->
+  
+    <!-- modal2 -->
+  </body>
+
+  <script>
+      $(document).ready(function () {
+        $("#multiple-select-field").select2({
+          theme: "bootstrap-5",
+          width: "100%",
+          placeholder: $("#multiple-select-field").data("placeholder"),
+          closeOnSelect: false
+        });
+      });
+  </script>
+  
+ 
+  <!-- add resources -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const addBtn = document.querySelector("#add_btn");
+      if (addBtn) {
+        addBtn.addEventListener("click", handleAddBtn1);
+      }
+  
+      async function handleAddBtn1() {
+        const roleInput = document.querySelector("#role_input");
+        const resourcesName = roleInput ? roleInput.value : null; 
+  
+        const urlParams = new URLSearchParams(window.location.search);
+        const roleName = urlParams.get("role"); 
+  
+        const selectedOptions = [
+          ...document.querySelector("#multiple-select-field").selectedOptions
+        ];
+        const selectedResources = selectedOptions.map(option => option.value); 
+  
+        // Validation
+        if (!resourcesName || selectedResources.length === 0) {
+          alert("Please select a resource name and at least one action.");
+          return;
+        }
+  
+        try {
+          // Send the POST request
+          const response = await fetch("/recourcesadd", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              role_name: roleName,
+              resources: [
+                {
+                  name: resourcesName,
+                  actions: selectedResources
+                }
+              ]
+            })
+          });
+  
+          
+          if (response.ok) {
+            window.location.reload(); 
+          } else {
+            const errorMessage = await response.text();
+            console.error("Error:", errorMessage);
+            alert("Failed to add the resource. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred while adding the resource. Please try again.");
+        }
+      }
+    });
+  </script>
+
+
+<!-- Modal 2 -->
+<div class="modal fade" id="staticBackdrope" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">Edit Resources</h3>
+      </div>
+      <div class="modal-body modal_seclect">
+        <form id="resourceForm">
+          <div class="form-main">
+            <div class="form-group mb-4">
+              <label for="fname" class="mb-2 form_heading">Resources Name:</label>
+              <input type="text" id="role_input1" class="form-control input_flid" name="role" disabled />
+              <input type="hidden" id="roleId" class="form-control mx-sm-3" name="roleid" disabled />
+            </div>
+            <div class="position-relative">
+              <label for="multiple-select-fieldw" class="mb-2 fs-18 fw-500 text-secondary">Actions:</label>
+              <select class="form-select form-control multipale_option label ui selection fluid dropdown multiple" id="multiple-select-fieldw" data-placeholder="Select" multiple>
+                <option value="" disabled>Select actions</option>
+              </select>
+              <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+          </div>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button id="add_btn1" type="button" class="button_modal_success" disabled>Submit</button>
+        <button type="button" class="btn_close" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
-
-  <%- include ('partials/footer.ejs') %>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<link rel="stylesheet" href="admin/css/semantic.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
 
-<script>
-  function disableExistingResources() {
-    var existingNames = document.querySelectorAll("#role_input option");
-    var resourceNames = document.querySelectorAll("td.text-center");
 
-    existingNames.forEach(function (option) {
-      resourceNames.forEach(function (resource) {
-        if (option.value.trim() === resource.textContent.trim()) {
-          option.disabled = true;
-        }
-      });
-    });
-  }
-
-  function closeModal() {
-    document.getElementById("role_input").value = "";
-
-    const select = document.getElementById("resources_select");
-
-    select.selectedIndex = -1;
-
-    const selectedLabels = document.querySelectorAll(
-      ".ui.label.transition.visible"
-    );
-    selectedLabels.forEach((label) => label.remove());
-  }
-</script>
 
 <script>
-  $(".label.ui.dropdown").dropdown();
-
-  $(".no.label.ui.dropdown").dropdown({
-    useLabels: false,
+  // Initialize Select2 for dropdown
+function initializeSelect2() {
+  $("#multiple-select-fieldw").select2({
+    theme: "bootstrap-5",
+    width: "100%",
+    placeholder: "Select actions",
+    closeOnSelect: false,
   });
-</script>
+}
 
-<!-- add resources -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const handleAddBtn1 = async () => {
-      const roleInput = document.querySelector("#role_input");
-      const resorces_name = roleInput.value;
+// Fetch available actions and populate dropdown
+async function fetchActionsAndPopulate() {
+  try {
+    const response = await fetch("/getActions"); // Replace with your API endpoint
+    if (response.ok) {
+      const actions = await response.json();
+      const select = document.getElementById("multiple-select-fieldw");
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const roleName = urlParams.get("role");
+      // Clear existing options
+      select.innerHTML = '<option value="" disabled>Select actions</option>';
 
-      const selectedOptions = [
-        ...document.querySelector("#resources_select").selectedOptions,
-      ];
-      const selectedResources = [];
-
-      selectedOptions.forEach((option) => {
-        if (option.selected) {
-          selectedResources.push(option.value);
-        }
+      // Populate dropdown
+      actions.forEach((action) => {
+        const option = document.createElement("option");
+        option.value = action;
+        option.textContent = action;
+        select.appendChild(option);
       });
 
-      if (!roleName || selectedResources.length === 0) {
-        alert("Please fill in the role name and select at least one resource.");
-        return;
-      }
-
-      try {
-        const response = await fetch("/admin/recourcesadd", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            role_name: roleName,
-            resources: [
-              {
-                name: resorces_name,
-                actions: selectedResources,
-              },
-            ],
-          }),
-        });
-
-        if (response.status === 200) {
-          window.location.reload();
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    const addBtn1 = document.querySelector("#add_btn1");
-    addBtn1.addEventListener("click", handleAddBtn1);
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const enableCheckboxes = () => {
-      const roleInput = document.querySelector("#role_input");
-      const role = roleInput.value;
-
-      const addbtn = document.querySelector("#add_btn1");
-
-      addbtn.disabled = !role;
-    };
-
-    const roleInput = document.querySelector("#role_input");
-    roleInput.addEventListener("input", enableCheckboxes);
-
-    enableCheckboxes();
-
-    const addNewRoleBtn = document.querySelector("#add_newResources");
-    addNewRoleBtn.addEventListener("click", () => {
-      const addbtn = document.querySelector("#add_btn1");
-
-      addbtn.disabled = true;
-    });
-  });
-</script>
-
-<script>
-  document.querySelectorAll(".editBtn2").forEach(function (button) {
-    button.addEventListener("click", function (event) {
-      event.preventDefault();
-    });
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const roleName = urlParams.get("role");
-    const headingElement = document.getElementById("roleNameHeading");
-    if (roleName) {
-      headingElement.textContent += `( ${roleName})`;
+      initializeSelect2(); // Initialize Select2 after options are populated
+    } else {
+      console.error("Failed to fetch actions:", response.statusText);
     }
+  } catch (error) {
+    console.error("Error fetching actions:", error);
+  }
+}
+
+// Populate dropdown with pre-selected resources for editing
+function editRole(resourceName, id, resources, _id) {
+  const select = document.getElementById("multiple-select-fieldw");
+  let resourceArray = [];
+
+  // Parse resources safely
+  try {
+    resourceArray = JSON.parse(resources);
+  } catch (error) {
+    console.error("Error parsing resources:", error);
+  }
+
+  // Set resource ID and name
+  document.getElementById("roleId").value = id;
+  document.getElementById("role_input1").value = resourceName;
+
+  // Clear existing options
+  select.innerHTML = '<option value="" disabled>Select actions</option>';
+
+  // Populate dropdown with pre-selected options
+  resourceArray.forEach((action) => {
+    const option = document.createElement("option");
+    option.value = action;
+    option.textContent = action;
+    option.selected = true; // Mark as selected
+    select.appendChild(option);
   });
-</script>
 
-// editresources fatch api?
-<script>
-  const handleAddBtnClick = async () => {
-    const selectedOptions = [
-      ...document.querySelector("#resources_select1").selectedOptions,
-    ];
+  window.editId = _id;
 
-    const selectedValues = Array.from(selectedOptions).map(
-      (option) => option.value
-    );
-    const uniqueSelectedValues = Array.from(new Set(selectedValues));
+  initializeSelect2(); // Reinitialize Select2
 
-    const roleName = document.getElementById("roleId").value;
-    const resource_name = document.getElementById("role_input1").value;
+  // Enable submit button on selection change
+  document.getElementById("add_btn1").disabled = true;
+  select.addEventListener("change", () => {
+    document.getElementById("add_btn1").disabled = false;
+  });
+}
 
-    try {
-      const response = await fetch("/admin/editresources?role=" + roleName, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+// Handle Add Button click
+async function handleAddBtnClick() {
+  const select = document.getElementById("multiple-select-fieldw");
+  const selectedValues = Array.from(select.selectedOptions).map(
+    (option) => option.value
+  );
+  
+  const roleName = document.getElementById("roleId").value;
+  const resourceName = document.getElementById("role_input1").value;
+
+  try {
+    const response = await fetch(`/editresources?role=${roleName}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        resources: {
+          _id: window.editId,
+          name: resourceName,
+          actions: selectedValues,
         },
-        body: JSON.stringify({
-          resources: {
-            _id: window.editId,
-            name: resource_name,
-            actions: uniqueSelectedValues,
-          },
-        }),
-      });
-      if (response.status === 200) {
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error("Error:", error);
+      }),
+    });
+
+    if (response.ok) {
+      window.location.reload(); // Reload page on success
+    } else {
+      console.error("Failed to update resource:", response.statusText);
     }
-  };
-
-  const addBtn = document.querySelector("#add_btn");
-  addBtn.addEventListener("click", async () => {
-    await handleAddBtnClick();
-  });
-</script>
-
-<script>
-  function editRole(resourceName, id, resources, _id) {
-    const select = document.getElementById("resources_select1");
-    const selectedOptions = Array.from(select.selectedOptions).map(
-      (option) => option.value
-    );
-
-    const submitBtn = document.getElementById("add_btn");
-    submitBtn.disabled = true;
-    const resourceArray = JSON.parse(resources);
-    document.getElementById("roleId").value = id;
-
-    resourceArray.forEach((element) => {
-      const optionHTML =
-        '<option value="' + element + '" selected>' + element + "</option>";
-      select.innerHTML += optionHTML;
-    });
-
-    window.editId = _id;
-    document.getElementById("role_input1").value = resourceName;
-
-    select.addEventListener("change", function () {
-      submitBtn.disabled = false;
-    });
+  } catch (error) {
+    console.error("Error updating resource:", error);
   }
+}
+
+// Attach event listeners
+document.getElementById("add_btn1").addEventListener("click", handleAddBtnClick);
+
+// Fetch actions and populate dropdown on page load
+fetchActionsAndPopulate();
+
 </script>
 
-<script
-  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-  integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-  crossorigin="anonymous"
-></script>
+
+</html>

@@ -37,6 +37,11 @@ const DB_CONNECT = process.env.MONGODB_CONNECTION;
 app.set("view engine", "ejs");
 
 app.use(express.static(__dirname + "/public"));
+// app.use(
+//   "/framework",
+//   express.static(path.join(__dirname, "/public/framework"))
+// );
+
 app.use(express.json());
 
 mongoose.connect(DB_CONNECT);
@@ -44,7 +49,7 @@ mongoose.connect(DB_CONNECT);
 mongoose.connection.on("connected", () => {
   console.log("Connected to mongo");
 });
-mongoose.connection.on("error", (err) => {
+mongoose.connection.on("error", err => {
   console.error("Error connecting to mongo", err);
 });
 
@@ -72,7 +77,9 @@ app.use((err, req, res, next) => {
   }
 
   req.connection.destroy();
-  return res.status(err.status || 500).send(err.message || "internal server error");
+  return res
+    .status(err.status || 500)
+    .send(err.message || "internal server error");
 });
 
 app.listen(port, IPAddredd, () => {

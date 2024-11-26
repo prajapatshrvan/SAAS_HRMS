@@ -7,7 +7,9 @@ const transporter = require("../config/email_config.js");
 const { authLabels } = require("../Label.js");
 const Otp = require("../models/Otp.model.js");
 const randomstring = require("randomstring");
-const { getResourcesForUser } = require("../utility/permit_utilities/user_permits_utility.js");
+const {
+  getResourcesForUser
+} = require("../utility/permit_utilities/user_permits_utility.js");
 const Employee = require("../models/Employee.model.js");
 
 module.exports.register = async (req, res) => {
@@ -23,7 +25,16 @@ module.exports.register = async (req, res) => {
         message: authLabels.already_user_exist
       });
     } else {
-      const { firstname, lastname, mobile_number, email, password, city, roleId, role_name } = req.body;
+      const {
+        firstname,
+        lastname,
+        mobile_number,
+        email,
+        password,
+        city,
+        roleId,
+        role_name
+      } = req.body;
 
       const baseUid = lastname.slice(0, 3) + firstname.slice(0, 3);
       let userId = baseUid;
@@ -199,9 +210,14 @@ module.exports.forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email field is required" });
     }
-    const user = await Employee.findOne({ company_email: email, status: "completed" });
+    const user = await Employee.findOne({
+      company_email: email,
+      status: "completed"
+    });
     if (!user) {
-      return res.status(404).json({ message: "User with this email does not exist" });
+      return res
+        .status(404)
+        .json({ message: "User with this email does not exist" });
     }
     const userOtp = generateOTP();
     const otpexis = await Otp.findOne({ email: email });
@@ -243,9 +259,14 @@ module.exports.resendOtp = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email field is required" });
     }
-    const user = await Employee.findOne({ company_email: email, status: "completed" });
+    const user = await Employee.findOne({
+      company_email: email,
+      status: "completed"
+    });
     if (!user) {
-      return res.status(404).json({ message: "User with this email does not exist" });
+      return res
+        .status(404)
+        .json({ message: "User with this email does not exist" });
     }
     const userOtp = generateOTP();
     const otpexis = await Otp.findOne({ email: email });
@@ -292,11 +313,16 @@ module.exports.verifyOtp = async (req, res) => {
       return currentTimestamp - storedTimestamp > expiryDuration;
     };
 
-    const isBlocked = (userotp) => {
+    const isBlocked = userotp => {
       const currentTimestamp = getCurrentTimestamp();
-      const firstFailedAttemptTimestamp = new Date(userotp.firstFailedAttemptAt).getTime();
+      const firstFailedAttemptTimestamp = new Date(
+        userotp.firstFailedAttemptAt
+      ).getTime();
       const oneDay = 24 * 60 * 60 * 1000;
-      return userotp.failedAttempts >= 3 && currentTimestamp - firstFailedAttemptTimestamp < oneDay;
+      return (
+        userotp.failedAttempts >= 3 &&
+        currentTimestamp - firstFailedAttemptTimestamp < oneDay
+      );
     };
 
     const { email, otp } = req.body;
@@ -313,7 +339,9 @@ module.exports.verifyOtp = async (req, res) => {
 
     if (isBlocked(userotp)) {
       console.log(`User is blocked for email: ${email}`);
-      return res.status(400).send("User is blocked for the day due to too many failed attempts");
+      return res
+        .status(400)
+        .send("User is blocked for the day due to too many failed attempts");
     }
 
     const expiryDuration = 1.5 * 60 * 1000;
@@ -492,7 +520,11 @@ module.exports.userInfo = async (req, res) => {
 
 module.exports.ViewRoleApi = async (req, res) => {
   try {
-    const roles = await Role.find().select({ label: "$role", id: "$_id", _id: 0 });
+    const roles = await Role.find().select({
+      label: "$role",
+      id: "$_id",
+      _id: 0
+    });
     return res.status(200).send(roles);
   } catch (error) {
     return res.status(500).send("internal server error");

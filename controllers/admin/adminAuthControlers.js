@@ -10,13 +10,21 @@ module.exports.login = async (req, res) => {
   }
 };
 
-module.exports.AdminDashboard = async (req, res) => {
+module.exports.dashboard = async (req, res) => {
   try {
-    return res.render("dashboard");
+    return res.render("index");
   } catch (error) {
     console.log(error);
   }
 };
+
+// module.exports.AdminDashboard = async (req, res) => {
+//   try {
+//     return res.render("dashboard");
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 
 module.exports.Adminlogin = async (req, res) => {
   try {

@@ -67,6 +67,7 @@ module.exports.AddRole = async (req, res) => {
       await resources.save();
 
       return res.status(200).json({
+        status: "success",
         message: roleLabels.role_create_message,
         role: newRole
       });
@@ -93,7 +94,8 @@ module.exports.EditInherits = async (req, res) => {
       inherits = inherits.split(",");
     } else if (!Array.isArray(inherits)) {
       return res.status(400).json({
-        message: "Invalid 'inherits' value. It should be either a comma-separated string or an array."
+        message:
+          "Invalid 'inherits' value. It should be either a comma-separated string or an array."
       });
     }
     const inheritValues = Array.from(new Set(inherits));
@@ -125,11 +127,15 @@ module.exports.AddResources = async (req, res) => {
       return res.status(400).json({ message: "Role not found" });
     }
     if (!resources || !Array.isArray(resources) || resources.length === 0) {
-      return res.status(400).json({ message: "Resources are missing or invalid" });
+      return res
+        .status(400)
+        .json({ message: "Resources are missing or invalid" });
     }
     for (const resource of resources) {
       const resourceNameLowerCase = resource.name.toLowerCase();
-      const existingResource = role.resources.find((res) => res.name === resourceNameLowerCase);
+      const existingResource = role.resources.find(
+        res => res.name === resourceNameLowerCase
+      );
 
       if (!existingResource) {
         role.resources.push({
@@ -154,6 +160,7 @@ module.exports.NewResourcesAdd = async (req, res) => {
     const { resources } = req.body;
 
     const existingResources = await newResources.findOne({ resources });
+    console.log(existingResources);
 
     if (existingResources) {
       return res.status(400).json({
@@ -209,7 +216,9 @@ module.exports.EditResources = async (req, res) => {
     const resources = req.body.resources;
 
     const resource_id = resources._id;
-    const newActions = resources.actions.filter((action, index, self) => index === self.findIndex((a) => a === action));
+    const newActions = resources.actions.filter(
+      (action, index, self) => index === self.findIndex(a => a === action)
+    );
 
     let newResources = {
       name: resources.name,
@@ -225,7 +234,9 @@ module.exports.EditResources = async (req, res) => {
       return res.status(404).json({ error: "Resources not updated" });
     }
 
-    return res.status(200).json({ message: "Resources updated successfully", updatedResources });
+    return res
+      .status(200)
+      .json({ message: "Resources updated successfully", updatedResources });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -250,12 +261,13 @@ module.exports.ResourcesView = async (req, res) => {
   try {
     const newresourceslist = await NewResources.find();
     const action = await Action.find();
-
     const resources = await Resources.find({ role_name: req.query.role });
+
     return res.render("resourcesview", {
       resources,
       newresourceslist,
-      action
+      action,
+      role: req.query.role
     });
   } catch (error) {
     console.log(error);
@@ -273,6 +285,19 @@ module.exports.Actions = async (req, res) => {
       resources,
       action
     });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: roleLabels.internal_server_message
+    });
+  }
+};
+
+module.exports.getActions = async (req, res) => {
+  try {
+    const getSction = await Action.find();
+    const action = getSction.map(data => data.action);
+    return res.send(action);
   } catch (error) {
     console.log(error);
     return res.status(500).json({

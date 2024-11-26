@@ -4,7 +4,17 @@ const Employee = require("../../models/Employee.model");
 
 module.exports.AddDocumentAddress = async (req, res) => {
   try {
-    const { empid, company_name, line1, line2, line3, country, state, city, zip } = req.body;
+    const {
+      empid,
+      company_name,
+      line1,
+      line2,
+      line3,
+      country,
+      state,
+      city,
+      zip
+    } = req.body;
 
     const existingAddress = await DocumentAddress.findOne({ company_name });
     if (existingAddress) {
@@ -54,7 +64,11 @@ module.exports.UpdateDocAddress = async (req, res) => {
 
     const updateFields = { company_name, line1, line2, line3 };
 
-    const updatedAddress = await DocumentAddress.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
+    const updatedAddress = await DocumentAddress.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
 
     if (!updatedAddress) {
       return res.status(404).json({
@@ -75,11 +89,15 @@ module.exports.deleteDocAddress = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(400).json({ message: "Missing 'id' field in the request body" });
+      return res
+        .status(400)
+        .json({ message: "Missing 'id' field in the request body" });
     }
     await DocumentAddress.findByIdAndDelete(id);
 
-    return res.status(200).json({ message: "Document Address deleted successfully" });
+    return res
+      .status(200)
+      .json({ message: "Document Address deleted successfully" });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

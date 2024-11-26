@@ -1,146 +1,183 @@
-<%- include('partials/header.ejs') %>
-    <!-- content start -->
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/head.ejs') %>
 
-    <div class="main">
-        <div class="d-flex head justify-content-between">
-            <h2 class="heading" id="roleNameHeading">
-                <i class="bi bi-arrow-left-short"></i>Resources
-            </h2>
+  <body>
+    <%- include('partials/header.ejs') %>
 
-            <div>
-                <button class="btn btn-add ml-auto" id="add_newResources" data-toggle="modal" data-target="#myModal">
-                    <a href="#" style="color: azure">Add New Resources</a>
+    <main id="main" class="main">
+      <section class="role-secation overflow-auto">
+        <div class="container-fluid">
+          <div
+            class="row justify-content-between align-items-center border-bottom-coustem gap-y25"
+          >
+            <div class="col-sm-6">
+              <div class="pagetitle">
+                <h2>
+                  <span><i class="fa-solid fa-arrow-left-long"></i></span>
+                  Resources
+                </h2>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="dispaly_coustem-type">
+                <button
+                  type="button"
+                  class="button_modal"
+                  data-bs-toggle="modal"
+                  data-bs-target="#staticBackdrop"
+                >
+                  Add New Resources
                 </button>
+              </div>
             </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <table
+                class="w-100 table table-striped table-bordered table-hover table-responsive"
+              >
+                <thead class="table_head text-center">
+                  <tr>
+                    <th width="70">Sr. No.</th>
+                    <th width="700">Existing Resources</th>
+                  </tr>
+                </thead>
+                <tbody class="table-body text-center">
+                  <% for(let i=0; i<newresourceslist.length; i++) { %>
+                  <tr>
+                    <td> <%= i + 1 %></td>
+                    <td><%= newresourceslist[i].resources.toLowerCase() %></td>
+                  </tr>
+                  <% } %>
+                 
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <form>
-            <div class="content" name="add_name" id="add_name">
-                <table id="roles" class="table table-striped add-button" style="width: 100%">
-                    <thead>
-                        <tr>
-                            <th class="text-center" style="border-radius: 30px 0px 0px 0px">
-                                Sr. No.
-                            </th>
-                            <th class="text-center"> Existing Resources</th>
+      </section>
+    </main>
 
+    <a
+      href="#"
+      class="back-to-top d-flex align-items-center justify-content-center"
+      ><i class="fa-solid fa-arrow-up"></i
+    ></a>
 
+    <%- include('partials/footer.ejs') %>
 
-                            <th class="text-center" style="border-radius: 0px 30px 0px 0px"></th>
-                        </tr>
-                    </thead>
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="staticBackdrop"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title fs-5 text-primary" id="exampleModalLabel">
+              Add New Resources
+            </h3>
+          </div>
+          <div class="modal-body">
+            <form id="">
+              <div class="form-main">
+                <div class="form-group mb-4">
+                  <label for="fname" class="mb-2 form_heading"
+                    >Resources Name :
+                  </label>
+                  <input
+                    type="text"
+                    id="resource_name"
+                    class="form-control input_flid"
+                    name="resource_name"
+                    onkeypress="validateInput(event)"
+                  />
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="button_modal_success" id="add_btn">Submit</button>
+                  <button type="button" class="btn_close" data-bs-dismiss="modal">
+                    Close
+                  </button>
+                </div>
+              </div>
 
-                    <tbody>
-                        <% for(let i=0; i<newresourceslist.length; i++) { %>
-                            <tr>
-                                <td class="text-center" width="5%">
-                                    <%= i + 1 %>
-                                </td>
-                                <td class="text-center" width="10%">
-                                    <%= newresourceslist[i].resources.toLowerCase() %>
-                                </td>
-
-
-                                <td class="text-center" width="5%">
-
-                                </td>
-                            </tr>
-                            <% } %>
-                    </tbody>
-
-
-
-                </table>
-
-            </div>
-        </form>
-
-
-
-        <%- include ('partials/footer.ejs') %>
+            </form>
+          </div>
+          
+        </div>
+      </div>
     </div>
 
-    <div class="modal fade" id="myModal" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="add_role_nameForm">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Add New Resources</h4>
-                    </div>
-                    <div class="m-2 form-main">
-                        <div class="form-group">
-                            <h6 for="fname" class="pb-2">Resources Name : </h6>
-                            <input type="text" id="resource_name" value="" class="form-control" name="resource_name"
-                                onkeypress="validateInput(event)">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <input id="add_btn" type="submit" class="form-control btnAddModal ml-1 w-25" value="Submit" />
-                        <button type="button" onclick="closeModal()" class="btn btnCloseModal btn-default"
-                            data-dismiss="modal">
-                            Close
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script> -->
-
-    <script>
-        function validateInput(event) {
-            var key = event.key;
-            var regex = /^[a-zA-Z]+$/;
-            if (!regex.test(key)) {
-                event.preventDefault();
-                alert("Please enter only alphabetic characters.");
-            }
+    <!-- modal -->
+  </body>
+  <script>
+    function validateInput(event) {
+        var key = event.key;
+        var regex = /^[a-zA-Z]+$/;
+        if (!regex.test(key)) {
+            event.preventDefault();
+            alert("Please enter only alphabetic characters.");
         }
-    </script>
+    }
+</script>
 
-    <!-- add resourcses -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const handleAddBtn = async () => {
-                const resourceNameInput = document.querySelector("#resource_name");
-                const resourceName = resourceNameInput.value.trim();
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+      const handleAddBtn = async () => {
+          const resourceNameInput = document.querySelector("#resource_name");
+          const resourceName = resourceNameInput.value.trim();
 
-                if (!resourceName) {
-                    alert("Please fill in the resource name.");
-                    return;
-                }
+          if (!resourceName) {
+              alert("Please fill in the resource name.");
+              return;
+          }
 
-                try {
-                    const response = await fetch("/admin/newrecourcesadd", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
+          try {
+              const response = await fetch("/newrecourcesadd", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                      
+                      resources: resourceName
 
-                            resources: resourceName
+                  }),
+              });
+
+              if (!response.ok) {
+                  if (response.status === 400) {
+                      const errorData = await response.json();
+                      alert(`${errorData.message || "Invalid input."}`);
+                  } else if (response.status === 500) {
+                      alert("Server error. Please try again later.");
+                  } else {
+                      alert(`Unexpected error: ${response.statusText}`);
+                  }
+                  return;
+              }
+
+              const responseData = await response.json();
+              alert(responseData.message || "Resource added successfully!");
+              
+              window.location.reload();
+
+          } catch (error) {
+              console.error("Error:", error);
+          }
+      };
+
+      const addBtn = document.querySelector("#add_btn");
+      addBtn.addEventListener("click", handleAddBtn);
+  });
 
 
-                        }),
-                    });
-
-
-                    if (response.status === 201) {
-                        window.location.reload();
-                    }
-
-                } catch (error) {
-                    console.error("Error:", error);
-                }
-            };
-
-            const addBtn = document.querySelector("#add_btn");
-            addBtn.addEventListener("click", handleAddBtn);
-        });
-
-
-    </script>
+</script>
+</html>

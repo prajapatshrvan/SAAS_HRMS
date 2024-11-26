@@ -2,10 +2,11 @@ const adminrole = require("../../controllers/admin/roleController");
 const { auth } = require("../../middleware/AdminauthMiddleware");
 
 const router = require("express").Router();
-router.get("/viewrole", adminrole.ViewRole);
+router.get("/role", auth, adminrole.ViewRole);
 router.get("/permission", auth, adminrole.Permission);
-router.get("/userprofile", adminrole.UserProfile);
+router.get("/userprofile", auth, adminrole.UserProfile);
 router.get("/actions", auth, adminrole.Actions);
+router.get("/getActions", auth, adminrole.getActions);
 router.get("/resourcesview", auth, adminrole.ResourcesView);
 router.post("/addrole", auth, adminrole.AddRole);
 router.post("/editinherits/:id", auth, adminrole.EditInherits);
@@ -16,7 +17,7 @@ router.post("/newactionsadd", auth, adminrole.NewAddActions);
 router.post("/editresources", auth, adminrole.EditResources);
 router.get("/resourceslist", auth, adminrole.ResourcesList);
 
-router.get("/resources", adminrole.Resources);
-router.get("/address", adminrole.documentAddressList);
+router.get("/resources", auth, adminrole.Resources);
+router.get("/address", auth, adminrole.documentAddressList);
 
 module.exports = router;
