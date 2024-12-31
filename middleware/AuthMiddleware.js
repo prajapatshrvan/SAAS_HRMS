@@ -73,7 +73,15 @@ const checkAccess = (resourceName, action) => {
   };
 };
 
+const checkRole = roles => (req, res, next) => {
+  if (!roles.includes(req.userRole)) {
+    return apiResponse(res, 403, "Access denied");
+  }
+  next();
+};
+
 module.exports = {
   auth,
-  checkAccess
+  checkAccess,
+  checkRole
 };

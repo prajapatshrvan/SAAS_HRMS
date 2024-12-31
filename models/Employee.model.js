@@ -5,225 +5,233 @@ const EmployeeSchema = new mongoose.Schema(
     employeeID: {
       type: String,
       unique: true,
-      required: false,
+      required: false
     },
     firstname: {
       type: String,
-      required: true,
+      required: true
     },
     middlename: {
       type: String,
-      required: false,
+      required: false
     },
     password: {
       type: String,
-      required: false,
+      required: false
     },
     lastname: {
       type: String,
-      required: false,
+      required: false
     },
     image: {
       type: String,
-      required: false,
+      required: false
     },
     documentDob: {
       type: String,
-      required: false,
+      required: false
     },
     originalDob: {
       type: String,
-      required: false,
+      required: false
     },
     gender: {
       type: String,
-      required: false,
+      required: false
     },
     email: {
       type: String,
-      required: true,
+      required: true
     },
     mobile_number: {
       type: String,
-      required: false,
+      required: false
+    },
+    profile: {
+      type: String,
+      required: false
     },
 
     joining_date: {
       type: String,
-      required: false,
+      required: false
     },
 
     emergency_number: {
       type: String,
-      required: false,
+      required: false
     },
     aadharcard_no: {
       type: Number,
-      required: false,
+      required: false
     },
     resetpassword: {
       type: Boolean,
-      default: false,
+      default: false
     },
     aadhar_image: {
       type: String,
-      required: false,
+      required: false
     },
     pancard_no: {
       type: String,
-      required: false,
+      required: false
     },
     cocuments: {
       type: mongoose.Schema.Types.Mixed,
-      required: false,
+      required: false
     },
     pan_image: {
       type: String,
-      required: false,
+      required: false
     },
     family_member_first_name: {
       type: String,
-      required: false,
+      required: false
     },
     family_member_last_name: {
       type: String,
-      required: false,
+      required: false
     },
     relationship: {
       type: String,
-      required: false,
+      required: false
     },
     family_member_dob: {
       type: String,
-      required: false,
+      required: false
     },
     family_member_phone: {
       type: String,
-      required: false,
+      required: false
     },
+
     family_member_email: {
       type: String,
-      required: false,
+      required: false
     },
+
     currentAddress: {
       line1: {
         type: String,
-        required: false,
+        required: false
       },
       line2: {
         type: String,
-        required: false,
+        required: false
       },
       line3: {
         type: String,
-        required: false,
+        required: false
       },
       city: {
         type: Number,
-        required: false,
+        required: false
       },
       state: {
         type: Number,
-        required: false,
+        required: false
       },
       zip: {
         type: Number,
-        required: false,
+        required: false
       },
       country: {
         type: Number,
-        required: false,
-      },
+        required: false
+      }
     },
 
     ParmanentAddress: {
       line1: {
         type: String,
-        required: false,
+        required: false
       },
       line2: {
         type: String,
-        required: false,
+        required: false
       },
       line3: {
         type: String,
-        required: false,
+        required: false
       },
       city: {
         type: Number,
-        required: false,
+        required: false
       },
       state: {
         type: Number,
-        required: false,
+        required: false
       },
       zip: {
         type: String,
-        required: false,
+        required: false
       },
       country: {
         type: Number,
-        required: false,
-      },
+        required: false
+      }
     },
     sameAddress: {
       type: Boolean,
-      default: false,
+      default: false
     },
     status: {
       type: String,
-      default: "pending",
+      default: "pending"
     },
     company_email: {
       type: String,
-      default: null,
+      default: null
     },
     department: {
       type: String,
-      default: null,
+      default: null
     },
     designation: {
       type: String,
-      default: null,
+      default: null
     },
 
     bankdetails: {
       bank_name: {
-        type: String,
+        type: String
       },
       account_no: {
-        type: String,
+        type: String
       },
       ifsc_code: {
-        type: String,
-      },
+        type: String
+      }
     },
+
     ctcDetails: {
       totalctc: String,
       monthlycompensation: String,
       hra: String,
       pf: String,
       insurance: String,
-      tax: String,
+      tax: String
     },
+
     worklocation: {
       country: Number,
       state: Number,
       city: Number,
-      zip: String,
+      zip: String
     },
+
     inherits: [String],
 
     token: [
       {
         type: String,
-        default: null,
-      },
-    ],
+        default: null
+      }
+    ]
   },
-
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 const Employee = mongoose.model("Employee", EmployeeSchema);

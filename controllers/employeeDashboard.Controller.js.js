@@ -38,6 +38,7 @@ module.exports.getWorkingHours = async (req, res) => {
         message: "Working hours not found for the employee"
       });
     }
+    
     const checkInTime = new Date(workingHours.checkInTime);
     const checkOutTime = new Date(workingHours.checkOutTime);
     const durationMs = checkOutTime - checkInTime;
@@ -103,42 +104,42 @@ module.exports.EmpCurrectMonthsData = async (req, res) => {
   }
 };
 
-module.exports.workingHoursList = async (req, res) => {
-  try {
-    const workinghoursList = await Workingtime.find().populate({
-      path: "empid",
-      select: "firstname lastname employeeID"
-    });
+// module.exports.workingHoursList = async (req, res) => {
+//   try {
+//     const workinghoursList = await Workingtime.find().populate({
+//       path: "empid",
+//       select: "firstname lastname employeeID"
+//     });
 
-    const formattedList = workinghoursList.map((item) => {
-      const checkInTime = new Date(item.checkInTime);
-      const checkOutTime = new Date(item.checkOutTime);
-      const durationMs = checkOutTime - checkInTime;
-      const hours = Math.floor(durationMs / (1000 * 60 * 60));
-      const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((durationMs % (1000 * 60)) / 1000);
-      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-      const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-      const formattedWorkingHours = `${hours}:${formattedMinutes}:${formattedSeconds}`;
-      return {
-        employeeID: item.empid.employeeID,
-        firstname: item.empid.firstname,
-        lastname: item.empid.lastname,
-        date: item.date,
-        workingHours: formattedWorkingHours
-      };
-    });
+//     const formattedList = workinghoursList.map((item) => {
+//       const checkInTime = new Date(item.checkInTime);
+//       const checkOutTime = new Date(item.checkOutTime);
+//       const durationMs = checkOutTime - checkInTime;
+//       const hours = Math.floor(durationMs / (1000 * 60 * 60));
+//       const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+//       const seconds = Math.floor((durationMs % (1000 * 60)) / 1000);
+//       const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+//       const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+//       const formattedWorkingHours = `${hours}:${formattedMinutes}:${formattedSeconds}`;
+//       return {
+//         employeeID: item.empid.employeeID,
+//         firstname: item.empid.firstname,
+//         lastname: item.empid.lastname,
+//         date: item.date,
+//         workingHours: formattedWorkingHours
+//       };
+//     });
 
-    return res.status(200).json({
-      workinghoursList: formattedList
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Internal Server Error"
-    });
-  }
-};
+//     return res.status(200).json({
+//       workinghoursList: formattedList
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// };
 
 module.exports.empdata = async (req, res) => {
   try {
@@ -156,134 +157,6 @@ module.exports.empdata = async (req, res) => {
 
     return res.status(200).json({
       empdata: empdata
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Internal Server Error"
-    });
-  }
-};
-
-module.exports.checkInAndCheckOut = async (req, res) => {
-  try {
-    const empId = req.user?.userObjectId;
-    const todayStart = new Date().setHours(0, 0, 0, 0);
-    const currentTime = new Date();
-
-    let existingDoc = await Workingtime.findOne({
-      empid: empId,
-      date: { $gte: todayStart }
-    });
-
-    let message, status;
-    let breakHours = 0,
-      breakMinutes = 0,
-      breakSeconds = 0,
-      overtimeMinutes = 0;
-
-    if (existingDoc) {
-      if (!existingDoc.checkOutTime) {
-        existingDoc.checkOutTime = currentTime;
-        const checkInTime = moment(existingDoc.checkInTime);
-        const checkOutTime = moment(currentTime);
-        const duration = moment.duration(checkOutTime.diff(checkInTime));
-        const hours = Math.floor(duration.asHours());
-        const minutes = duration.minutes();
-        const seconds = duration.seconds();
-        existingDoc.hours += hours;
-        existingDoc.minutes += minutes;
-        existingDoc.seconds += seconds;
-
-        let totalSeconds = existingDoc.seconds + existingDoc.minutes * 60 + existingDoc.hours * 3600;
-        existingDoc.hours = Math.floor(totalSeconds / 3600);
-        totalSeconds %= 3600;
-        existingDoc.minutes = Math.floor(totalSeconds / 60);
-        existingDoc.seconds = totalSeconds % 60;
-
-        const totalMinutes = existingDoc.hours * 60 + existingDoc.minutes;
-        overtimeMinutes = totalMinutes > 450 ? totalMinutes - 450 : 0;
-        existingDoc.overtimeMinutes = overtimeMinutes;
-
-        await existingDoc.save();
-        message = "Checked out successfully.";
-        status = "checkedOut";
-      } else {
-        const lastCheckOutTime = moment(existingDoc.checkOutTime);
-        const currentCheckInTime = moment(currentTime);
-        if (lastCheckOutTime.isSame(currentCheckInTime, "day")) {
-          const breakDuration = moment.duration(currentCheckInTime.diff(lastCheckOutTime));
-          breakHours = Math.floor(breakDuration.asHours());
-          breakMinutes = breakDuration.minutes();
-          breakSeconds = breakDuration.seconds();
-          existingDoc.breakHours += breakHours;
-          existingDoc.breakMinutes += breakMinutes;
-          existingDoc.breakSeconds += breakSeconds;
-          let totalBreakSeconds =
-            existingDoc.breakSeconds + existingDoc.breakMinutes * 60 + existingDoc.breakHours * 3600;
-          existingDoc.breakHours = Math.floor(totalBreakSeconds / 3600);
-          totalBreakSeconds %= 3600;
-          existingDoc.breakMinutes = Math.floor(totalBreakSeconds / 60);
-          existingDoc.breakSeconds = totalBreakSeconds % 60;
-        }
-        existingDoc.checkInTime = currentTime;
-        existingDoc.checkOutTime = null;
-
-        await existingDoc.save();
-        message = "Checked in successfully.";
-        status = "checkedIn";
-      }
-    } else {
-      const newWorkingtime = new Workingtime({
-        empid: empId,
-        checkInTime: currentTime,
-        date: todayStart,
-        breakHours: breakHours,
-        breakMinutes: breakMinutes,
-        breakSeconds: breakSeconds,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-        overtimeMinutes: 0
-      });
-      existingDoc = await newWorkingtime.save();
-
-      message = "Checked in successfully.";
-      status = "checkedIn";
-    }
-
-    const totalBreakSeconds = existingDoc.breakHours * 3600 + existingDoc.breakMinutes * 60 + existingDoc.breakSeconds;
-    const totalBreakMinutes = existingDoc.breakHours * 60 + existingDoc.breakMinutes;
-
-    const totalWorkedMinutes = existingDoc.hours * 60 + existingDoc.minutes;
-    const remainingMinutes = 540 - (totalWorkedMinutes + totalBreakMinutes);
-    const remainingHours = Math.floor(remainingMinutes / 60);
-    const remainingMins = remainingMinutes % 60;
-    const remainingSecs = 0;
-
-    let overtimeHours = Math.floor(existingDoc.overtimeMinutes / 60);
-    let overtimeMins = existingDoc.overtimeMinutes % 60;
-    let overtimeSecs = 0;
-
-    return res.status(200).json({
-      message: message,
-      status: status,
-      overtime: {
-        hours: overtimeHours,
-        minutes: overtimeMins,
-        seconds: overtimeSecs
-      },
-      remainingTime: {
-        hours: remainingHours,
-        minutes: remainingMins,
-        seconds: remainingSecs
-      },
-      breakTime: {
-        hours: existingDoc.breakHours,
-        minutes: existingDoc.breakMinutes,
-        seconds: existingDoc.breakSeconds,
-        totalSeconds: totalBreakSeconds
-      }
     });
   } catch (error) {
     console.log(error);
@@ -339,3 +212,342 @@ module.exports.salarydetails = async (req, res) => {
     });
   }
 };
+
+module.exports.checkInAndCheckOut = async (req, res) => {
+  try {
+    const empId = req.user?.userObjectId;
+    const todayStart = new Date(new Date().setHours(0, 0, 0, 0)); 
+    const currentTime = new Date();
+
+    let workingTime = await Workingtime.findOne({
+      empid: empId,
+      date: { $gte: todayStart },
+    });
+
+    if (!workingTime) {
+      workingTime = new Workingtime({
+        empid: empId,
+        date: todayStart,
+        check: [{ checkin: currentTime }],
+      });
+
+      await workingTime.save();
+      return res.status(200).json({
+        message: "Checked in successfully.",
+        status: "checkedIn",
+        workingTime,
+      });
+    }
+
+    if (!Array.isArray(workingTime.check)) {
+      workingTime.check = [];
+    }
+
+    const latestCheck = workingTime.check[workingTime.check.length - 1];
+
+    if (latestCheck && !latestCheck.checkout) {
+      // Handle checkout
+      latestCheck.checkout = currentTime;
+
+      // Calculate working time and break time
+      const totalWorkedMinutes = workingTime.check.reduce((total, item) => {
+        if (item.checkin && item.checkout) {
+          const duration = moment.duration(
+            moment(item.checkout).diff(moment(item.checkin))
+          );
+          total += duration.asMinutes();
+        }
+        return total;
+      }, 0);
+
+      const totalBreakMinutes = workingTime.breaks?.reduce((total, breakItem) => {
+        if (breakItem.breakStart && breakItem.breakEnd) {
+          const duration = moment.duration(
+            moment(breakItem.breakEnd).diff(moment(breakItem.breakStart))
+          );
+          total += duration.asMinutes();
+        }
+        return total;
+      }, 0) || 0;
+
+      workingTime.overtime = Math.max(0, totalWorkedMinutes - 450);
+      workingTime.worktime = Math.max(0, totalWorkedMinutes - totalBreakMinutes);
+      workingTime.breaktime = totalBreakMinutes;
+
+      await workingTime.save();
+
+      return res.status(200).json({
+        message: "Checked out successfully.",
+        status: "checkedOut",
+        workingTime,
+      });
+    }
+
+    // Ensure no more than 4 check-ins/check-outs
+    if (workingTime.check.length >= 4) {
+      return res.status(400).json({
+        message: "Maximum 4 check-in/check-out pairs are allowed per day.",
+      });
+    }
+
+    // Handle check-in
+    workingTime.check.push({ checkin: currentTime });
+    await workingTime.save();
+
+    return res.status(200).json({
+      message: "Checked in successfully.",
+      status: "checkedIn",
+      workingTime,
+    });
+  } catch (error) {
+    console.error("Error in checkInAndCheckOut:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.updateWorkingTime = async (req, res) => {
+  try {
+    const { empid, date, newCheckin, newCheckout } = req.body;
+
+    // Validate if new check-in time is provided
+    if (!newCheckin) {
+      return res.status(400).json({
+        message: "New check-in time is required.",
+      });
+    }
+
+    const startOfDay = new Date(new Date(date).setUTCHours(0, 0, 0, 0));
+    let workingTime = await Workingtime.findOne({
+      empid: empid,
+      date: { $gte: startOfDay },
+    });
+
+    if (!workingTime) {
+      workingTime = new Workingtime({
+        empid: empid,
+        date: startOfDay,
+        check: [], 
+      });
+    }
+
+    workingTime.check = [
+      {
+        checkin: new Date(newCheckin),
+        checkout: newCheckout ? new Date(newCheckout) : null,
+      },
+    ];
+
+
+    let totalWorkedMinutes = 0;
+    if (newCheckout) {
+      const checkinTime = moment(newCheckin);
+      const checkoutTime = moment(newCheckout);
+      const duration = moment.duration(checkoutTime.diff(checkinTime));
+      totalWorkedMinutes = duration.asMinutes();
+    }
+
+    workingTime.overtime = Math.max(0, totalWorkedMinutes - 450);
+
+    await workingTime.save();
+
+    return res.status(200).json({
+      message: "Working time updated successfully, and previous entries removed.",
+      workingTime,
+    });
+  } catch (error) {
+    console.error("Error in updateWorkingTime:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.manageBreak = async (req, res) => {
+  try {
+    const { empid, date } = req.body;
+
+    if (!empid || !date) {
+      return res.status(400).json({
+        message: "Employee ID and date are required.",
+      });
+    }
+
+    const currentTime = new Date();
+    const startOfDay = new Date(new Date(date).setUTCHours(0, 0, 0, 0));
+
+    let workingTime = await Workingtime.findOne({
+      empid: empid,
+      date: { $gte: startOfDay },
+    });
+
+    if (!workingTime) {
+      workingTime = new Workingtime({
+        empid: empid,
+        date: startOfDay,
+        check: [],
+        breaks: [],
+      });
+    }
+
+    // Check for an ongoing break
+    const ongoingBreak = workingTime.breaks.find(
+      (breakItem) => !breakItem.breakEnd
+    );
+
+    if (ongoingBreak) {
+      // End the ongoing break
+      ongoingBreak.breakEnd = currentTime;
+
+      // Calculate total break duration in minutes (optional)
+      const breakDuration = moment
+        .duration(moment(ongoingBreak.breakEnd).diff(moment(ongoingBreak.breakStart)))
+        .asMinutes();
+
+      await workingTime.save();
+
+      return res.status(200).json({
+        message: "Break ended successfully.",
+        breakDuration: `${breakDuration} minutes`,
+        workingTime,
+      });
+    }
+
+    // Start a new break
+    workingTime.breaks.push({
+      breakStart: currentTime,
+    });
+
+    await workingTime.save();
+
+    return res.status(200).json({
+      message: "Break started successfully.",
+      workingTime,
+    });
+  } catch (error) {
+    console.error("Error in manageBreak:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.workingHoursList = async (req, res) => {
+  try {
+    const { empId, date } = req.query; 
+    const userRole = req.user?.role; 
+    const currentUserId = req.user?.userObjectId;
+    const query = {};
+
+    if (empId) {
+      query.empid = empId;
+    }
+
+    if (date) {
+      const dayStart = new Date(new Date(date).setHours(0, 0, 0, 0));
+      const dayEnd = new Date(new Date(date).setHours(23, 59, 59, 999));
+      query.date = { $gte: dayStart, $lte: dayEnd };
+    } else {
+      const todayStart = new Date(new Date().setUTCHours(0, 0, 0, 0));
+      query.date = { $gte: todayStart };
+    }
+
+    if (userRole !== 'ADMIN' && userRole !== 'HR') {
+      query.empid = currentUserId;
+    }
+
+    const workingTimeData = await Workingtime.find(query).populate({
+      path: 'empid',
+      select: 'firstname lastname employeeID',
+    });
+
+    if (!workingTimeData || workingTimeData.length === 0) {
+      return res.status(404).json({
+        message: "No working time data found for the given criteria.",
+      });
+    }
+
+    const formattedData = workingTimeData.map((item) => {
+      const checkDetails = item.check.map((check) => {
+        const checkIn = check.checkin ? new Date(check.checkin).toISOString() : null;
+        const checkOut = check.checkout ? new Date(check.checkout).toISOString() : null;
+
+        return {
+          checkIn,
+          checkOut,
+        };
+      });
+
+      return {
+        employeeID: item.empid?.employeeID || "N/A",
+        firstname: item.empid?.firstname || "N/A",
+        lastname: item.empid?.lastname || "N/A",
+        date: item.date,
+        checkDetails,
+        overtime: item.overtime || 0,
+        worktime: item.worktime || 0,
+        breaktime: item.breaktime || 0,
+      };
+    });
+
+    return res.status(200).json({
+      message: "Working time data retrieved successfully.",
+      data: formattedData,
+    });
+  } catch (error) {
+    console.error("Error in getCheckInData:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.BirthdaysCurrentDay = async (req, res) => {
+  try {
+    const day = new Date().getDate();
+    const month = new Date().getMonth() + 1; 
+    const birthday = await Employee.find({
+      status : "completed",
+      $expr: {
+        $and: [
+          { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, month] },
+          { $eq: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, day] }
+        ]
+      }
+    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1});
+
+    return res.status(200).json({
+      data: birthday
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+module.exports.BirthdaysCurrentMonth = async (req, res) => {
+  try {
+    const currentMonth = new Date().getMonth() + 1; 
+    const birthdays = await Employee.find({
+      $expr: {
+        $eq: [
+          { $month: { $dateFromString: { dateString: "$originalDob" } } },
+          currentMonth
+        ]
+      }
+    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1});
+
+    return res.status(200).json({
+      data: birthdays
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
+
+
+
+
+
+
+
+

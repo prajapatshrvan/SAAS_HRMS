@@ -1,52 +1,46 @@
 const mongoose = require("mongoose");
 
-const WorkingHoursSchema = new mongoose.Schema({
-  empid: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Employee",
-    required: true,
+const WorkingtimeSchema = new mongoose.Schema(
+  {
+    updatedby: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee"
+    },
+    empid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      required: true
+    },
+    date: {
+      type: Date,
+      required: true
+    },
+    check: [
+      {
+        _id: false,
+        checkin: {
+          type: Date,
+          required: true
+        },
+        checkout: {
+          type: Date
+        }
+      }
+    ],
+    breaks: [
+      {
+        breakStart: { type: Date, required: true },
+        breakEnd: { type: Date },
+        _id: false
+      }
+    ],
+    overtime: { type: Number, default: 0 },
+    breaktime: { type: Number, default: 0 },
+    worktime: { type: Number, default: 0 }
   },
-  checkInTime: {
-    type: Date,
-    required: true,
-  },
-  checkOutTime: {
-    type: Date,
-  },
-  date: {
-    type: Date,
-    required: true,
-  },
-  breakHours: {
-    type: Number,
-    default: 0,
-  },
-  breakMinutes: {
-    type: Number,
-    default: 0,
-  },
-  breakSeconds: {
-    type: Number,
-    default: 0,
-  },
-  hours: {
-    type: Number,
-    default: 0,
-  },
-  minutes: {
-    type: Number,
-    default: 0,
-  },
-  seconds: {
-    type: Number,
-    default: 0,
-  },
-  overtimeMinutes: {
-    type: Number,
-    default: 0,
-  },
-});
+  {
+    timestamps: true
+  }
+);
 
-const Workingtime = mongoose.model("Workingtime", WorkingHoursSchema);
-
-module.exports = Workingtime;
+module.exports = mongoose.model("Workingtime", WorkingtimeSchema);

@@ -6,7 +6,12 @@ const { response } = require("express");
 
 module.exports.createOffboarding = async (req, res) => {
   try {
-    const { resignation_type, notice_date, resignation_date, reason } = req.body;
+    const {
+      resignation_type,
+      notice_date,
+      resignation_date,
+      reason
+    } = req.body;
     const cooling_period = 30;
     const empid = req.user.userObjectId;
 
@@ -52,7 +57,13 @@ module.exports.createOffboarding = async (req, res) => {
 module.exports.Status = async (req, res) => {
   try {
     const { id, status } = req.body;
-    let statuses = ["approved", "rejected", "cancelled", "InNoticePeriod", "completed"];
+    let statuses = [
+      "approved",
+      "rejected",
+      "cancelled",
+      "InNoticePeriod",
+      "completed"
+    ];
 
     const data = await Offboarding.findById(id);
     if (!data) {
@@ -98,17 +109,21 @@ module.exports.offBoardingList = async (req, res) => {
   try {
     let offboarding;
     if (offboarding_status) {
-      offboarding = await Offboarding.find({ offboarding_status: offboarding_status }).populate({
+      offboarding = await Offboarding.find({
+        offboarding_status: offboarding_status
+      }).populate({
         path: "empid",
-        select: "employeeID firstname middlename lastname image email mobile_number"
+        select:
+          "employeeID firstname middlename lastname image email mobile_number"
       });
     } else {
       offboarding = await Offboarding.find().sort({ createdAt: -1 });
     }
-    const modifiedOffboardingList = offboarding.map((item) => {
+    const modifiedOffboardingList = offboarding.map(item => {
       const newItem = { ...item._doc };
       if (newItem.empid) {
-        newItem.employee_name = `${newItem.empid.firstname} ${newItem.empid.lastname}`;
+        newItem.employee_name = `${newItem.empid.firstname} ${newItem.empid
+          .lastname}`;
         newItem.employeeID = newItem.empid.employeeID;
         newItem.image = newItem.empid.image;
         newItem.email = newItem.empid.email;
@@ -134,7 +149,8 @@ module.exports.offboardingView = async (req, res) => {
     const { id } = req.body;
     const viewOffboarding = await Offboarding.findOne({ _id: id }).populate({
       path: "empid",
-      select: "firstname middlename lastname employeeID company_email department designation"
+      select:
+        "firstname middlename lastname employeeID company_email department designation"
     });
     return res.status(200).json({
       viewOffboarding: viewOffboarding

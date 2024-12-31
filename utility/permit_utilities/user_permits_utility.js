@@ -5,7 +5,7 @@ async function getResourcesForUser(userRoleMapping) {
   const cachedPermissions = cache.get(userRoleMapping.userId);
 
   if (cachedPermissions) {
-    console.log("cachedPermissions ** for user Id : ", userRoleMapping.userId, cachedPermissions);
+    // console.log("cachedPermissions ** for user Id : ", userRoleMapping.userId, cachedPermissions);
     return cachedPermissions;
   }
 
@@ -29,7 +29,7 @@ async function getResourcesForUser(userRoleMapping) {
 
   function traverse(roleName) {
     if (visitedRoles.has(roleName)) {
-      console.warn(`Cyclic dependency detected for role: ${roleName}`);
+      // console.warn(`Cyclic dependency detected for role: ${roleName}`);
       return;
     }
 

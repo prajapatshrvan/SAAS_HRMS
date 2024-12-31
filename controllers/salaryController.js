@@ -32,18 +32,33 @@ module.exports.salaryList = async (req, res) => {
       firstDateOfMonth = new Date(yearInt, monthInt, 1).toISOString();
       lastDateOfMonth = new Date(yearInt, monthInt + 1, 0).toISOString();
     } else {
-      firstDateOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
-      lastDateOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString();
+      firstDateOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      ).toISOString();
+      lastDateOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0
+      ).toISOString();
     }
 
     let salaryList;
-    if (req.role_name === "ADMIN" || req.role_name === "SUPERADMIN" || req.role_name === "HR") {
+    if (
+      req.role_name === "ADMIN" ||
+      req.role_name === "SUPERADMIN" ||
+      req.role_name === "HR"
+    ) {
       salaryList = await Salary.find({
         date: {
           $gte: firstDateOfMonth,
           $lte: lastDateOfMonth
         }
-      }).populate({ path: "empid", select: "firstname lastname employeeID image" });
+      }).populate({
+        path: "empid",
+        select: "firstname lastname employeeID image"
+      });
     } else {
       salaryList = await Salary.find({
         empid: req.user.userObjectId,
@@ -51,10 +66,13 @@ module.exports.salaryList = async (req, res) => {
           $gte: firstDateOfMonth,
           $lte: lastDateOfMonth
         }
-      }).populate({ path: "empid", select: "firstname lastname employeeID image" });
+      }).populate({
+        path: "empid",
+        select: "firstname lastname employeeID image"
+      });
     }
 
-    const newData = salaryList.map((salary) => {
+    const newData = salaryList.map(salary => {
       const { empid, ...rest } = salary.toObject();
       if (!empid) {
         return {
@@ -128,7 +146,10 @@ module.exports.updatedSalary = async (req, res) => {
 module.exports.UpdateSalarystatus = async (req, res) => {
   try {
     const { id } = req.body;
-    const updateStatus = await Salary.updateMany({ _id: { $in: id } }, { $set: { salary_status: "approved" } });
+    const updateStatus = await Salary.updateMany(
+      { _id: { $in: id } },
+      { $set: { salary_status: "approved" } }
+    );
     return res.status(200).json({
       message: "Salary statuses updated successfully",
       success: true,
@@ -153,9 +174,14 @@ module.exports.PaySalary = async (req, res) => {
     }
 
     for (const salaryId of id) {
-      let salary = await Salary.findOne({ salary_status: "approved", _id: salaryId });
+      let salary = await Salary.findOne({
+        salary_status: "approved",
+        _id: salaryId
+      });
       if (salary) {
-        await Salary.findByIdAndUpdate(salary._id, { $set: { payment_status: true } });
+        await Salary.findByIdAndUpdate(salary._id, {
+          $set: { payment_status: true }
+        });
       }
     }
 
@@ -177,7 +203,10 @@ module.exports.Updatetatus = async (req, res) => {
     const statuss = ["hold", "edited"];
 
     if (statuss.includes(status)) {
-      const updateStatus = await Salary.updateMany({ _id: id }, { $set: { salary_status: status } });
+      const updateStatus = await Salary.updateMany(
+        { _id: id },
+        { $set: { salary_status: status } }
+      );
 
       return res.status(200).json({
         message: "salary status update successful",
@@ -211,7 +240,15 @@ module.exports.trasitionHistoryList = async (req, res) => {
       lastDateOfLastMonth = new Date(currentYear - 1, 11, 31, 23, 59, 59, 999);
     } else {
       firstDateOfLastMonth = new Date(currentYear, currentMonth - 1, 1);
-      lastDateOfLastMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+      lastDateOfLastMonth = new Date(
+        currentYear,
+        currentMonth,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
     }
 
     const transionhistorie = await adSalaryTransition.find({
@@ -247,7 +284,9 @@ module.exports.createSalary = async (req, res) => {
     const existingSalary = await Salary.findOne({ month: Month, year: Year });
 
     if (existingSalary) {
-      return res.status(400).json({ message: `Salary for ${Month}-${Year} Already Created.` });
+      return res
+        .status(400)
+        .json({ message: `Salary for ${Month}-${Year} Already Created.` });
     }
 
     const employees = await Employee.find({ status: "completed" });
@@ -256,7 +295,9 @@ module.exports.createSalary = async (req, res) => {
     let unpaidLeave = 0;
     // const startDate = moment(`${Year}-${Month}-01`).startOf("month");
     // const endDate = moment(startDate).endOf("month");
-    const startDate = moment(`${Year}-${Month}-26`).subtract(1, "month").startOf("day");
+    const startDate = moment(`${Year}-${Month}-26`)
+      .subtract(1, "month")
+      .startOf("day");
     const endDate = moment(`${Year}-${Month}-25`).endOf("day");
     const currentDate = moment().format("YYYY-MM-DD");
 
@@ -267,7 +308,10 @@ module.exports.createSalary = async (req, res) => {
         status: "approved",
         start_date: { $gte: startDate, $lte: endDate }
       });
-      const totalLeaveDays = leaves.reduce((acc, curr) => acc + curr.leave_days, 0);
+      const totalLeaveDays = leaves.reduce(
+        (acc, curr) => acc + curr.leave_days,
+        0
+      );
 
       let remainingDays = monthdays - unpaidLeave;
 
@@ -275,38 +319,37 @@ module.exports.createSalary = async (req, res) => {
         unpaidLeave = totalLeaveDays - paidLeave;
       }
 
-      const totalGrossSalary = parseFloat(emp.ctcDetails.monthlycompensation) || 0;
+      const totalGrossSalary =
+        parseFloat(emp.ctcDetails.monthlycompensation) || 0;
       const countParDaySalary = (totalGrossSalary / monthdays).toFixed(2);
       const leaveDeduction = countParDaySalary * unpaidLeave;
       const grossSalary = totalGrossSalary - leaveDeduction;
 
-      const basicSalary = ((grossSalary * 30) / 100).toFixed(2);
-      const hra = ((grossSalary * 25) / 100).toFixed(2);
-      const ta = ((grossSalary * 10) / 100).toFixed(2);
-      const da = ((grossSalary * 10) / 100).toFixed(2);
-      const other = ((grossSalary * 25) / 100).toFixed(2);
+      const basicSalary = (grossSalary * 30 / 100).toFixed(2);
+      const hra = (grossSalary * 25 / 100).toFixed(2);
+      const ta = (grossSalary * 10 / 100).toFixed(2);
+      const da = (grossSalary * 10 / 100).toFixed(2);
+      const other = (grossSalary * 25 / 100).toFixed(2);
 
-      const netSalary = (
-        parseFloat(basicSalary) +
+      const netSalary = (parseFloat(basicSalary) +
         parseFloat(hra) +
         parseFloat(ta) +
         parseFloat(da) +
-        parseFloat(other)
-      ).toFixed(2);
+        parseFloat(other)).toFixed(2);
 
       const pf = (totalGrossSalary * 0.3 * 0.24).toFixed(2);
       let esi = 0;
       if (totalGrossSalary < 21000) {
-        esi = ((grossSalary * 4) / 100).toFixed(2);
+        esi = (grossSalary * 4 / 100).toFixed(2);
       }
 
-      const totalnetSalary = (
-        parseFloat(netSalary) -
+      const totalnetSalary = (parseFloat(netSalary) -
         parseFloat(pf) -
         parseFloat(esi) +
-        parseFloat(emp.bonus || 0)
-      ).toFixed(2);
-      const totaldeduction = (parseFloat(pf) + parseFloat(esi) + parseFloat(leaveDeduction)).toFixed(2);
+        parseFloat(emp.bonus || 0)).toFixed(2);
+      const totaldeduction = (parseFloat(pf) +
+        parseFloat(esi) +
+        parseFloat(leaveDeduction)).toFixed(2);
 
       const salary = new Salary({
         empid: emp._id,
@@ -348,7 +391,10 @@ module.exports.createSalary = async (req, res) => {
       });
       await salary.save();
 
-      const advanceSalary = await AdvanceSalary.findOne({ empid: emp._id, status: "pending" });
+      const advanceSalary = await AdvanceSalary.findOne({
+        empid: emp._id,
+        status: "pending"
+      });
       if (advanceSalary) {
         let emiAmount = advanceSalary.emi_amount;
         let instalment = advanceSalary.instalment;
@@ -407,8 +453,12 @@ module.exports.SalarySlip = async (req, res) => {
     }
 
     const logo = await Logo.findOne({}).select("logo_image");
-    const address = await DocumentAddress.findOne({}).select("line1 line2 line3 country state city zip");
-    const netSalaryInWords = capitalizeFirstLetter(numberToWords.toWords(salaryslip.totalnetsalary));
+    const address = await DocumentAddress.findOne({}).select(
+      "line1 line2 line3 country state city zip"
+    );
+    const netSalaryInWords = capitalizeFirstLetter(
+      numberToWords.toWords(salaryslip.totalnetsalary)
+    );
 
     function capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
@@ -502,12 +552,12 @@ module.exports.SalarySlip = async (req, res) => {
       <div class="salary-slip">
         <div class="log">
           <div>
-            <img src="${process.env.HOST}/${logo ? logo.logo_image : " "}" width="67%" alt="Logo">
+            <img src="${process.env.HOST}/${logo
+      ? logo.logo_image
+      : " "}" width="67%" alt="Logo">
           </div>
           <div class="address">
-            ${address.line1} ${address.line2} ${address.line3} ${address.city}, ${address.state} ${address.zip}, ${
-      address.country
-    }
+            ${address.line1} ${address.line2} ${address.line3} ${address.city}, ${address.state} ${address.zip}, ${address.country}
         </div>
         </div>
         <h1>Payslip for The Month of ${monthName} ${salaryslip.year}</h1>
@@ -638,7 +688,12 @@ module.exports.SalarySlip = async (req, res) => {
 
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-dev-shm-usage"]
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage"
+      ]
     });
 
     const page = await browser.newPage();
@@ -648,7 +703,10 @@ module.exports.SalarySlip = async (req, res) => {
     await browser.close();
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'attachment; filename="SalarySlip.pdf"');
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="SalarySlip.pdf"'
+    );
     res.send(pdfBuffer);
   } catch (error) {
     console.error(error.message);

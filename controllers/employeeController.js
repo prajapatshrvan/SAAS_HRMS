@@ -72,7 +72,8 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         relationship,
         family_member_dob,
         family_member_phone,
-        family_member_email
+        family_member_email,
+        profile
       } = req.body;
 
       // Capitalize function for first letters
@@ -183,7 +184,8 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         relationship,
         family_member_dob,
         family_member_phone,
-        family_member_email
+        family_member_email,
+        profile
       });
 
       const data = await employee.save();
@@ -323,123 +325,7 @@ module.exports.updateEmployee = async (req, res, next) => {
   }
 };
 
-// module.exports.updateEmployee = async (req, res, next) => {
-//   try {
-//     updateupload(req, res, async (err) => {
-//       if (err) {
-//         console.log(err);
-//         return res.status(400).json({ error: "File upload failed", err });
-//       }
 
-//       const {
-//         empid,
-//         firstname,
-//         middlename,
-//         lastname,
-//         documentDob,
-//         originalDob,
-//         gender,
-//         email,
-//         mobile_number,
-//         emergency_number,
-//         aadharcard_no,
-//         pancard_no,
-//         family_member_first_name,
-//         family_member_last_name,
-//         relationship,
-//         family_member_dob,
-//         family_member_phone,
-//         family_member_email
-//       } = req.body;
-
-//       const emp = await Employee.findOne({ _id: empid });
-//       if (!emp) {
-//         return res.status(404).json({ errors: "Employee not found" });
-//       }
-
-//       if (emp.email !== email) {
-//         const emailExist = await Employee.findOne({ email });
-//         if (emailExist) {
-//           return res.status(404).json({ errors: "Email already exist" });
-//         }
-//       }
-//       if (emp.aadharcard_no !== Number(aadharcard_no)) {
-//         const aadharExist = await Employee.findOne({ aadharcard_no });
-//         if (aadharExist) {
-//           return res.status(404).json({ errors: "Aadhar already exist" });
-//         }
-//       }
-
-//       if (emp.pancard_no !== pancard_no) {
-//         const panExist = await Employee.findOne({ pancard_no });
-//         if (panExist) {
-//           return res.status(404).json({ errors: "Pancard no. already exist" });
-//         }
-//       }
-
-//       const employeeID = emp.employeeID;
-//       const directoryPath = join(process.cwd(), `uploads/${employeeID}`);
-
-//       let updatePayload = {
-//         firstname,
-//         middlename,
-//         lastname,
-//         documentDob,
-//         originalDob,
-//         gender,
-//         email,
-//         mobile_number,
-//         emergency_number,
-//         aadharcard_no,
-//         pancard_no,
-//         family_member_first_name,
-//         family_member_last_name,
-//         relationship,
-//         family_member_dob,
-//         family_member_phone,
-//         family_member_email
-//       };
-
-//       if (req.files.image && req.files.image[0]) {
-//         if (emp.image) {
-//           const imagepath = `${directoryPath}/${emp.image.slice(9 + emp.employeeID.length)}`;
-//           if (fs.existsSync(imagepath)) {
-//             fs.unlinkSync(imagepath);
-//           }
-//         }
-
-//         updatePayload.image = `uploads/${employeeID}/${req.files.image[0].filename}`;
-//       }
-
-//       if (req.files.aadhar_image && req.files.aadhar_image[0]) {
-//         if (emp.aadhar_image) {
-//           const imagepath = `${directoryPath}/${emp.aadhar_image.slice(9 + emp.employeeID.length)}`;
-//           if (fs.existsSync(imagepath)) {
-//             fs.unlinkSync(imagepath);
-//           }
-//         }
-//         updatePayload.aadhar_image = `uploads/${employeeID}/${req.files.aadhar_image[0].filename}`;
-//       }
-
-//       if (req.files.pan_image && req.files.pan_image[0]) {
-//         if (emp.pan_image) {
-//           const imagepath = `${directoryPath}/${emp.pan_image.slice(9 + emp.employeeID.length)}`;
-//           if (fs.existsSync(imagepath)) {
-//             fs.unlinkSync(imagepath);
-//           }
-//         }
-//         updatePayload.pan_image = `uploads/${employeeID}/${req.files.pan_image[0].filename}`;
-//       }
-
-//       const data = await Employee.findByIdAndUpdate(empid, { $set: updatePayload });
-
-//       return res.status(200).json({ data, message: "Employee details updated successfully" });
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: "Failed to update Employee" });
-//   }
-// };
 
 module.exports.EmployeeAddress = async (req, res, next) => {
   try {
@@ -470,8 +356,6 @@ module.exports.EmployeeAddress = async (req, res, next) => {
         return next("Something went wrong");
       }
 
-      // Employee.updateOne
-      // const newEmpAddress = await EmpAddresh.create(req.body);
     }
   } catch (error) {
     console.log(error);
@@ -481,7 +365,7 @@ module.exports.EmployeeAddress = async (req, res, next) => {
     });
   }
 };
-
+  
 // documentupload multer
 const storages = multer.diskStorage({
   destination: async (req, file, cb) => {
