@@ -35,7 +35,6 @@ module.exports.candidateAddressDetails = async (req, res, next) => {
   if (data && data?.currentAddress?.city) {
     nextPage = true;
   }
-
   res.status(200).send({ data, nextPage });
 };
 

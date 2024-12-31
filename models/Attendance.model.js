@@ -3,25 +3,25 @@ const mongoose = require("mongoose");
 const AttendanceSchema = new mongoose.Schema(
   {
     updateby: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId
     },
     empid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
-      required: true,
+      required: true
     },
     date: {
       type: Date,
-      required: true,
+      required: true
     },
     status: {
       type: Boolean,
       default: true,
-      required: true,
-    },
+      required: true
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 module.exports = mongoose.model("Attendance", AttendanceSchema);

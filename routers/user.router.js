@@ -1,15 +1,16 @@
 const user = require("../controllers/authController");
-const { auth } = require("../middleware/AuthMiddleware");
+const { auth, checkRole } = require("../middleware/AuthMiddleware");
 const {
   attendance,
   updateAttendance,
   attendanceReport,
   attendanceWeekReport,
   todayAttendanceData,
-  TotalEmployee
+  TotalEmployee,
+  employeeAttendanceReport,
+  attendanceReportTesting
 } = require("../controllers/attendanceController.js");
 const router = require("express").Router();
-
 router.post("/register", user.register);
 router.post("/login", user.employeeLogin);
 // router.post("/login", user.userLogin);
@@ -27,6 +28,8 @@ router.get("/attendance", auth, attendanceReport);
 router.get("/week_attendance", auth, attendanceWeekReport);
 router.get("/oneday_attendance", auth, todayAttendanceData);
 router.get("/employeecount", auth, TotalEmployee);
+router.get("/emp_attendance", auth, employeeAttendanceReport);
+router.get("/emp_attendance_report_test", auth, attendanceReportTesting);
 
 router.get("/roles", auth, user.ViewRoleApi);
 

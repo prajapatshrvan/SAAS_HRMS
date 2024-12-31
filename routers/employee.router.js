@@ -4,6 +4,7 @@ const {
   candidateDocuments,
   candidateAllData
 } = require("../controllers/admin/candidateDetails.js");
+
 const employee = require("../controllers/employeeController");
 const { auth } = require("../middleware/AuthMiddleware");
 const router = require("express").Router();

@@ -30,13 +30,13 @@ const upload = multer({
 module.exports.createLeave = async (req, res) => {
   upload(req, res, async (err) => {
     try {
+
       if (err) {
         console.error(err);
         return res.status(400).json({ error: "File upload failed", err });
       }
 
       const { type, start_date, end_date, reason, session, requestto } = req.body;
-
       let sdateParts = start_date.split("/");
       let edateParts = end_date.split("/");
 
@@ -85,7 +85,7 @@ module.exports.createLeave = async (req, res) => {
         return res.status(400).json({ message: "Employee not found" });
       }
 
-      const leave = await Leave.create({
+      await Leave.create({
         empid: req.user.userObjectId,
         type,
         start_date: sdate,
@@ -147,7 +147,7 @@ module.exports.ApprovedLeave = async (req, res) => {
 
     if (statuses.includes(status)) {
       const leave = await Leave.findByIdAndUpdate(leaveid, { status: status }, { new: true });
-
+      
       if (!leave) {
         return res.status(404).json({
           message: "Leave not found"

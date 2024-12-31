@@ -10,7 +10,7 @@
     <i class="fa-solid fa-bars toggle-sidebar-btn"></i>
   </div>
   <div class="search-bar">
-    <form
+    <!-- <form
       class="search-form d-flex align-items-center"
       method="POST"
       action="#"
@@ -24,7 +24,7 @@
       <button type="submit" title="Search">
         <i class="fa-solid fa-magnifying-glass"></i>
       </button>
-    </form>
+    </form> -->
   </div>
 
   <nav class="header-nav ms-auto">
@@ -41,9 +41,7 @@
           href="#"
           data-bs-toggle="dropdown"
         >
-          <span class="d-none d-md-block dropdown-toggle pe-2"
-            >K. Anderson</span
-          >
+          <span class="d-none d-md-block dropdown-toggle pe-2">Admin</span>
           <img
             src="framework/images/profile-img.jpg"
             alt="Profile"
@@ -52,14 +50,13 @@
         </a>
 
         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-          <li class="dropdown-header">
+          <!-- <li class="dropdown-header">
             <h6>Kevin Anderson</h6>
             <span>Web Designer</span>
-          </li>
+          </li> -->
           <li>
             <hr class="dropdown-divider" />
           </li>
-
           <li>
             <a
               class="dropdown-item d-flex align-items-center"
@@ -72,11 +69,13 @@
           <li>
             <hr class="dropdown-divider" />
           </li>
-
           <li>
-            <a class="dropdown-item d-flex align-items-center">
+            <a
+              class="dropdown-item d-flex align-items-center"
+              onclick="logout()"
+            >
               <i class="fa-solid fa-arrow-right-to-bracket"></i>
-              <span onclick="logout()">Sign Out</span>
+              <span>Sign Out</span>
             </a>
           </li>
         </ul>

@@ -11,8 +11,8 @@ require("dotenv").config();
 
 const IPAddredd = process.env.IP_ADDRESS;
 const app = express();
-// app.use(compression());
 
+// app.use(compression());
 // app.use(timeout("30s"));
 
 const result = createAdmin();
@@ -37,10 +37,6 @@ const DB_CONNECT = process.env.MONGODB_CONNECTION;
 app.set("view engine", "ejs");
 
 app.use(express.static(__dirname + "/public"));
-// app.use(
-//   "/framework",
-//   express.static(path.join(__dirname, "/public/framework"))
-// );
 
 app.use(express.json());
 
@@ -49,6 +45,7 @@ mongoose.connect(DB_CONNECT);
 mongoose.connection.on("connected", () => {
   console.log("Connected to mongo");
 });
+
 mongoose.connection.on("error", err => {
   console.error("Error connecting to mongo", err);
 });
@@ -59,7 +56,7 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 // 1 day
+      maxAge: 1000 * 60 * 60 * 24
     }
   })
 );

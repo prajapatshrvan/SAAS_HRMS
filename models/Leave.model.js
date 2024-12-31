@@ -5,43 +5,43 @@ const LeaveSchema = new mongoose.Schema(
     empid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
-      required: true,
+      required: true
     },
     type: {
       type: String,
-      required: true,
+      required: true
     },
     start_date: {
       type: Date,
-      required: true,
+      required: true
     },
     end_date: {
       type: Date,
-      required: true,
+      required: true
     },
     leave_days: {
       type: Number,
-      required: true,
+      required: true
     },
     reason: {
-      type: String,
+      type: String
     },
     document: {
-      type: String,
+      type: String
     },
     session: {
-      type: String,
+      type: String
     },
     requestto: {
-      type: String,
+      type: String
     },
     status: {
       type: String,
-      default: "pending",
-    },
+      default: "pending"
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 const Leave = mongoose.model("Leave", LeaveSchema);
