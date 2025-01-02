@@ -520,23 +520,35 @@ module.exports.BirthdaysCurrentDay = async (req, res) => {
   }
 };
 
+
+
 module.exports.BirthdaysCurrentMonth = async (req, res) => {
   try {
-    const currentMonth = new Date().getMonth() + 1; 
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
+    const currentDay = currentDate.getDate(); // Today's day
+
     const birthdays = await Employee.find({
       $expr: {
-        $eq: [
-          { $month: { $dateFromString: { dateString: "$originalDob" } } },
-          currentMonth
+        $and: [
+          { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, currentMonth] }, // Filter by month
+          { $gte: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } // Filter by day
         ]
       }
-    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1});
+    }).select({
+      firstname: 1,
+      lastname: 1,
+      middlename: 1,
+      image: 1,
+      originalDob: 1
+    });
 
     return res.status(200).json({
-      data: birthdays
+      data: birthdays,
+      message: "Birthdays found from current date to month's end"
     });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error fetching birthdays:", error.message);
     return res.status(500).json({
       message: "Internal Server Error"
     });
