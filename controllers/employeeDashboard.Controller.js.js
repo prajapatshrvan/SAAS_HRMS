@@ -530,8 +530,8 @@ module.exports.BirthdaysCurrentMonth = async (req, res) => {
           currentMonth
         ]
       }
-    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1});
-
+    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1 ,profile:1});
+   
     return res.status(200).json({
       data: birthdays
     });
