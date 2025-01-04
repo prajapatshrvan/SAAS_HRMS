@@ -510,7 +510,8 @@ module.exports.BirthdaysCurrentDay = async (req, res) => {
     }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1});
 
     return res.status(200).json({
-      data: birthday
+      data: birthday,
+      message:"birthady found"
     });
   } catch (error) {
     console.error(error.message);
@@ -532,7 +533,7 @@ module.exports.BirthdaysCurrentMonth = async (req, res) => {
       $expr: {
         $and: [
           { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, currentMonth] }, // Filter by month
-          { $gte: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } // Filter by day
+          { $gt: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } // Filter by day
         ]
       }
     }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1 ,profile:1});
@@ -547,7 +548,7 @@ module.exports.BirthdaysCurrentMonth = async (req, res) => {
       message: "Internal Server Error"
     });
   }
-};
+};  
 
 
 
