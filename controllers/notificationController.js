@@ -2,37 +2,44 @@ const Notication = require("../models/NotificationModel");
 
 module.exports.AddNotification = async (req, res) => {
   try {
-    const { notification, date } = req.body;
+    const { empid, title, message } = req.body;
 
-    if (!notification || !notification.trim()) {
-      return res.status(400).json({ message: "Please enter Notification Message" });
+    if (!empid) {
+      return res.status(400).json({ mesage: "empid is required" });
+    } else if (!title) {
+      return res.status(400).json({ mesage: "title is required" });
+    } else if (!message) {
+      return res.status(400).json({ mesage: "message is required" });
     }
 
     const notifications = new Notication({
-      notification,
-      date,
+      empid,
+      title,
+      message
     });
 
     await notifications.save();
 
     return res.status(200).json({
-      message: "Notification sent successfully",
+      message: "Notification sent successfully"
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: "Internal server error",
+      message: "Internal server error"
     });
   }
 };
 
 module.exports.UpdateNotification = async (req, res) => {
   try {
-    const { notification, date } = req.body;
+    const { title, message } = req.body;
     const id = req.params.id;
 
-    if (!notification || !notification.trim()) {
-      return res.status(400).json({ message: "Please enter Notification Message" });
+    if (!title) {
+      return res.status(400).json({ mesage: "title is required" });
+    } else if (!message) {
+      return res.status(400).json({ mesage: "message is required" });
     }
 
     const notificationToUpdate = await Notication.findOne({ _id: id });
@@ -43,18 +50,18 @@ module.exports.UpdateNotification = async (req, res) => {
 
     await Notication.findByIdAndUpdate(id, {
       $set: {
-        notification,
-        date,
-      },
+        title,
+        message
+      }
     });
 
     res.status(200).json({
-      message: "Notification updated successfully",
+      message: "Notification updated successfully"
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: "Internal server error",
+      message: "Internal server error"
     });
   }
 };
@@ -63,12 +70,12 @@ module.exports.GetNotification = async (req, res) => {
   try {
     const notifications = await Notication.find();
     res.status(200).json({
-      Notifications: notifications,
+      Notifications: notifications
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: "Internal server error",
+      message: "Internal server error"
     });
   }
 };

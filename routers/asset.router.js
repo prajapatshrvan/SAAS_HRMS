@@ -15,4 +15,5 @@ router.post("/bulkasset", auth, asset.bulkAssetUpload);
 router.get("/getasset/:id", auth, asset.getAssetByID);
 router.get("/invantory", auth, asset.invantory);
 router.post("/revokeasset", auth, asset.RevokeAsset);
+router.get("/asset_count", auth, asset.Assetscounter);
 module.exports = router;

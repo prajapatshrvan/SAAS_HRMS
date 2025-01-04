@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     assetname: {
-      type: String,
+      type: String
     },
 
     assetId: {
-      type: String,
+      type: String
     },
 
     // date_of_asset: {
@@ -16,56 +16,56 @@ const userSchema = new mongoose.Schema(
 
     purchase_date: {
       type: String,
-      required: true,
+      required: true
     },
 
     purchase_from: {
       type: String,
-      required: true,
+      required: true
     },
 
     manufacturer: {
       type: String,
-      required: true,
+      required: true
     },
 
     model: {
       type: String,
-      required: true,
+      required: true
     },
 
     serial_number: {
       type: String,
-      required: true,
+      required: true
     },
 
     supplier: {
       type: String,
-      required: true,
+      required: true
     },
 
     condition: {
       type: String,
-      required: false,
+      required: false
     },
 
     warranty: {
       type: String,
-      required: true,
+      required: true
     },
 
     value: {
       type: String,
-      required: true,
+      required: true
     },
 
     asset_user: {
       type: String,
-      required: false,
+      required: false
     },
 
     description: {
-      type: String,
+      type: String
     },
 
     // asset_status: {
@@ -76,32 +76,32 @@ const userSchema = new mongoose.Schema(
     assign_to: {
       type: String,
       required: false,
-      ref: "Employee",
+      ref: "Employee"
     },
 
     assign_by: {
       type: String,
       ref: "Employee",
-      required: false,
+      required: false
     },
 
     status: {
       type: String,
-      default: "unAssigned",
+      default: "unassigned"
     },
 
     verified: {
       type: String,
-      default: "false",
+      default: "false"
     },
 
     image: {
       type: [String],
-      required: true,
-    },
+      required: true
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 

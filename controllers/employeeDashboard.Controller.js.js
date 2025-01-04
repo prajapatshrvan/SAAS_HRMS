@@ -526,12 +526,15 @@ module.exports.BirthdaysCurrentDay = async (req, res) => {
 module.exports.BirthdaysCurrentMonth = async (req, res) => {
   try {
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
-    const currentDay = currentDate.getDate(); // Today's day
+
+    const currentMonth = currentDate.getMonth() + 1; 
+    const currentDay = currentDate.getDate(); 
+
 
     const birthdays = await Employee.find({
       $expr: {
         $and: [
+
           { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, currentMonth] }, // Filter by month
           { $gt: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } // Filter by day
         ]
