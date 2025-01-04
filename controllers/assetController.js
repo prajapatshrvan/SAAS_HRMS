@@ -583,3 +583,26 @@ module.exports.bulkAssetUpload = async (req, res) => {
     }
   });
 };
+
+
+module.exports.Assetscounter = async (req, res) => {
+  try {
+    const assigned = await Asset.countDocuments({ status: "assigned" });
+   const unassigned = await Asset.countDocuments({ status: "unassigned" });
+   const active = await Asset.countDocuments({ status: "active" });
+   const inactive = await Asset.countDocuments({ status: "inactive" });
+   const repair = await Asset.countDocuments({ status: "repair" });
+    return res.status(200).json({
+      assigned,
+      unassigned,
+      active,
+      inactive,
+      repair
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: assetLabels.internal_server_message
+    });
+  }
+};

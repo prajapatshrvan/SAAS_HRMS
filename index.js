@@ -4,20 +4,16 @@ const apiRouter = require("./api-router");
 const adminRouter = require("./admin-router");
 const createAdmin = require("./config/createAdmin");
 const session = require("express-session");
-// var timeout = require("connect-timeout");
-// const compression = require("compression");
 const cors = require("cors");
 require("dotenv").config();
 
-const IPAddredd = process.env.IP_ADDRESS;
 const app = express();
 
-// app.use(compression());
-// app.use(timeout("30s"));
+const PORT = process.env.PORT || 5000;
 
 const result = createAdmin();
 if (!result) {
-  print("admin creation failed");
+  console.error("Admin creation failed");
   process.exit();
 }
 
@@ -28,26 +24,19 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.use("/uploads", express.static("uploads"));
-const port = process.env.PORT || 5000;
-
-const DB_CONNECT = process.env.MONGODB_CONNECTION;
-
 app.set("view engine", "ejs");
-
 app.use(express.static(__dirname + "/public"));
-
 app.use(express.json());
 
-mongoose.connect(DB_CONNECT);
+mongoose.connect(process.env.MONGODB_CONNECTION);
 
 mongoose.connection.on("connected", () => {
-  console.log("Connected to mongo");
+  console.log("Connected to MongoDB");
 });
 
 mongoose.connection.on("error", err => {
-  console.error("Error connecting to mongo", err);
+  console.error("Error connecting to MongoDB:", err);
 });
 
 app.use(
@@ -56,7 +45,7 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24
+      maxAge: 1000 * 60 * 60 * 24 // 1 day
     }
   })
 );
@@ -64,21 +53,20 @@ app.use(
 apiRouter(app);
 adminRouter(app);
 
-app.use("/", (req, res, next) => {
+app.use("/", (req, res) => {
   res.status(404).send({ message: "Bad request" });
 });
 
 app.use((err, req, res, next) => {
-  if (err.code == "ETIMEDOUT") {
+  if (err.code === "ETIMEDOUT") {
     return res.status(408).send("Timeout");
   }
-
   req.connection.destroy();
-  return res
-    .status(err.status || 500)
-    .send(err.message || "internal server error");
+  res.status(err.status || 500).send(err.message || "Internal Server Error");
 });
 
-app.listen(port, IPAddredd, () => {
-  console.log(`App is running on port ${port}`);
-});
+// app.listen(PORT, "0.0.0.0", () => {
+//   console.log(`App is running on port ${PORT}`);
+// });
+
+module.exports = app;
