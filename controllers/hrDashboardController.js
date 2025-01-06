@@ -179,16 +179,67 @@ module.exports.departmentCount = async (req, res) => {
   }
 };
 
+// module.exports.list = async (req, res) => {
+//   try {
+//     const emplist = await Employee.find();
+//     return res.status(200).json({
+//       List: emplist
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// };
+
 module.exports.list = async (req, res) => {
   try {
-    const emplist = await Employee.find();
+    const { year, month, day } = req.query;
+
+    const matchFilter = { status: "completed" };
+    const exprConditions = [];
+
+    if (year) {
+      exprConditions.push({ $eq: [{ $year: "$createdAt" }, parseInt(year)] });
+    }
+    if (year && month) {
+      exprConditions.push({
+        $and: [
+          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
+          { $eq: [{ $month: "$createdAt" }, parseInt(month)] }
+        ]
+      });
+    }
+    if (day && month && year) {
+      exprConditions.push({
+        $and: [
+          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
+          { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
+          { $dayOfMonth: "$createdAt" }
+        ]
+      });
+    }
+
+    if (exprConditions.length > 0) {
+      matchFilter.$expr = { $and: exprConditions };
+    }
+
+    const emplist = await Employee.find(
+      matchFilter,
+      "firstname lastname image originalDob gender email mobile_number"
+    );
+
     return res.status(200).json({
+      success: true,
       List: emplist
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching employee list:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
     });
   }
 };
