@@ -65,8 +65,4 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).send(err.message || "Internal Server Error");
 });
 
-// app.listen(PORT, "0.0.0.0", () => {
-//   console.log(`App is running on port ${PORT}`);
-// });
-
 module.exports = app;
