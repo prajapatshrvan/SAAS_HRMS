@@ -98,7 +98,9 @@ module.exports.empAttendaceStaus = async (req, res) => {
 module.exports.allAssetStatus = async (req, res) => {
   try {
     const invertoryCount = await Asset.countDocuments({ status: "unassigned" });
-    const assetAssignedCount = await Asset.countDocuments({ status: "unassigned" });
+    const assetAssignedCount = await Asset.countDocuments({
+      status: "unassigned"
+    });
     const assetrepairCount = await Asset.countDocuments({ status: "repair" });
 
     return res.status(200).json({
@@ -116,23 +118,63 @@ module.exports.allAssetStatus = async (req, res) => {
 
 module.exports.departmentCount = async (req, res) => {
   try {
-    const hrCount = await Employee.countDocuments({ department: "HR" });
-    const adminCount = await Employee.countDocuments({ department: "ADMIN" });
-    const salesCount = await Employee.countDocuments({ department: "SALES" });
-    const itCount = await Employee.countDocuments({ department: "IT" });
-    const logisticCount = await Employee.countDocuments({ department: "LOGISTIC" });
-    const payrollCount = await Employee.countDocuments({ department: "PAYROLL" });
-    const accountCount = await Employee.countDocuments({ department: "ACCOUNTS" });
-    const operationsCount = await Employee.countDocuments({ department: "OPERATION MANAGER" });
+    const { year, month, day } = req.query;
+
+    const matchFilter = { status: "completed" };
+    const exprConditions = [];
+
+    if (year) {
+      exprConditions.push({ $eq: [{ $year: "$createdAt" }, parseInt(year)] });
+    }
+    if (year && month) {
+      exprConditions.push({
+        $and: [
+          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
+          { $eq: [{ $month: "$createdAt" }, parseInt(month)] }
+        ]
+      });
+    }
+    if (day && month && year) {
+      exprConditions.push({
+        $and: [
+          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
+          { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
+          { $dayOfMonth: "$createdAt" }
+        ]
+      });
+    }
+
+    if (exprConditions.length > 0) {
+      matchFilter.$expr = { $and: exprConditions };
+    }
+
+    const departmentCounts = await Employee.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: "$department",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    const departments = departmentCounts.map(item => item._id);
+    const series = departmentCounts.map(item => item.count);
 
     return res.status(200).json({
-      departments: ["HR", "ADMIN", "SALES", "IT", "LOGISTIC", "PAYROLL", "ACCOUNTS", "OPERATIONS"],
-      series: [hrCount, adminCount, salesCount, itCount, logisticCount, payrollCount, accountCount, operationsCount]
+      success: true,
+      departments,
+      series
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching department counts:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
     });
   }
 };
@@ -189,7 +231,7 @@ module.exports.yearlydata = async (req, res) => {
     ]);
 
     const formattedOnboardingData = Array(12).fill(0);
-    onboardingData.forEach((data) => {
+    onboardingData.forEach(data => {
       formattedOnboardingData[data._id - 1] = data.count;
     });
 
@@ -216,7 +258,7 @@ module.exports.yearlydata = async (req, res) => {
     ]);
 
     const formattedOffboardingData = Array(12).fill(0);
-    offboardingData.forEach((data) => {
+    offboardingData.forEach(data => {
       formattedOffboardingData[data._id - 1] = data.count;
     });
 
