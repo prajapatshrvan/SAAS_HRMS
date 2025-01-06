@@ -552,6 +552,41 @@ module.exports.BirthdaysCurrentMonth = async (req, res) => {
   }
 };
 
+module.exports.Work_Anniversary = async (req, res) => {
+  try {
+    const today = new Date();
+    const day = today.getDate('00');
+    const month = today.getMonth('00') + 1;
+
+    const work_anniversaries = await Employee.find(
+      {
+        status: "completed",
+        $expr: {
+          $and: [
+            { $eq: [{ $month: "$createdAt" }, month] },
+            { $eq: [{ $dayOfMonth: "$createdAt" }, day] }
+          ]
+        }
+      },
+      "firstname lastname createdAt" 
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: work_anniversaries[0] ? work_anniversaries : 0,
+    });
+  } catch (error) {
+    console.error("Error fetching work anniversaries:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
+    });
+  }
+};
+
+
+
 
 
 

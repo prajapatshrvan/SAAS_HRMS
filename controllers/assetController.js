@@ -584,7 +584,6 @@ module.exports.bulkAssetUpload = async (req, res) => {
   });
 };
 
-
 module.exports.Assetscounter = async (req, res) => {
   try {
     const assigned = await Asset.countDocuments({ status: "assigned" });
