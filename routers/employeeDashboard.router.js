@@ -26,4 +26,6 @@ router.get(
   EmployeeDashBoard.BirthdaysCurrentMonth
 );
 
+router.get("/emp_work_anniversary", auth, EmployeeDashBoard.Work_Anniversary);
+
 module.exports = router;
