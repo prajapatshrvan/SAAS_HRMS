@@ -525,24 +525,21 @@ module.exports.BirthdaysCurrentDay = async (req, res) => {
 module.exports.BirthdaysCurrentMonth = async (req, res) => {
   try {
     const currentDate = new Date();
+
     const currentMonth = currentDate.getMonth() + 1; 
     const currentDay = currentDate.getDate(); 
+
 
     const birthdays = await Employee.find({
       $expr: {
         $and: [
-          { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, currentMonth] }, 
-          { $gte: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } 
+
+          { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, currentMonth] }, // Filter by month
+          { $gte: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } // Filter by day
         ]
       }
-    }).select({
-      firstname: 1,
-      lastname: 1,
-      middlename: 1,
-      image: 1,
-      originalDob: 1
-    });
-
+    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1 ,profile:1});
+   
     return res.status(200).json({
       data: birthdays,
       message: "Birthdays found from current date to month's end"
