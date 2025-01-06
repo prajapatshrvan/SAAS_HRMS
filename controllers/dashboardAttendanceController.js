@@ -22,7 +22,7 @@ module.exports.HolidayList = async (req, res) => {
     };
 
     const holidaylist = await Holiday.find(query, { country: 0, year: 0, state: 0, holiday_status: 0 });
-
+     console.log(holidaylist,'holidaylistjhfgjh')
     const formattedHolidaylist = {};
     holidaylist.forEach((holiday) => {
       const dayOfday = moment(holiday.date).format("DD");
