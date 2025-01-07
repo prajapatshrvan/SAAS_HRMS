@@ -118,34 +118,27 @@ module.exports.allAssetStatus = async (req, res) => {
 
 module.exports.departmentCount = async (req, res) => {
   try {
-    const { year, month, day } = req.query;
+    const { year, month, week } = req.query;
 
     const matchFilter = { status: "completed" };
-    const exprConditions = [];
+    const currentDate = new Date();
 
-    if (year) {
-      exprConditions.push({ $eq: [{ $year: "$createdAt" }, parseInt(year)] });
-    }
-    if (year && month) {
-      exprConditions.push({
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-          { $eq: [{ $month: "$createdAt" }, parseInt(month)] }
-        ]
-      });
-    }
-    if (day && month && year) {
-      exprConditions.push({
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-          { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
-          { $dayOfMonth: "$createdAt" }
-        ]
-      });
+    if (year === "365") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 365);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
-    if (exprConditions.length > 0) {
-      matchFilter.$expr = { $and: exprConditions };
+    if (month === "30") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 30);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+    }
+
+    if (week === "7") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 7);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
     const departmentCounts = await Employee.aggregate([
@@ -179,50 +172,29 @@ module.exports.departmentCount = async (req, res) => {
   }
 };
 
-// module.exports.list = async (req, res) => {
-//   try {
-//     const emplist = await Employee.find();
-//     return res.status(200).json({
-//       List: emplist
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       message: "Internal Server Error"
-//     });
-//   }
-// };
-
 module.exports.list = async (req, res) => {
   try {
-    const { year, month, day } = req.query;
+    const { year, month, week } = req.query;
 
     const matchFilter = { status: "completed" };
-    const exprConditions = [];
+    const currentDate = new Date();
 
-    if (year) {
-      exprConditions.push({ $eq: [{ $year: "$createdAt" }, parseInt(year)] });
-    }
-    if (year && month) {
-      exprConditions.push({
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-          { $eq: [{ $month: "$createdAt" }, parseInt(month)] }
-        ]
-      });
-    }
-    if (day && month && year) {
-      exprConditions.push({
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-          { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
-          { $dayOfMonth: "$createdAt" }
-        ]
-      });
+    if (year === "365") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 365);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
-    if (exprConditions.length > 0) {
-      matchFilter.$expr = { $and: exprConditions };
+    if (month === "30") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 30);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+    }
+
+    if (week === "7") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 7);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
     const emplist = await Employee.find(
