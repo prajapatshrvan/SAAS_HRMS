@@ -5,6 +5,7 @@ const adminRouter = require("./admin-router");
 const createAdmin = require("./config/createAdmin");
 const session = require("express-session");
 const cors = require("cors");
+const { io } = require("./server");
 require("dotenv").config();
 
 const app = express();
@@ -28,6 +29,11 @@ app.use("/uploads", express.static("uploads"));
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 app.use(express.json());
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 mongoose.connect(process.env.MONGODB_CONNECTION);
 
@@ -63,6 +69,11 @@ app.use((err, req, res, next) => {
   }
   req.connection.destroy();
   res.status(err.status || 500).send(err.message || "Internal Server Error");
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`App is running on port ${PORT}`);
+  console.log(`URL: http://localhost:${PORT}`);
 });
 
 module.exports = app;

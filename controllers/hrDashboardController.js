@@ -116,6 +116,64 @@ module.exports.allAssetStatus = async (req, res) => {
   }
 };
 
+// module.exports.departmentCount = async (req, res) => {
+//   try {
+//     const { year, month, week } = req.query;
+
+//     const matchFilter = { status: "completed" };
+//     const currentDate = new Date();
+
+//     if (year === "365") {
+//       const startDate = new Date(currentDate);
+//       startDate.setDate(startDate.getDate() - 365);
+//       matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+//     }
+
+//     if (month === "30") {
+//       const startDate = new Date(currentDate);
+//       startDate.setDate(startDate.getDate() - 30);
+//       matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+//     }
+
+//     if (week === "7") {
+//       const startDate = new Date(currentDate);
+//       startDate.setDate(startDate.getDate() - 7);
+//       matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+//     }
+
+//     const departmentCounts = await Employee.aggregate([
+//       { $match: matchFilter },
+//       {
+//         $group: {
+//           _id: "$department",
+//           count: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $sort: { _id: 1 }
+//       }
+//     ]);
+
+//     const depart = IT,ADMIN,SALES,ACCOUNT,HR
+
+//     const departments = departmentCounts.map(item => if(item._id == ));
+//     // const series = departmentCounts.map(item => item.count);
+
+//     return res.status(200).json({
+//       success: true,
+//       departments,
+//       // series
+//     });
+//   } catch (error) {
+//     console.error("Error fetching department counts:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal Server Error",
+//       error: error.message
+//     });
+//   }
+// };
+
 module.exports.departmentCount = async (req, res) => {
   try {
     const { year, month, week } = req.query;
@@ -123,6 +181,7 @@ module.exports.departmentCount = async (req, res) => {
     const matchFilter = { status: "completed" };
     const currentDate = new Date();
 
+    // Filter based on year, month, week
     if (year === "365") {
       const startDate = new Date(currentDate);
       startDate.setDate(startDate.getDate() - 365);
@@ -141,6 +200,7 @@ module.exports.departmentCount = async (req, res) => {
       matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
+    // Aggregate department counts
     const departmentCounts = await Employee.aggregate([
       { $match: matchFilter },
       {
@@ -154,8 +214,16 @@ module.exports.departmentCount = async (req, res) => {
       }
     ]);
 
-    const departments = departmentCounts.map(item => item._id);
-    const series = departmentCounts.map(item => item.count);
+    const allDepartments = ["IT", "ADMIN", "SALES", "ACCOUNT", "HR"];
+
+    const departmentData = allDepartments.map(dept => {
+      const found = departmentCounts.find(item => item._id === dept);
+      return { department: dept, count: found ? found.count : 0 };
+    });
+
+    // Prepare the response
+    const departments = departmentData.map(item => item.department);
+    const series = departmentData.map(item => item.count);
 
     return res.status(200).json({
       success: true,

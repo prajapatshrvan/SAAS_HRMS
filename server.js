@@ -17,9 +17,19 @@ const io = socketIo(server, {
 io.on("connection", socket => {
   console.log("A user connected:", socket.id);
 
-  socket.on("join", userId => {
-    console.log(`User ${userId} joined`);
-    socket.join(userId);
+  socket.on("join", empId => {
+    console.log(`Employee ${empId} joined room`);
+    socket.join(empId);
+  });
+
+  socket.on("broadcast", message => {
+    console.log("Broadcast message:", message);
+    socket.broadcast.emit("broadcast", message);
+  });
+
+  socket.on("personalMessage", ({ empId, message }) => {
+    console.log(`Sending personal message to ${empId}:`, message);
+    io.to(empId).emit("personalMessage", message);
   });
 
   socket.on("disconnect", () => {
@@ -27,8 +37,4 @@ io.on("connection", socket => {
   });
 });
 
-// Start the server
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`App is running on port ${PORT}`);
-  console.log(`URL: http://localhost:${PORT}`);
-});
+module.exports = { server, io };
