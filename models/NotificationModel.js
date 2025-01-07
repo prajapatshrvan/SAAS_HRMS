@@ -4,8 +4,8 @@ const notificationSchema = new mongoose.Schema(
   {
     empid: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      required: true
+      ref: "Employee"
+      // required: true
     },
     title: { type: String, required: true },
     message: { type: String, required: true },
