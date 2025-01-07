@@ -118,34 +118,27 @@ module.exports.allAssetStatus = async (req, res) => {
 
 module.exports.departmentCount = async (req, res) => {
   try {
-    const { year, month, day } = req.query;
+    const { year, month, week } = req.query;
 
     const matchFilter = { status: "completed" };
-    const exprConditions = [];
+    const currentDate = new Date();
 
-    if (year) {
-      exprConditions.push({ $eq: [{ $year: "$createdAt" }, parseInt(year)] });
-    }
-    if (year && month) {
-      exprConditions.push({
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-          { $eq: [{ $month: "$createdAt" }, parseInt(month)] }
-        ]
-      });
-    }
-    if (day && month && year) {
-      exprConditions.push({
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-          { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
-          { $dayOfMonth: "$createdAt" }
-        ]
-      });
+    if (year === "365") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 365);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
-    if (exprConditions.length > 0) {
-      matchFilter.$expr = { $and: exprConditions };
+    if (month === "30") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 30);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+    }
+
+    if (week === "7") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 7);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
     }
 
     const departmentCounts = await Employee.aggregate([
@@ -181,14 +174,44 @@ module.exports.departmentCount = async (req, res) => {
 
 module.exports.list = async (req, res) => {
   try {
-    const emplist = await Employee.find();
+    const { year, month, week } = req.query;
+
+    const matchFilter = { status: "completed" };
+    const currentDate = new Date();
+
+    if (year === "365") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 365);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+    }
+
+    if (month === "30") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 30);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+    }
+
+    if (week === "7") {
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 7);
+      matchFilter.createdAt = { $gte: startDate, $lte: currentDate };
+    }
+
+    const emplist = await Employee.find(
+      matchFilter,
+      "firstname lastname image originalDob gender email mobile_number"
+    );
+
     return res.status(200).json({
+      success: true,
       List: emplist
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching employee list:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
     });
   }
 };
