@@ -1,81 +1,114 @@
-const Notication = require("../models/NotificationModel");
+const Notification = require("../models/NotificationModel");
+const { io } = require("../server");
 
-module.exports.AddNotification = async (req, res) => {
+exports.createBroadcastNotification = async (req, res) => {
   try {
-    const { empid, title, message } = req.body;
+    const { title, message } = req.body;
 
-    if (!empid) {
-      return res.status(400).json({ mesage: "empid is required" });
-    } else if (!title) {
-      return res.status(400).json({ mesage: "title is required" });
-    } else if (!message) {
-      return res.status(400).json({ mesage: "message is required" });
+    const notification = new Notification({
+      empid: null,
+      title,
+      message
+    });
+    await notification.save();
+
+    if (io) {
+      io.emit("broadcastNotification", {
+        id: notification._id,
+        title,
+        message,
+        isRead: notification.isRead,
+        createdAt: notification.createdAt
+      });
+    } else {
+      console.error("Socket.io instance is undefined");
     }
 
-    const notifications = new Notication({
+    return res.status(200).json({
+      success: true,
+      message: "Broadcast notification sent successfully"
+    });
+  } catch (error) {
+    console.error("Error creating broadcast notification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
+    });
+  }
+};
+
+exports.createPersonalNotification = async (req, res) => {
+  try {
+    const { empid, title, message } = req.body;
+    const notification = new Notification({
       empid,
       title,
       message
     });
+    await notification.save();
 
-    await notifications.save();
+    if (io) {
+      io.to(empid).emit("personalNotification", {
+        id: notification._id,
+        title,
+        message,
+        isRead: notification.isRead,
+        createdAt: notification.createdAt
+      });
+    } else {
+      console.error("Socket.io instance is undefined");
+    }
 
     return res.status(200).json({
-      message: "Notification sent successfully"
+      success: true,
+      message: "Personal notification sent successfully"
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error creating personal notification:", error);
     return res.status(500).json({
-      message: "Internal server error"
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
     });
   }
 };
 
-module.exports.UpdateNotification = async (req, res) => {
+exports.updateNotificationStatus = async (req, res) => {
   try {
-    const { title, message } = req.body;
-    const id = req.params.id;
+    const { notificationId } = req.params;
 
-    if (!title) {
-      return res.status(400).json({ mesage: "title is required" });
-    } else if (!message) {
-      return res.status(400).json({ mesage: "message is required" });
+    if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid notification ID"
+      });
     }
 
-    const notificationToUpdate = await Notication.findOne({ _id: id });
+    const updatedNotification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { isRead: true },
+      { new: true }
+    );
 
-    if (!notificationToUpdate) {
-      return res.status(404).json({ message: "Notification not found" });
+    if (!updatedNotification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found"
+      });
     }
 
-    await Notication.findByIdAndUpdate(id, {
-      $set: {
-        title,
-        message
-      }
-    });
-
-    res.status(200).json({
-      message: "Notification updated successfully"
+    return res.status(200).json({
+      success: true,
+      message: "Notification marked as read",
+      notification: updatedNotification
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error updating notification status:", error);
     return res.status(500).json({
-      message: "Internal server error"
-    });
-  }
-};
-
-module.exports.GetNotification = async (req, res) => {
-  try {
-    const notifications = await Notication.find();
-    res.status(200).json({
-      Notifications: notifications
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      message: "Internal server error"
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
     });
   }
 };
