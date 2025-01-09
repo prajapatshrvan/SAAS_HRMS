@@ -22,7 +22,6 @@ module.exports.HolidayList = async (req, res) => {
     };
 
     const holidaylist = await Holiday.find(query, { country: 0, year: 0, state: 0, holiday_status: 0 });
-     console.log(holidaylist,'holidaylistjhfgjh')
     const formattedHolidaylist = {};
     holidaylist.forEach((holiday) => {
       const dayOfday = moment(holiday.date).format("DD");
@@ -220,7 +219,6 @@ module.exports.yearlydata = async (req, res) => {
     }, {});
 
     const resultArray = Object.values(groupedData);
-
     return res.status(200).json(resultArray);
   } catch (error) {
     console.log(error);
