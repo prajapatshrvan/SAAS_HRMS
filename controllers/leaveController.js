@@ -108,9 +108,37 @@ module.exports.createLeave = async (req, res) => {
   });
 };
 
+
+
 module.exports.leaveList = async (req, res) => {
   try {
     const leave = await Leave.find()
+      .populate({ path: "empid", select: "firstname lastname employeeID" })
+      .sort({ createdAt: -1 });
+
+    const newData = [];
+    for (let index = 0; index < leave.length; index++) {
+      const element = { ...leave[index]?._doc };
+      if (element.empid) {
+        element.employee_name = element.empid.firstname + " " + element.empid.lastname;
+        element.employeeID = element.empid.employeeID;
+      }
+      delete element.empid;
+      newData.push(element);
+    }
+
+    return res.status(200).json({ leave: newData });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
+
+module.exports.Employee_leave_List = async (req, res) => {
+  try {
+  const empid = req.user.userObjectId 
+    const leave = await Leave.find({empid : empid})
       .populate({ path: "empid", select: "firstname lastname employeeID" })
       .sort({ createdAt: -1 });
 
