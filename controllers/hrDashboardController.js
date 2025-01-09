@@ -116,6 +116,7 @@ module.exports.allAssetStatus = async (req, res) => {
   }
 };
 
+
 module.exports.departmentCount = async (req, res) => {
   try {
     const { year, month, week } = req.query;
