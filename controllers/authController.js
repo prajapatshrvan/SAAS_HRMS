@@ -32,9 +32,20 @@ module.exports.register = async (req, res) => {
         email,
         password,
         city,
-        roleId,
         role_name
       } = req.body;
+
+      if (!firstname) {
+        return res.status(400).json({ message: "Please fill firstname" });
+      } else if (lastname) {
+        return res.status(400).json({ message: "Please fill lastname" });
+      } else if (mobile_number) {
+        return res.status(400).json({ message: "Please fill mobile number" });
+      } else if (!password) {
+        return res.status(400).json({ message: "Please fill password" });
+      } else if (!role_name) {
+        return res.status(400).json({ message: "Please fill role name" });
+      }
 
       const baseUid = lastname.slice(0, 3) + firstname.slice(0, 3);
       let userId = baseUid;

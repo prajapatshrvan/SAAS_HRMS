@@ -1,28 +1,22 @@
 const Notification = require("../models/NotificationModel");
-const { io } = require("../server");
+const mongoose = require("mongoose");
+const { getSocketInstance } = require("../utility/socket");
 
 exports.createBroadcastNotification = async (req, res) => {
   try {
     const { title, message } = req.body;
 
-    const notification = new Notification({
-      empid: null,
-      title,
-      message
-    });
+    const notification = new Notification({ empid: null, title, message });
     await notification.save();
 
-    if (io) {
-      io.emit("broadcastNotification", {
-        id: notification._id,
-        title,
-        message,
-        isRead: notification.isRead,
-        createdAt: notification.createdAt
-      });
-    } else {
-      console.error("Socket.io instance is undefined");
-    }
+    const io = getSocketInstance();
+    io.emit("broadcastNotification", {
+      id: notification._id,
+      title,
+      message,
+      isRead: notification.isRead,
+      createdAt: notification.createdAt
+    });
 
     return res.status(200).json({
       success: true,
@@ -30,11 +24,7 @@ exports.createBroadcastNotification = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating broadcast notification:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -86,7 +76,7 @@ exports.updateNotificationStatus = async (req, res) => {
     }
 
     const updatedNotification = await Notification.findByIdAndUpdate(
-      notificationId,
+      { _id: notificationId },
       { isRead: true },
       { new: true }
     );
