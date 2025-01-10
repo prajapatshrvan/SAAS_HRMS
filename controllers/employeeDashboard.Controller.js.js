@@ -641,7 +641,7 @@ module.exports.Work_Anniversary = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: work_anniversaries[0] ? work_anniversaries : 0,
+      data: work_anniversaries
     });
   } catch (error) {
     console.error("Error fetching work anniversaries:", error);
@@ -652,6 +652,43 @@ module.exports.Work_Anniversary = async (req, res) => {
     });
   }
 };
+
+module.exports.Week_Working_Hours_List = async (req, res) => {
+  try {
+    const currentUserId = req.user?.userObjectId;
+
+    if (!currentUserId) {
+      return res.status(401).json({ message: "Unauthorized access" });
+    }
+
+    const inputDate = new Date();
+    const dayOfWeek = inputDate.getDay(); 
+
+    const sunday = new Date(inputDate.setDate(inputDate.getDate() - dayOfWeek));
+    const saturday = new Date(sunday.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+    const weekStart = new Date(sunday.setHours(0, 0, 0, 0));
+    const weekEnd = new Date(saturday.setHours(23, 59, 59, 999));
+
+    const query = {
+      empid: currentUserId,
+      date: { $gte: weekStart, $lte: weekEnd },
+    };
+
+    const workingTimeData = await Workingtime.find(query, "overtime breaktime worktime check date")
+
+   
+
+    return res.status(200).json({
+      data: workingTimeData,
+    });
+  } catch (error) {
+    console.error("Error in Week_Working_Hours_List:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 
 
 
