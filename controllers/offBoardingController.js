@@ -15,20 +15,15 @@ module.exports.createOffboarding = async (req, res) => {
     const cooling_period = 30;
     const empid = req.user.userObjectId;
 
+    const employee = await Employee.findOne({ _id: empid });
 
-    const employee = await Employee.findOne({_id : empid})
-
-    if(!employee){
-      return res.status(400).json({message : "employee not found"})
+    if (!employee) {
+      return res.status(400).json({ message: "employee not found" });
     }
-
-    
 
     if (!reason.trim()) {
       return res.status(400).json({ message: "Please enter valid reason" });
     }
-
-   
 
     const Offboardingexist = await Offboarding.findOne({
       empid,
@@ -98,7 +93,6 @@ module.exports.Status = async (req, res) => {
         employee.status = "InNoticePeriod";
         await employee.save();
       }
-
       return res.status(200).json({
         message: `Offboarding status updated to ${status}`
       });
