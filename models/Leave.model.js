@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const LeaveSchema = new mongoose.Schema(
   {
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee"
+    },
     empid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",

@@ -110,25 +110,32 @@ module.exports.createLeave = async (req, res) => {
 
 module.exports.leaveList = async (req, res) => {
   try {
-    const leave = await Leave.find()
+    const { role_name: role, userObjectId: empid } = req.user;
+
+    const query = role !== "ADMIN" && role !== "HR" ? { empid } : {};
+
+    const leaves = await Leave.find(query)
       .populate({ path: "empid", select: "firstname lastname employeeID" })
+      .populate({ path: "approvedBy", select: "firstname lastname" })
       .sort({ createdAt: -1 });
 
-    const newData = [];
-    for (let index = 0; index < leave.length; index++) {
-      const element = { ...leave[index]?._doc };
-      if (element.empid) {
-        element.employee_name = element.empid.firstname + " " + element.empid.lastname;
-        element.employeeID = element.empid.employeeID;
-      }
-      delete element.empid;
-      newData.push(element);
-    }
+    // Transform data into a flat structure
+    const flatData = leaves.map((leave) => {
+      const { empid, approvedBy, ...rest } = leave._doc;
+      return {
+        ...rest,
+        employee_name: empid ? `${empid.firstname} ${empid.lastname}` : null,
+        employeeID: empid ? empid.employeeID : null,
+        approved_by_name: approvedBy ? `${approvedBy.firstname} ${approvedBy.lastname}` : null,
+    
+      };
+    });
 
-    return res.status(200).json({ leave: newData });
+    return res.status(200).json({ leave: flatData });
   } catch (error) {
+    console.error("Error fetching leave list:", error.message);
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
@@ -144,27 +151,16 @@ module.exports.ApprovedLeave = async (req, res) => {
     }
 
     let statuses = ["approved", "rejected", "cancelled", "withdrawn"];
+    const approvedBy = req.user?.userObjectId
 
     if (statuses.includes(status)) {
-      const leave = await Leave.findByIdAndUpdate(leaveid, { status: status }, { new: true });
+      const leave = await Leave.findByIdAndUpdate(leaveid, { approvedBy : approvedBy, status: status }, { new: true });
       
       if (!leave) {
         return res.status(404).json({
           message: "Leave not found"
         });
       }
-
-      // if (leave.status === "approved") {
-      //   const attendance = await Attendance.findOne({ empid: leave.empid });
-      //   if (attendance) {
-      //     attendance.status = false;
-      //     await attendance.save();
-      //   } else {
-      //     return res.status(404).json({
-      //       message: "Attendance record not found for employee"
-      //     });
-      //   }
-      // }
 
       return res.status(200).json({
         message: `Leave ${status}`
@@ -219,6 +215,45 @@ module.exports.leaveDelete = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "Internal server error"
+    });
+  }
+};
+
+
+module.exports.leaveCount = async (req, res) => {
+  try {
+    const { userObjectId } = req.user;
+    const totalLeavesPerYear = 12;
+    const leavesPerMonth = 1;
+
+    const currentDate = new Date();
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1); 
+    const monthsElapsed = currentDate.getMonth() + 1;
+
+
+    const paidLeaves = monthsElapsed * leavesPerMonth;
+
+    const leaves = await Leave.find({ empid: userObjectId, status: "approved" }).sort({ createdAt: -1 });
+
+    const takenLeaves = leaves.reduce((accumulator, leave) => {
+      return accumulator + (leave.leave_days || 0); 
+    }, 0);
+
+    // Calculate remaining and unpaid leaves
+    const remainingLeaves = Math.max(0, accruedLeaves - takenLeaves); 
+    const unpaidLeaves = Math.max(0, takenLeaves - accruedLeaves); 
+
+    return res.status(200).json({
+      totalLeavesPerYear,
+      paidLeaves,
+      takenLeaves,
+      remainingLeaves,
+      unpaidLeaves,
+    });
+  } catch (error) {
+    console.error("Error fetching leave count:", error.message);
+    return res.status(500).json({
+      message: "Internal server error",
     });
   }
 };

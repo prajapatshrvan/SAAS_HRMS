@@ -8,5 +8,6 @@ router.get("/leavelist", auth, Leave.leaveList);
 router.get("/approvedleavelist", auth, Leave.leaveApprovedList);
 router.get("/pendingleavelist", auth, Leave.leavePendingList);
 router.post("/leavedelete", auth, Leave.leaveDelete);
+router.get("/leave_count", auth, Leave.leaveCount);
 
 module.exports = router;
