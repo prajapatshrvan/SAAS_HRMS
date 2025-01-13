@@ -158,10 +158,10 @@ module.exports.EmployeeAdd = async (req, res, next) => {
 
       const imagePaths = req.files
         ? {
-            image: req.files.image ? `uploads/${employeeID}/${req.files.image[0].filename}` : null,
-            aadhar_image: `uploads/${employeeID}/${req.files.aadhar_image[0].filename}`,
-            pan_image: `uploads/${employeeID}/${req.files.pan_image[0].filename}`
-          }
+          image: req.files.image ? `uploads/${employeeID}/${req.files.image[0].filename}` : null,
+          aadhar_image: `uploads/${employeeID}/${req.files.aadhar_image[0].filename}`,
+          pan_image: `uploads/${employeeID}/${req.files.pan_image[0].filename}`
+        }
         : {};
 
       // Create employee object
@@ -365,7 +365,7 @@ module.exports.EmployeeAddress = async (req, res, next) => {
     });
   }
 };
-  
+
 // documentupload multer
 const storages = multer.diskStorage({
   destination: async (req, file, cb) => {
@@ -1018,12 +1018,12 @@ module.exports.Employeedocument = async (req, res, next) => {
         senior_passing,
         bachelor_passing,
         undergraduate_passing,
-        extraExperienceData,  
-        extra,               
-        ...uploadedFiles,     
+        extraExperienceData,
+        extra,
+        ...uploadedFiles,
       };
 
-     
+
       if (companyname) {
         setUpdateData.companyname = companyname;
         setUpdateData.start_date = start_date;

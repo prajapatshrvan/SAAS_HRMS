@@ -574,7 +574,7 @@ module.exports.Work_Anniversary = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: work_anniversaries[0] ? work_anniversaries : 0,
+      data:  work_anniversaries,
     });
   } catch (error) {
     console.error("Error fetching work anniversaries:", error);
