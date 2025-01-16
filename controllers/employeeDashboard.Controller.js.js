@@ -216,12 +216,14 @@ module.exports.salarydetails = async (req, res) => {
 module.exports.checkInAndCheckOut = async (req, res) => {
   try {
     const empId = req.user?.userObjectId;
-    const todayStart = new Date(new Date().setHours(0, 0, 0, 0)); 
+  
+    const todayStart = new Date().toISOString().slice(0, 10)
+
     const currentTime = new Date();
 
     let workingTime = await Workingtime.findOne({
       empid: empId,
-      date: { $gte: todayStart },
+      date: todayStart ,
     });
 
     if (!workingTime) {
@@ -316,10 +318,10 @@ module.exports.updateWorkingTime = async (req, res) => {
       });
     }
 
-    const startOfDay = new Date(new Date(date).setUTCHours(0, 0, 0, 0));
+    const startOfDay = new Date(date).toISOString().slice(0, 10);
     let workingTime = await Workingtime.findOne({
       empid: empid,
-      date: { $gte: startOfDay },
+      date: startOfDay,
     });
 
     if (!workingTime) {
@@ -362,20 +364,19 @@ module.exports.updateWorkingTime = async (req, res) => {
 
 module.exports.manageBreak = async (req, res) => {
   try {
-    const { empid } = req.query;
+    const { empid } = req.user.userObjectId;
 
     if (!empid ) {
       return res.status(400).json({
         message: "Employee ID and date are required.",
       });
     }
-
     const currentTime = new Date();
-    const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0));
+    const startOfDay = new Date().toISOString().slice(0, 10);
 
     let workingTime = await Workingtime.findOne({
       empid: empid,
-      date: { $gte: startOfDay },
+      date: startOfDay,
     });
 
     if (!workingTime) {
@@ -499,7 +500,7 @@ module.exports.manageBreak = async (req, res) => {
 
 module.exports.workingHoursList = async (req, res) => {
   try {
-    const { date } = req.query; 
+    // const { date } = req.query; 
     const userRole = req.user?.role_name; 
     const currentUserId = req.user?.userObjectId; 
     
