@@ -406,7 +406,7 @@ module.exports.manageBreak = async (req, res) => {
       return res.status(200).json({
         message: "Break ended successfully.",
         status:"Break end",
-        breakDuration: `${breakDuration} minutes`,
+        breakDuration: `${breakDuration}`,
         workingTime,
       });
     }
@@ -648,7 +648,7 @@ module.exports.Week_Working_Hours_List = async (req, res) => {
     const workingTimeData = await Workingtime.find(query, "overtime breaktime worktime date");
 
     const weekDates = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 1; i <= 7; i++) {
       const date = new Date(sunday.getTime() + i * 24 * 60 * 60 * 1000)
         .toISOString()
         .slice(0, 10);
