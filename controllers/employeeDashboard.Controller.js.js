@@ -286,11 +286,11 @@ module.exports.checkInAndCheckOut = async (req, res) => {
     }
 
     // Ensure no more than 4 check-ins/check-outs
-    if (workingTime.check.length >= 4) {
-      return res.status(400).json({
-        message: "Maximum 4 check-in/check-out pairs are allowed per day.",
-      });
-    }
+    // if (workingTime.check.length >= 4) {
+    //   return res.status(400).json({
+    //     message: "Maximum 4 check-in/check-out pairs are allowed per day.",
+    //   });
+    // }
 
     // Handle check-in
     workingTime.check.push({ checkin: currentTime });
@@ -405,6 +405,7 @@ module.exports.manageBreak = async (req, res) => {
 
       return res.status(200).json({
         message: "Break ended successfully.",
+        status:"Break end",
         breakDuration: `${breakDuration} minutes`,
         workingTime,
       });
@@ -419,6 +420,7 @@ module.exports.manageBreak = async (req, res) => {
 
     return res.status(200).json({
       message: "Break started successfully.",
+      status:"Break start",
       workingTime,
     });
   } catch (error) {
