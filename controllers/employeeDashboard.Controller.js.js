@@ -427,76 +427,6 @@ module.exports.manageBreak = async (req, res) => {
   }
 };
 
-// module.exports.workingHoursList = async (req, res) => {
-//   try {
-//     const { empId, date } = req.query; 
-//     const userRole = req.user?.role; 
-//     const currentUserId = req.user?.userObjectId;
-  
-//     const query = {};
-
-//     if (empId) {
-//       query.empid = empId;
-//     }
-
-//     if (date) {
-//       const dayStart = new Date(new Date(date).setHours(0, 0, 0, 0));
-//       const dayEnd = new Date(new Date(date).setHours(23, 59, 59, 999));
-//       query.date = { $gte: dayStart, $lte: dayEnd };
-//     } else {
-//       const todayStart = new Date(new Date().setUTCHours(0, 0, 0, 0));
-//       query.date = { $gte: todayStart };
-//     }
-
-//     if (userRole !== 'ADMIN' && userRole !== 'HR') {
-//       query.empid = currentUserId;
-//     }
-
-//     const workingTimeData = await Workingtime.find(query).populate({
-//       path: 'empid',
-//       select: 'firstname lastname employeeID',
-//     });
-
-
-//     if (!workingTimeData || workingTimeData.length === 0) {
-//       return res.status(404).json({
-//         message: "No working time data found for the given criteria.",
-//       });
-//     }
-
-//     const formattedData = workingTimeData.map((item) => {
-//       const checkDetails = item.check.map((check) => {
-//         const checkIn = check.checkin ? new Date(check.checkin).toISOString() : null;
-//         const checkOut = check.checkout ? new Date(check.checkout).toISOString() : null;
-
-//         return {
-//           checkIn,
-//           checkOut,
-//         };
-//       });
-
-//       return {
-//         employeeID: item.empid?.employeeID || "N/A",
-//         firstname: item.empid?.firstname || "N/A",
-//         lastname: item.empid?.lastname || "N/A",
-//         date: item.date,
-//         checkDetails,
-//         overtime: item.overtime || 0,
-//         worktime: item.worktime || 0,
-//         breaktime: item.breaktime || 0,
-//       };
-//     });
-
-//     return res.status(200).json({
-//       message: "Working time data retrieved successfully.",
-//       data: formattedData,
-//     });
-//   } catch (error) {
-//     console.error("Error in getCheckInData:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
-
 
 module.exports.workingHoursList = async (req, res) => {
   try {
@@ -654,6 +584,42 @@ module.exports.Work_Anniversary = async (req, res) => {
   }
 };
 
+// module.exports.Week_Working_Hours_List = async (req, res) => {
+//   try {
+//     const currentUserId = req.user?.userObjectId;
+
+//     if (!currentUserId) {
+//       return res.status(401).json({ message: "Unauthorized access" });
+//     }
+
+//     const inputDate = new Date();
+//     const dayOfWeek = inputDate.getDay(); 
+
+//     const sunday = new Date(inputDate.setDate(inputDate.getDate() - dayOfWeek));
+//     const saturday = new Date(sunday.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+//     const weekStart = new Date(sunday.setHours(0, 0, 0, 0));
+//     const weekEnd = new Date(saturday.setHours(23, 59, 59, 999));
+
+//     const query = {
+//       empid: currentUserId,
+//       date: { $gte: weekStart, $lte: weekEnd },
+//     };
+
+//     const workingTimeData = await Workingtime.find(query, "overtime breaktime worktime check date")
+
+   
+
+//     return res.status(200).json({
+//       data: workingTimeData,
+//     });
+//   } catch (error) {
+//     console.error("Error in Week_Working_Hours_List:", error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+
 module.exports.Week_Working_Hours_List = async (req, res) => {
   try {
     const currentUserId = req.user?.userObjectId;
@@ -663,31 +629,64 @@ module.exports.Week_Working_Hours_List = async (req, res) => {
     }
 
     const inputDate = new Date();
-    const dayOfWeek = inputDate.getDay(); 
+    const dayOfWeek = inputDate.getDay();
 
     const sunday = new Date(inputDate.setDate(inputDate.getDate() - dayOfWeek));
     const saturday = new Date(sunday.getTime() + 6 * 24 * 60 * 60 * 1000);
 
-    const weekStart = new Date(sunday.setHours(0, 0, 0, 0));
-    const weekEnd = new Date(saturday.setHours(23, 59, 59, 999));
+    const weekStart = sunday.toISOString().slice(0, 10);
+    const weekEnd = saturday.toISOString().slice(0, 10);
 
+    
     const query = {
       empid: currentUserId,
       date: { $gte: weekStart, $lte: weekEnd },
     };
 
-    const workingTimeData = await Workingtime.find(query, "overtime breaktime worktime check date")
+    const workingTimeData = await Workingtime.find(query, "overtime breaktime worktime date");
 
-   
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(sunday.getTime() + i * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      weekDates.push(date);
+    }
+
+    const formattedData = weekDates.map(date => {
+      const dayData = workingTimeData.find(entry => entry.date === date);
+
+      // Default values for days with no data
+      if (!dayData) {
+        return {
+          date: date,
+          overtime: "0 hours",
+          breaktime: "0 hours",
+          worktime: "0 hours",
+      
+        };
+      }
+
+      // Return actual data if available
+      const { overtime, breaktime, worktime, check } = dayData.toObject();
+      return {
+        date,
+        overtime,
+        breaktime,
+        worktime,
+        check,
+      };
+    });
 
     return res.status(200).json({
-      data: workingTimeData,
+      data: formattedData,
     });
   } catch (error) {
     console.error("Error in Week_Working_Hours_List:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 
 

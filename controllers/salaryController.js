@@ -106,11 +106,12 @@ module.exports.salaryList = async (req, res) => {
 module.exports.EmployeeSalaryList = async (req, res) => {
   try {
     // Fetch salary data for the logged-in user
+    console.log(req.user.userObjectId);
     const salaryList = await Salary.find({
-      empid: req.user.userObjectId // Ensure `req.user.userObjectId` is defined and valid
+      empid: req.user.userObjectId
     }).populate({
       path: "empid",
-      select: "firstname lastname employeeID image" // Fetch only necessary fields
+      select: "firstname lastname employeeID image"
     });
 
     // Map through the results and format the data
