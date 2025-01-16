@@ -4,6 +4,10 @@ const router = require("express").Router();
 
 router.post("/add/header/footer", auth, headerAndfooter.addheaderfooter);
 router.post("/delete/header/footer", auth, headerAndfooter.deleteHeaderFooter);
-router.get("/header/footer/list", auth, headerAndfooter.CompanyHeaderFooterList);
+router.get(
+  "/header/footer/list",
+  auth,
+  headerAndfooter.CompanyHeaderFooterList
+);
 
 module.exports = router;

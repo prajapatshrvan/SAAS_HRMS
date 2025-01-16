@@ -119,7 +119,6 @@ module.exports.leaveList = async (req, res) => {
       .populate({ path: "approvedBy", select: "firstname lastname" })
       .sort({ createdAt: -1 });
 
-    // Transform data into a flat structure
     const flatData = leaves.map((leave) => {
       const { empid, approvedBy, ...rest } = leave._doc;
       return {
@@ -127,7 +126,6 @@ module.exports.leaveList = async (req, res) => {
         employee_name: empid ? `${empid.firstname} ${empid.lastname}` : null,
         employeeID: empid ? empid.employeeID : null,
         approved_by_name: approvedBy ? `${approvedBy.firstname} ${approvedBy.lastname}` : null,
-    
       };
     });
 
@@ -240,8 +238,8 @@ module.exports.leaveCount = async (req, res) => {
     }, 0);
 
     // Calculate remaining and unpaid leaves
-    const remainingLeaves = Math.max(0, accruedLeaves - takenLeaves); 
-    const unpaidLeaves = Math.max(0, takenLeaves - accruedLeaves); 
+    const remainingLeaves = Math.max(0, paidLeaves - takenLeaves); 
+    const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves); 
 
     return res.status(200).json({
       totalLeavesPerYear,
