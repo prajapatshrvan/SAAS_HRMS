@@ -22,10 +22,8 @@ const checkLeaves = (attendance, leaves) => {
     let leaveFound = false;
 
     for (let leave of leaves) {
-      let startDate = new Date(leave.start_date);
-      let endDate = new Date(leave.end_date);
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(0, 0, 0, 0);
+      let startDate = new Date(leave.start_date).setHours(0, 0, 0, 0);
+      let endDate = new Date(leave.end_date).setHours(0, 0, 0, 0);
 
       if (startDate <= date && endDate >= date) {
         leaveFound = true;
@@ -836,104 +834,32 @@ const attendanceReportTesting = async (req, res, next) => {
             {
               $addFields: {
                 leaveData: {
-                  $ifNull: ["$leaveData", []]
-                }
-              }
-            },
-            {
-              $addFields: {
-                leaveData: {
-                  $arrayElemAt: [
+                  $ifNull: [
                     {
-                      $filter: {
-                        input: "$$leaves",
-                        as: "leave",
-                        cond: {
-                          $and: [
-                            { $gte: ["$date", "$$leave.start_date"] },
-                            { $lte: ["$date", "$$leave.end_date"] },
-                            {
-                              $in: ["$$leave.status", ["approved", "cancelled"]]
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    0
-                  ]
-                },
-                attendance_type: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: {
-                          $and: [
-                            { $gt: [{ $size: "$leaveData" }, 0] },
-                            {
-                              $eq: [
-                                { $arrayElemAt: ["$leaveData.status", 0] },
-                                "approved"
-                              ]
-                            }
-                          ]
-                        },
-                        then: {
-                          $cond: {
-                            if: {
-                              $or: [
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$$leaves",
+                            as: "leave",
+                            cond: {
+                              $and: [
+                                { $gte: ["$date", "$$leave.start_date"] },
+                                { $lte: ["$date", "$$leave.end_date"] },
                                 {
-                                  $eq: [
-                                    { $arrayElemAt: ["$leaveData.session", 0] },
-                                    "Session 1"
-                                  ]
-                                },
-                                {
-                                  $eq: [
-                                    { $arrayElemAt: ["$leaveData.session", 0] },
-                                    "Session 2"
+                                  $in: [
+                                    "$$leave.status",
+                                    ["approved", "cancelled"]
                                   ]
                                 }
                               ]
-                            },
-                            then: "HD", // Half-day leave
-                            else: "L" // Full-day leave
+                            }
                           }
-                        }
-                      },
-                      {
-                        case: { $eq: ["$status", true] },
-                        then: "P" // Present
-                      },
-                      {
-                        case: { $eq: ["$status", false] },
-                        then: "A" // Absent
-                      }
-                    ],
-                    default: "U" // Unknown
-                  }
-                },
-                color: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: { $eq: ["$attendance_type", "P"] },
-                        then: "30991F" // Green for Present
-                      },
-                      {
-                        case: { $eq: ["$attendance_type", "A"] },
-                        then: "FF0606" // Red for Absent
-                      },
-                      {
-                        case: { $eq: ["$attendance_type", "L"] },
-                        then: "0F137E" // Blue for Leave
-                      },
-                      {
-                        case: { $eq: ["$attendance_type", "HD"] },
-                        then: "FFA800" // Orange for Half-Day
-                      }
-                    ],
-                    default: "000000" // Black for Unknown
-                  }
+                        },
+                        0
+                      ]
+                    },
+                    [] // Default to empty array if no leave data
+                  ]
                 }
               }
             }
@@ -953,13 +879,50 @@ const attendanceReportTesting = async (req, res, next) => {
 
     const reportData = await Employee.aggregate(pipeline);
 
-    if (!reportData || reportData.length === 0) {
+    let data = []; // Accumulate results in an array
+
+    reportData.forEach(item => {
+      const updatedAttendances = item.attendances.map(attendance => {
+        let attendance_type = "A";
+        let color = "FF0606"; // Default to "Absent" status
+
+        // Check if leave data exists and if it is approved
+        if (
+          attendance.leaveData.length > 0 &&
+          attendance.leaveData[0].status === "approved"
+        ) {
+          if (
+            attendance.leaveData.session === "Session 1" ||
+            attendance.leaveData.session === "Session 2"
+          ) {
+            attendance_type = "HD";
+            color = "FFA800"; // Set color for leave
+          } else {
+            attendance_type = "L";
+            color = "0F137E"; // Set color for leave
+          }
+        } else {
+          // If the attendance status is true (Present)
+          attendance_type = "P";
+          color = "30991F"; // Set color for present
+        }
+
+        // Return updated attendance with attendance_type and color
+        return { ...attendance, attendance_type, color };
+      });
+
+      // Add the updated item with modified attendances to the result array
+      data.push({ ...item, attendances: updatedAttendances });
+    });
+
+    // If no data, return an error
+    if (data.length === 0) {
       return res
         .status(404)
         .json({ error: "No data found for the given range" });
     }
 
-    res.status(200).json(reportData);
+    res.status(200).json(data);
   } catch (error) {
     console.error("Error generating attendance report:", error);
     res.status(500).json({ error: "Internal server error" });
