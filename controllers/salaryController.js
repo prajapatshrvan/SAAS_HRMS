@@ -103,6 +103,56 @@ module.exports.salaryList = async (req, res) => {
   }
 };
 
+module.exports.EmployeeSalaryList = async (req, res) => {
+  try {
+    // Fetch salary data for the logged-in user
+    const salaryList = await Salary.find({
+      empid: req.user.userObjectId // Ensure `req.user.userObjectId` is defined and valid
+    }).populate({
+      path: "empid",
+      select: "firstname lastname employeeID image" // Fetch only necessary fields
+    });
+
+    // Map through the results and format the data
+    const newData = salaryList.map(salary => {
+      const { empid, ...rest } = salary.toObject(); // Convert document to plain object
+
+      // Handle case where empid is null or undefined
+      if (!empid) {
+        return {
+          ...rest,
+          employee_name: "Unknown",
+          empid: null,
+          employeeID: "Unknown",
+          image: "Unknown"
+        };
+      }
+
+      // Return formatted data for each salary record
+      return {
+        ...rest,
+        employee_name: `${empid.firstname} ${empid.lastname}`,
+        empid: empid._id,
+        employeeID: empid.employeeID,
+        image: empid.image
+      };
+    });
+
+    // Return the formatted data as a response
+    return res.status(200).json({
+      SalaryList: newData
+    });
+  } catch (error) {
+    // Log the error for debugging
+    console.error("Error fetching salary list:", error);
+
+    // Respond with an error message
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
 module.exports.updatedSalary = async (req, res) => {
   try {
     const id = req.body.id;

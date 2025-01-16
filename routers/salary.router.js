@@ -5,6 +5,7 @@ const router = require("express").Router();
 
 router.post("/create/salary", auth, salary.createSalary);
 router.get("/salary/list", auth, salary.salaryList);
+router.get("/emp/salary/list", auth, salary.EmployeeSalaryList);
 router.patch("/update/salary", auth, salary.updatedSalary);
 router.patch("/approved/salary", auth, salary.UpdateSalarystatus);
 router.patch("/pay/salary", auth, salary.PaySalary);
