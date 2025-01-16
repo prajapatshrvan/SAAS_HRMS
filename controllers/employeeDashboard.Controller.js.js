@@ -364,8 +364,8 @@ module.exports.updateWorkingTime = async (req, res) => {
 
 module.exports.manageBreak = async (req, res) => {
   try {
-    const { empid } = req.user.userObjectId;
-
+    const  empid  = req.user.userObjectId;
+    
     if (!empid ) {
       return res.status(400).json({
         message: "Employee ID and date are required.",
