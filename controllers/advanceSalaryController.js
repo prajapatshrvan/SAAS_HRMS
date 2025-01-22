@@ -30,7 +30,10 @@ const storage = multer.diskStorage({
     const lastDotIndex = file.originalname.lastIndexOf(".");
     cb(
       null,
-      file.originalname.slice(0, lastDotIndex).replace(" ", "_") + Date.now() + "." + file.originalname.split(".").pop()
+      file.originalname.slice(0, lastDotIndex).replace(" ", "_") +
+        Date.now() +
+        "." +
+        file.originalname.split(".").pop()
     );
   }
 });
@@ -42,7 +45,7 @@ const upload = multer({
 }).single("attachment");
 
 module.exports.createAdvanceSalary = async (req, res) => {
-  upload(req, res, async (err) => {
+  upload(req, res, async err => {
     try {
       if (err) {
         console.error(err);
@@ -52,7 +55,14 @@ module.exports.createAdvanceSalary = async (req, res) => {
         });
       }
 
-      const { advance_salary_type, amount, instalment, emi_amount, reason } = req.body;
+      const {
+        advance_salary_type,
+        amount,
+        instalment,
+        emi_amount,
+        reason
+      } = req.body;
+
       const empid = req.user.userObjectId;
 
       const empDetails = await Employee.findOne({ _id: empid });
@@ -68,11 +78,14 @@ module.exports.createAdvanceSalary = async (req, res) => {
 
       if (monthsOfService < 6) {
         return res.status(403).json({
-          message: "You are not eligible for advance salary as you have not completed six months of service"
+          message:
+            "You are not eligible for advance salary as you have not completed six months of service"
         });
       }
 
-      const advanceSalaryExist = await AdvanceSalary.findOne({ $and: [{ empid }, { status: "pending" }] });
+      const advanceSalaryExist = await AdvanceSalary.findOne({
+        $and: [{ empid }, { status: "pending" }]
+      });
 
       if (advanceSalaryExist) {
         return res.status(409).json({
@@ -80,7 +93,9 @@ module.exports.createAdvanceSalary = async (req, res) => {
         });
       }
 
-      const attachmentPath = req.file ? `uploads/${empDetails.employeeID}/${req.file.filename}` : null;
+      const attachmentPath = req.file
+        ? `uploads/${empDetails.employeeID}/${req.file.filename}`
+        : null;
 
       const advanceSalary = new AdvanceSalary({
         empid,
@@ -107,13 +122,18 @@ module.exports.createAdvanceSalary = async (req, res) => {
     }
   });
 };
+
 module.exports.AdvanceSalaryStatus = async (req, res) => {
   try {
     const { id, status } = req.body;
+    const approvedBy = req.user.userObjectId;
     let statuses = ["approved", "rejected", "cancelled"];
     if (statuses.includes(status)) {
       await AdvanceSalary.findByIdAndUpdate(id, {
-        $set: { status: status }
+        $set: {
+          approvedBy: approvedBy,
+          status: status
+        }
       });
       return res.status(200).json({
         message: `AdvanceSalary ${status}`
@@ -130,20 +150,42 @@ module.exports.AdvanceSalaryStatus = async (req, res) => {
     });
   }
 };
+
 module.exports.advanceSalaryList = async (req, res) => {
   try {
-    const advanceSalaryList = await AdvanceSalary.find().populate({
-      path: "empid",
-      select: "firstname middlename lastname employeeID image"
-    });
+    const role = req.user.role_name;
+    const empid = req.user.userObjectId;
+    let query = {};
 
-    const modifiedList = advanceSalaryList.map((advanceSalary) => {
-      const { empid, ...rest } = advanceSalary._doc;
+    if (role !== "ADMIN" && role !== "HR") {
+      query = { empid: empid };
+    }
+
+    const advanceSalaryList = await AdvanceSalary.find(query)
+      .populate({
+        path: "empid",
+        select: "firstname middlename lastname employeeID image"
+      })
+      .populate({
+        path: "approvedBy",
+        select: "firstname middlename lastname"
+      });
+
+    const modifiedList = advanceSalaryList.map(advanceSalary => {
+      const { empid, approvedBy, ...rest } = advanceSalary._doc;
       const employee_name = `${empid.firstname} ${empid.lastname}`;
       const employeeID = empid.employeeID;
       const image = empid.image;
       const empId = empid._id;
-      return { ...rest, employee_name, employeeID, image, empId };
+      const approvedBy_name = `${approvedBy.firstname} ${approvedBy.lastname}`;
+      return {
+        ...rest,
+        employee_name,
+        employeeID,
+        image,
+        empId,
+        approvedBy_name
+      };
     });
 
     return res.status(200).json({
@@ -156,6 +198,7 @@ module.exports.advanceSalaryList = async (req, res) => {
     });
   }
 };
+
 module.exports.advanceSalarybyId = async (req, res) => {
   try {
     const id = req.params.id;
@@ -176,7 +219,13 @@ module.exports.advanceSalarybyId = async (req, res) => {
     const image = empid.image;
     const empId = empid._id;
 
-    const advanceSalaryData = { ...rest, employee_name, employeeID, image, empId };
+    const advanceSalaryData = {
+      ...rest,
+      employee_name,
+      employeeID,
+      image,
+      empId
+    };
 
     return res.status(200).json({
       data: advanceSalaryData
