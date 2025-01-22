@@ -2,48 +2,52 @@ const mongoose = require("mongoose");
 
 const advanceSalarySchema = new mongoose.Schema(
   {
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee"
+    },
     empid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
-      required: true,
+      required: true
     },
     advance_salary_type: {
       type: String,
-      required: true,
+      required: true
     },
     amount: {
       type: Number,
-      required: true,
+      required: true
     },
     emiNumber: {
-      type: Number,
+      type: Number
     },
     paidAmount: {
       type: Number,
-      default : 0,
-      required: true,
+      default: 0,
+      required: true
     },
     instalment: {
       type: Number,
-      required: true,
+      required: true
     },
     emi_amount: {
       type: Number,
-      required: true,
+      required: true
     },
     reason: {
-      type: String,
+      type: String
     },
     attachment: {
-      type: [String],
+      type: [String]
     },
     status: {
       type: String,
-      default: "pending",
-    },
+      default: "pending"
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 const AdvanceSalary = mongoose.model("AdvanceSalary", advanceSalarySchema);

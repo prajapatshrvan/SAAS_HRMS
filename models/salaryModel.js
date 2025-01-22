@@ -5,150 +5,151 @@ const salarySchema = new mongoose.Schema(
     empid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
-      required: true,
+      required: true
     },
     employeeID: {
-      type: String,
+      type: String
     },
     empname: {
-      type: String,
+      type: String
     },
     pf: {
-      type: String,
+      type: String
     },
     esi: {
-      type: String,
+      type: String
     },
     hra: {
-      type: String,
+      type: String
     },
     da: {
-      type: String,
+      type: String
     },
     advance_amount: {
-      type: String,
+      type: String
     },
     date: {
-      type: String,
+      type: String
     },
     month: {
-      type: String,
+      type: String
     },
     year: {
-      type: String,
+      type: String
     },
-    salary_status: {
-      type: String,
-      default: "pending",
-    },
+
     payment_mode: {
       type: String,
-      default: "bank",
+      default: "bank"
     },
     payment_status: {
       type: Boolean,
-      default: false,
+      default: false
     },
     presentDay: {
       type: Number,
-      default: 0,
+      default: 0
     },
     totalLeave: {
       type: Number,
-      default: 0,
+      default: 0
     },
     unpaidLeave: {
       type: Number,
-      default: 0,
+      default: 0
     },
     paidLeave: {
-      type: Number,
+      type: Number
     },
     basicSalary: {
-      type: Number,
+      type: Number
     },
     ta: {
       type: Number,
-      default: 0,
+      default: 0
     },
     da: {
       type: Number,
-      default: 0,
+      default: 0
     },
     other: {
       type: Number,
-      default: 0,
+      default: 0
     },
     paydays: {
-      type: String,
+      type: String
     },
     bonus: {
       type: Number,
-      default: 0,
+      default: 0
     },
     netSalary: {
-      type: Number,
+      type: Number
     },
     leaveDeduction: {
       type: Number,
-      default: 0,
+      default: 0
     },
     miscellaneous: {
       type: Number,
-      default: 0,
+      default: 0
     },
     totalCTC: {
-      type: String,
+      type: String
     },
     countPardaysalary: {
-      type: String,
+      type: String
     },
     monthlyAmount: {
-      type: String,
+      type: String
     },
     advanceSalary: {
       type: Number,
-      default: 0,
+      default: 0
     },
     totaldeduction: {
-      type: Number,
+      type: Number
     },
     description: {
-      type: String,
+      type: String
     },
     designation: {
-      type: String,
+      type: String
     },
     department: {
-      type: String,
+      type: String
     },
     date_of_joining: {
-      type: String,
+      type: String
     },
     pancard_No: {
-      type: String,
+      type: String
     },
     gender: {
-      type: String,
+      type: String
     },
     account_no: {
-      type: String,
+      type: String
     },
     remainingDays: {
-      type: String,
+      type: String
     },
     grossSalary: {
-      type: String,
+      type: String
     },
     totalGrossSalary: {
-      type: String,
+      type: String
     },
     totalnetsalary: {
-      type: String,
+      type: String
     },
+    salary_status: {
+      type: String,
+      default: "pending"
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 

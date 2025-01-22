@@ -38,7 +38,10 @@ module.exports.city = async (req, res) => {
       return;
     }
     // Fetch data from the "cities" collection
-    let data = await db.collection("cities").find({ state_id: stateId }).toArray();
+    let data = await db
+      .collection("cities")
+      .find({ state_id: stateId })
+      .toArray();
 
     res.send(data);
   } catch (err) {
@@ -65,7 +68,10 @@ module.exports.state = async (req, res) => {
       return;
     }
     // Fetch data from the "states" collection
-    let data = await db.collection("states").find({ country_id: countryId }).toArray();
+    let data = await db
+      .collection("states")
+      .find({ country_id: countryId })
+      .toArray();
     res.send(data);
   } catch (err) {
     console.error("Error fetching data:", err);
@@ -91,7 +97,10 @@ module.exports.state_name = async (req, res) => {
     //   return;
     // }
     // Fetch data from the "states" collection
-    let data = await db.collection("states").find({ country_name: countryName }).toArray();
+    let data = await db
+      .collection("states")
+      .find({ country_name: countryName })
+      .toArray();
     res.send(data);
   } catch (err) {
     console.error("Error fetching data:", err);

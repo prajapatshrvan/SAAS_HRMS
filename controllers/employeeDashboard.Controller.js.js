@@ -7,18 +7,20 @@ const Salary = require("../models/salaryModel.js");
 module.exports.personalInfo = async (req, res) => {
   try {
     const empId = req.user?.userObjectId;
-    const info = await Employee.findOne({ _id: empId });
+    const info = await Employee.findOne({ _id: empId },{password : 0,token : 0,inherits : 0,__v : 0});
     const First = info.firstname;
     const Middle = info.middlename;
     const Last = info.lastname;
     const fullName = `${First} ${Middle} ${Last}`;
+    
 
     return res.status(200).json({
       FullName: fullName,
       Designation: info.designation,
       EmployeeID: info.employeeID,
       JoiningDate: info.createdAt,
-      Department: info.department
+      Department: info.department,
+      info
     });
   } catch (error) {
     console.log(error);
@@ -384,7 +386,7 @@ module.exports.manageBreak = async (req, res) => {
         empid: empid,
         date: startOfDay,
         check: [],
-        breaks: [],
+        breaks: [],  
       });
     }
 
@@ -428,7 +430,6 @@ module.exports.manageBreak = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 module.exports.workingHoursList = async (req, res) => {
   try {
@@ -495,7 +496,6 @@ module.exports.workingHoursList = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 module.exports.BirthdaysCurrentDay = async (req, res) => {
   try {
@@ -585,43 +585,7 @@ module.exports.Work_Anniversary = async (req, res) => {
     });
   }
 };
-
-// module.exports.Week_Working_Hours_List = async (req, res) => {
-//   try {
-//     const currentUserId = req.user?.userObjectId;
-
-//     if (!currentUserId) {
-//       return res.status(401).json({ message: "Unauthorized access" });
-//     }
-
-//     const inputDate = new Date();
-//     const dayOfWeek = inputDate.getDay(); 
-
-//     const sunday = new Date(inputDate.setDate(inputDate.getDate() - dayOfWeek));
-//     const saturday = new Date(sunday.getTime() + 6 * 24 * 60 * 60 * 1000);
-
-//     const weekStart = new Date(sunday.setHours(0, 0, 0, 0));
-//     const weekEnd = new Date(saturday.setHours(23, 59, 59, 999));
-
-//     const query = {
-//       empid: currentUserId,
-//       date: { $gte: weekStart, $lte: weekEnd },
-//     };
-
-//     const workingTimeData = await Workingtime.find(query, "overtime breaktime worktime check date")
-
-   
-
-//     return res.status(200).json({
-//       data: workingTimeData,
-//     });
-//   } catch (error) {
-//     console.error("Error in Week_Working_Hours_List:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
-
-
+ 
 module.exports.Week_Working_Hours_List = async (req, res) => {
   try {
     const currentUserId = req.user?.userObjectId;
@@ -686,6 +650,131 @@ module.exports.Week_Working_Hours_List = async (req, res) => {
   } catch (error) {
     console.error("Error in Week_Working_Hours_List:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+
+// module.exports.workingHoursCountList = async (req, res) => {
+//   try {
+//     const empid = req.user?.userObjectId;
+
+//     const currentMonth = moment().month() + 1;
+
+//     const query = {
+//       empid: empid,
+//       $expr: {
+//         $eq: [{ $month: { $dateFromString: { dateString: "$date" } } }, currentMonth],
+//       },
+//     };
+
+//     const workingTimeData = await Workingtime.find(query);
+
+//     // if (!workingTimeData.length) {
+//     //   return res.status(404).json({
+//     //     message: "No working time data found for the current month.",
+//     //     data: [],
+//     //   });
+//     // }
+
+//     // Initialize counters
+//     let totalWorkingHours = 0;
+//     let totalOvertime = 0;
+//     let totalBreakTime = 0;
+
+//     // Loop through the data and calculate totals
+//     workingTimeData.forEach((entry) => {
+//       totalWorkingHours += entry.worktime || 0;
+//       totalOvertime += entry.overtime || 0;
+//       totalBreakTime += entry.breaktime || 0;
+//     });
+
+
+//     // Format the response data
+//     const formattedData = {
+//       totalWorkingHours,
+//       totalOvertime,
+//       totalBreakTime
+//     };
+
+//     // Respond with success
+//     return res.status(200).json({
+//       message: "Working time data retrieved successfully.",
+//       data: formattedData,
+//     });
+//   } catch (error) {
+//     console.error("Error in workingHoursList:", error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+
+
+module.exports.workingHoursCountList = async (req, res) => {
+  try {
+    const empid = req.user?.userObjectId;
+
+    // Query for current month working time data
+    const currentMonth = moment().month() + 1;
+    const monthQuery = {
+      empid: empid,
+      $expr: {
+        $eq: [{ $month: { $dateFromString: { dateString: "$date" } } }, currentMonth],
+      },
+    };
+
+    const [workingTimeData, weekData] = await Promise.all([
+      Workingtime.find(monthQuery),
+      (() => {
+        // Calculate start and end of the current week
+        const startOfWeek = new Date();
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const weekQuery = {
+          empid: empid,
+          date: {
+            $gte: startOfWeek,
+            $lte: endOfWeek,
+          },
+        };
+
+        return Workingtime.find(weekQuery);
+      })(),
+    ]);
+
+    // Calculate totals for the current week
+    const totalWeekHours = weekData.reduce((total, entry) => total + (entry.worktime || 0), 0);
+
+    // Calculate totals for the current month
+    const totals = workingTimeData.reduce(
+      (acc, entry) => {
+        acc.totalWorkingHours += entry.worktime || 0;
+        acc.totalOvertime += entry.overtime || 0;
+        acc.totalBreakTime += entry.breaktime || 0;
+        return acc;
+      },
+      { totalWorkingHours: 0, totalOvertime: 0, totalBreakTime: 0 }
+    );
+
+    // Format the response data
+    const formattedData = {
+      totalWeekHours,
+      ...totals,
+    };
+
+    // Respond with success
+    return res.status(200).json({
+      message: "Working time data retrieved successfully.",
+      data: formattedData,
+    });
+  } catch (error) {
+    console.error("Error in workingHoursCountList:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
