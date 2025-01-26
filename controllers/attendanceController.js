@@ -8,7 +8,6 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const fs = require("fs");
-e;
 
 const apiHandler = new ApiCRUDController(AttendanceModel);
 const apiHandlerUSER = new ApiCRUDController(Employee);
