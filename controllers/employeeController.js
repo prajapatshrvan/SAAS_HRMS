@@ -579,8 +579,115 @@ let modifyEmpData = (alldata, req) => {
 };
 
 
+// module.exports.EmployeeList = async (req, res) => {
+//   let statusParam = req.query.status;
+//   let statusList = {
+//     active: ["completed", "InNoticePeriod"],
+//     pending: "pending",
+//   };
+
+//   let empstatus = null;
+//   if (statusParam === "active" || statusParam === "pending") {
+//     empstatus = statusList[statusParam];
+//   }
+
+//   try {
+//     let employeeList;
+
+//     if (empstatus) {
+//       employeeList = await Employee.aggregate([
+//         { $match: { status: { $in: empstatus } } },
+//         { $sort: { createdAt: -1 } },
+//         {
+//           $lookup: {
+//             from: "empdocuments",
+//             localField: "_id",
+//             foreignField: "empid",
+//             as: "documents",
+//           },
+//         },
+//         { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, // Flatten documents array
+//         { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, // Flatten experienceData array
+//         {
+//           $project: {
+//             firstname: 1,
+//             lastname: 1,
+//             middlename: 1,
+//             mobile_number: 1,
+//             status: 1,
+//             employeeID: 1,
+//             image: 1,
+//             emergency_number: 1,
+//             department: 1,
+//             designation: 1,
+//             joining_date: 1,
+//             marital_status: 1,
+//             monthlycompensation: "$ctcDetails.monthlycompensation",
+//             bachelor_doc: "$documents.bachelor_doc",
+//             secondary_doc: "$documents.secondary_doc",
+//             senior_doc: "$documents.senior_doc",
+//             extra: "$documents.extra",
+//             companyname: "$documents.experienceData.companyname", 
+//             start_date: "$documents.experienceData.start_date",
+//             end_date: "$documents.experienceData.end_date",
+//             offerletter: "$documents.experienceData.offerletter",
+//             payslip: "$documents.experienceData.payslip",
+//           },
+//         },
+//       ]);
+//     } else {
+//       employeeList = await Employee.aggregate([
+//         { $sort: { createdAt: -1 } },
+//         {
+//           $lookup: {
+//             from: "empdocuments",
+//             localField: "_id",
+//             foreignField: "empid",
+//             as: "documents",
+//           },
+//         },
+//         { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, 
+//         { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, 
+//         {
+//           $project: {
+//             firstname: 1,
+//             lastname: 1,
+//             middlename: 1,
+//             mobile_number: 1,
+//             status: 1,
+//             employeeID: 1,
+//             image: 1,
+//             emergency_number: 1,
+//             department: 1,
+//             designation: 1,
+//             joining_date: 1,
+//             marital_status: 1,
+//             monthlycompensation: "$ctcDetails.monthlycompensation",
+//             bachelor_doc: "$documents.bachelor_doc",
+//             secondary_doc: "$documents.secondary_doc",
+//             senior_doc: "$documents.senior_doc",
+//             companyname: "$documents.experienceData.companyname", 
+//             start_date: "$documents.experienceData.start_date",
+//             end_date: "$documents.experienceData.end_date",
+//             offerletter: "$documents.experienceData.offerletter",
+//             payslip: "$documents.experienceData.payslip",
+//           },
+//         },
+//       ]);
+//     }
+
+//     return res.status(200).send(employeeList);
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+
 module.exports.EmployeeList = async (req, res) => {
   let statusParam = req.query.status;
+  let searchParam = req.query.search; 
   let statusList = {
     active: ["completed", "InNoticePeriod"],
     pending: "pending",
@@ -592,89 +699,56 @@ module.exports.EmployeeList = async (req, res) => {
   }
 
   try {
-    let employeeList;
-
+    let matchStage = {};
+    
     if (empstatus) {
-      employeeList = await Employee.aggregate([
-        { $match: { status: { $in: empstatus } } },
-        { $sort: { createdAt: -1 } },
-        {
-          $lookup: {
-            from: "empdocuments",
-            localField: "_id",
-            foreignField: "empid",
-            as: "documents",
-          },
-        },
-        { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, // Flatten documents array
-        { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, // Flatten experienceData array
-        {
-          $project: {
-            firstname: 1,
-            lastname: 1,
-            middlename: 1,
-            mobile_number: 1,
-            status: 1,
-            employeeID: 1,
-            image: 1,
-            emergency_number: 1,
-            department: 1,
-            designation: 1,
-            joining_date: 1,
-            marital_status: 1,
-            monthlycompensation: "$ctcDetails.monthlycompensation",
-            bachelor_doc: "$documents.bachelor_doc",
-            secondary_doc: "$documents.secondary_doc",
-            senior_doc: "$documents.senior_doc",
-            extra: "$documents.extra",
-            companyname: "$documents.experienceData.companyname", 
-            start_date: "$documents.experienceData.start_date",
-            end_date: "$documents.experienceData.end_date",
-            offerletter: "$documents.experienceData.offerletter",
-            payslip: "$documents.experienceData.payslip",
-          },
-        },
-      ]);
-    } else {
-      employeeList = await Employee.aggregate([
-        { $sort: { createdAt: -1 } },
-        {
-          $lookup: {
-            from: "empdocuments",
-            localField: "_id",
-            foreignField: "empid",
-            as: "documents",
-          },
-        },
-        { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, 
-        { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, 
-        {
-          $project: {
-            firstname: 1,
-            lastname: 1,
-            middlename: 1,
-            mobile_number: 1,
-            status: 1,
-            employeeID: 1,
-            image: 1,
-            emergency_number: 1,
-            department: 1,
-            designation: 1,
-            joining_date: 1,
-            marital_status: 1,
-            monthlycompensation: "$ctcDetails.monthlycompensation",
-            bachelor_doc: "$documents.bachelor_doc",
-            secondary_doc: "$documents.secondary_doc",
-            senior_doc: "$documents.senior_doc",
-            companyname: "$documents.experienceData.companyname", 
-            start_date: "$documents.experienceData.start_date",
-            end_date: "$documents.experienceData.end_date",
-            offerletter: "$documents.experienceData.offerletter",
-            payslip: "$documents.experienceData.payslip",
-          },
-        },
-      ]);
+      matchStage.status = { $in: empstatus };
     }
+
+    if (searchParam) {
+      matchStage.firstname = { $regex: `^${searchParam}`, $options: "i" };
+    }
+
+    let employeeList = await Employee.aggregate([
+      { $match: matchStage },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "empdocuments",
+          localField: "_id",
+          foreignField: "empid",
+          as: "documents",
+        },
+      },
+      { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, 
+      { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          firstname: 1,
+          lastname: 1,
+          middlename: 1,
+          mobile_number: 1,
+          status: 1,
+          employeeID: 1,
+          image: 1,
+          emergency_number: 1,
+          department: 1,
+          designation: 1,
+          joining_date: 1,
+          marital_status: 1,
+          monthlycompensation: "$ctcDetails.monthlycompensation",
+          bachelor_doc: "$documents.bachelor_doc",
+          secondary_doc: "$documents.secondary_doc",
+          senior_doc: "$documents.senior_doc",
+          extra: "$documents.extra",
+          companyname: "$documents.experienceData.companyname", 
+          start_date: "$documents.experienceData.start_date",
+          end_date: "$documents.experienceData.end_date",
+          offerletter: "$documents.experienceData.offerletter",
+          payslip: "$documents.experienceData.payslip",
+        },
+      },
+    ]);
 
     return res.status(200).send(employeeList);
   } catch (error) {
@@ -683,6 +757,7 @@ module.exports.EmployeeList = async (req, res) => {
     });
   }
 };
+
 
 // employee status
 module.exports.employeeStatus = async (req, res) => {
