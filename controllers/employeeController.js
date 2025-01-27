@@ -242,6 +242,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         family_member_phone,
         family_member_email,
         marital_status,
+        joining_date
       } = req.body;
 
       const emp = await Employee.findById(empid);
@@ -292,6 +293,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         family_member_phone,
         family_member_email,
         marital_status,
+        joining_date
       };
 
       if (req.files.image && req.files.image[0]) {
