@@ -28,7 +28,13 @@ module.exports.createSalary = async (req, res) => {
     }
 
     const employees = await Employee.find({ status: "completed" });
-    const monthdays = 30;
+    const date = new Date();
+    const currentMonth = date.getMonth();
+    const currentYear = date.getFullYear();
+    const lastDateOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    const totalDaysInCurrentMonth = lastDateOfMonth.getDate();
+
+    const monthdays = totalDaysInCurrentMonth;
     const paidLeave = 1;
     let unpaidLeave = 0;
     // const startDate = moment(`${Year}-${Month}-01`).startOf("month");
@@ -125,8 +131,7 @@ module.exports.createSalary = async (req, res) => {
         totalnetsalary: parseFloat(totalnetSalary),
         leaveDeduction: leaveDeduction,
         miscellaneous: 0,
-        totaldeduction: parseFloat(totaldeduction),
-        absent_day: totalLeaveDays || 0
+        totaldeduction: parseFloat(totaldeduction)
       });
       await salary.save();
 
