@@ -716,7 +716,6 @@ module.exports.addctcdetails = async (req, res) => {
   }
 };
 
-
 // module.exports.Employeedocument = async (req, res, next) => {
 //   uploaddoc(req, res, async (err) => {
 //     try {
