@@ -73,7 +73,10 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         family_member_dob,
         family_member_phone,
         family_member_email,
-        profile
+        marital_status,
+        profile,
+        joining_date
+    
       } = req.body;
 
       // Capitalize function for first letters
@@ -185,7 +188,9 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         family_member_dob,
         family_member_phone,
         family_member_email,
-        profile
+        profile,
+        marital_status,
+        joining_date
       });
 
       const data = await employee.save();
@@ -235,7 +240,8 @@ module.exports.updateEmployee = async (req, res, next) => {
         relationship,
         family_member_dob,
         family_member_phone,
-        family_member_email
+        family_member_email,
+        marital_status,
       } = req.body;
 
       const emp = await Employee.findById(empid);
@@ -284,7 +290,8 @@ module.exports.updateEmployee = async (req, res, next) => {
         relationship,
         family_member_dob,
         family_member_phone,
-        family_member_email
+        family_member_email,
+        marital_status,
       };
 
       if (req.files.image && req.files.image[0]) {
@@ -324,7 +331,6 @@ module.exports.updateEmployee = async (req, res, next) => {
     return res.status(500).json({ message: "Failed to update Employee" });
   }
 };
-
 
 
 module.exports.EmployeeAddress = async (req, res, next) => {
@@ -473,7 +479,7 @@ module.exports.addBankDetails = async (req, res) => {
 
 module.exports.adddepartment = async (req, res) => {
   try {
-    const { company_email, department, designation, empid, country, state, city, zip } = req.body;
+    const { company_email, department,joining_date, designation, empid, country, state, city, zip } = req.body;
     const exist = await Employee.findOne({ company_email });
     if (exist) {
       return res.status(409).json({
@@ -525,6 +531,7 @@ module.exports.adddepartment = async (req, res) => {
       company_email,
       department,
       designation,
+      joining_date,
       worklocation,
       status: "approved"
     };
@@ -706,7 +713,6 @@ module.exports.addctcdetails = async (req, res) => {
     });
   }
 };
-
 
 
 // module.exports.Employeedocument = async (req, res, next) => {
