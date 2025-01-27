@@ -140,6 +140,10 @@ const salarySchema = new mongoose.Schema(
     totalGrossSalary: {
       type: String
     },
+    absent_day: {
+      type: String
+    },
+
     totalnetsalary: {
       type: String
     },

@@ -3,85 +3,6 @@ const ApiCRUDController = require("../controllers/ApiCrudController");
 const moment = require("moment");
 const getResourcesForUser = require("../utility/generatePassword.js");
 
-// module.exports.addBulkHoliday = async (req, res) => {
-//   try {
-//     const userRoleMapping = {
-//       _id: req.user.userObjectId,
-//       userId: req.user.userId,
-//       role: req.user.role_name,
-//       inherits: req.user.userInheritedRoles
-//     };
-
-//     const userResources = await getResourcesForUser(userRoleMapping);
-
-//     if (userResources) {
-//       const { year: requestedYear, country: requestedCountry, state: requestedState, holiday_name, date } = req.body;
-
-//       if (!requestedCountry) {
-//         return res.status(400).json({ message: "Please select country" });
-//       }
-//       if (!requestedState) {
-//         return res.status(400).json({ message: "Please select state" });
-//       }
-//       if (!requestedYear) {
-//         return res.status(400).json({ message: "Please select year" });
-//       }
-//       if (!holiday_name) {
-//         return res.status(400).json({ message: "Please fill holiday name" });
-//       }
-//       if (!date) {
-//         return res.status(400).json({ message: "Please fill date" });
-//       }
-
-//       // Check if the date is valid
-//       const validDate = new Date(date);
-//       if (isNaN(validDate.getTime())) {
-//         return res.status(400).json({ message: "Invalid date format" });
-//       }
-
-//       // Check for existing holiday with the same name, year, country, and state
-//       let existingHolidays = await Holiday.findOne({
-//         holiday_name,
-//         year: requestedYear,
-//         country: requestedCountry,
-//         state: requestedState
-//       });
-
-//       if (existingHolidays) {
-//         return res.status(400).json({ message: "This holiday already exists" });
-//       }
-
-//       // Format the date and get the day of the week
-//       const formattedDate = validDate.toISOString().split("T")[0];
-//       const dayOfWeek = validDate.toLocaleDateString("en-US", { weekday: "long" });
-
-//       // Create a new holiday
-//       const newHoliday = new Holiday({
-//         country: requestedCountry,
-//         state: requestedState,
-//         year: requestedYear,
-//         day: dayOfWeek,
-//         date: formattedDate,
-//         holiday_name
-//       });
-
-//       // Save the new holiday to the database
-//       await newHoliday.save();
-
-//       return res.status(200).json({
-//         message: "Holiday added successfully."
-//       });
-//     } else {
-//       return res.status(403).json({ message: "Access denied" });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       message: "Internal Server Error"
-//     });
-//   }
-// };
-
 module.exports.addBulkHoliday = async (req, res) => {
   try {
     // const userRoleMapping = {
@@ -173,23 +94,23 @@ module.exports.addBulkHoliday = async (req, res) => {
 
 module.exports.UpdateHoliday = async (req, res) => {
   try {
-    const userRoleMapping = {
-      _id: req.user.userObjectId,
-      userId: req.user.userId,
-      role: req.user.role_name,
-      inherits: req.user.userInheritedRoles
-    };
+    // const userRoleMapping = {
+    //   _id: req.user.userObjectId,
+    //   userId: req.user.userId,
+    //   role: req.user.role_name,
+    //   inherits: req.user.userInheritedRoles
+    // };
 
-    const userResources = await getResourcesForUser(userRoleMapping);
+    // const userResources = await getResourcesForUser(userRoleMapping);
 
     // Check if the user has the required permissions
-    if (
-      !userResources &&
-      !userResources["holidays"] &&
-      !userResources["holidays"].includes("edit")
-    ) {
-      return res.status(403).json({ message: "Access denied" });
-    }
+    // if (
+    //   !userResources &&
+    //   !userResources["holidays"] &&
+    //   !userResources["holidays"].includes("edit")
+    // ) {
+    //   return res.status(403).json({ message: "Access denied" });
+    // }
     const id = req.query.id;
     const { country, state, year, holiday_status, holiday } = req.body;
 

@@ -28,7 +28,13 @@ module.exports.createSalary = async (req, res) => {
     }
 
     const employees = await Employee.find({ status: "completed" });
-    const monthdays = 30;
+    const date = new Date();
+    const currentMonth = date.getMonth();
+    const currentYear = date.getFullYear();
+    const lastDateOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    const totalDaysInCurrentMonth = lastDateOfMonth.getDate();
+
+    const monthdays = totalDaysInCurrentMonth;
     const paidLeave = 1;
     let unpaidLeave = 0;
     // const startDate = moment(`${Year}-${Month}-01`).startOf("month");
@@ -51,11 +57,11 @@ module.exports.createSalary = async (req, res) => {
         0
       );
 
-      let remainingDays = monthdays - unpaidLeave;
-
       if (totalLeaveDays > 1) {
         unpaidLeave = totalLeaveDays - paidLeave;
       }
+
+      let remainingDays = monthdays - unpaidLeave;
 
       const totalGrossSalary =
         parseFloat(emp.ctcDetails.monthlycompensation) || 0;
@@ -272,8 +278,6 @@ module.exports.salaryList = async (req, res) => {
 
 module.exports.EmployeeSalaryList = async (req, res) => {
   try {
-    // Fetch salary data for the logged-in user
-    console.log(req.user.userObjectId);
     const salaryList = await Salary.find({
       empid: req.user.userObjectId
     }).populate({
@@ -285,7 +289,6 @@ module.exports.EmployeeSalaryList = async (req, res) => {
     const newData = salaryList.map(salary => {
       const { empid, ...rest } = salary.toObject(); // Convert document to plain object
 
-      // Handle case where empid is null or undefined
       if (!empid) {
         return {
           ...rest,
