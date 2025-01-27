@@ -226,6 +226,98 @@ const attendance = async (req, res, next) => {
   res.status(200).send("Success");
 };
 
+// const attendanceReport = async (req, res, next) => {
+//   let leaveFilters = {
+//     input: "$leaves",
+//     as: "leave",
+//     cond: {
+//       $and: [
+//         {
+//           $or: [
+//             { $eq: ["$$leave.status", "approved"] },
+//             { $eq: ["$$leave.status", "cancelled"] }
+//           ]
+//         }
+//       ]
+//     }
+//   };
+
+//   let collections = [
+//     {
+//       name: "leaves",
+//       key: "empid",
+//       as: "leaves",
+//       local: "_id",
+//       filters: leaveFilters
+//     }
+//   ];
+
+//   let match = [
+//     { $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }
+//   ];
+
+//   const reportData = await readAllandPopulate(collections, undefined, match);
+
+//   let modifiedData = [];
+
+//   const { month, year } = req.query;
+
+//   const currentDate = new Date();
+//   let firstDateOfMonth, lastDateOfMonth;
+
+//   if (month && year) {
+//     const yearInt = parseInt(year, 10);
+//     const monthInt = parseInt(month, 10) - 1;
+
+//     if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
+//       return res.status(400).json({ error: "Invalid year or month" });
+//     }
+//     firstDateOfMonth = new Date(yearInt, monthInt, 1);
+//     lastDateOfMonth = new Date(yearInt, monthInt + 1, 0);
+//   } else {
+//     firstDateOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth(),
+//       1
+//     );
+//     lastDateOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth() + 1,
+//       0
+//     );
+//   }
+
+//   const formatDateToISOString = (date, startOfDay = true) => {
+//     const year = date.getFullYear();
+//     const month = String(date.getMonth() + 1).padStart(2, "0");
+//     const day = String(date.getDate()).padStart(2, "0");
+
+//     const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
+//     return `${year}-${month}-${day}T${time}+00:00`;
+//   };
+
+//   for (let index = 0; index < reportData.length; index++) {
+//     const item = reportData[index];
+
+//     let attendances = await AttendanceModel.find({
+//       empid: item._id,
+//       date: {
+//         $gte: formatDateToISOString(firstDateOfMonth, true),
+//         $lte: formatDateToISOString(lastDateOfMonth, false)
+//       }
+//     });
+
+//     let newItem = removeUnnecessaryFields(item);
+//     if (attendances.length) {
+//       let data = checkLeaves(attendances, item.leaves);
+//       newItem.attendance = data;
+//     }
+
+//     modifiedData.push(newItem);
+//   }
+//   res.status(200).send(modifiedData);
+// };
+
 const attendanceReport = async (req, res, next) => {
   let leaveFilters = {
     input: "$leaves",
@@ -262,7 +354,6 @@ const attendanceReport = async (req, res, next) => {
 
   const { month, year } = req.query;
 
-  const currentDate = new Date();
   let firstDateOfMonth, lastDateOfMonth;
 
   if (month && year) {
@@ -272,19 +363,24 @@ const attendanceReport = async (req, res, next) => {
     if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
       return res.status(400).json({ error: "Invalid year or month" });
     }
-    firstDateOfMonth = new Date(yearInt, monthInt, 1);
-    lastDateOfMonth = new Date(yearInt, monthInt + 1, 0);
+
+    // Calculate first and last dates based on the 26th to 25th range
+    firstDateOfMonth =
+      monthInt === 0
+        ? new Date(yearInt - 1, 11, 26) // Previous year December 26th
+        : new Date(yearInt, monthInt - 1, 26); // Previous month 26th
+    lastDateOfMonth = new Date(yearInt, monthInt, 25); // Current month 25th
   } else {
-    firstDateOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    lastDateOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    );
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+
+    // Calculate first and last dates based on the 26th to 25th range
+    firstDateOfMonth =
+      currentMonth === 0
+        ? new Date(currentYear - 1, 11, 26) // Previous year December 26th
+        : new Date(currentYear, currentMonth - 1, 26); // Previous month 26th
+    lastDateOfMonth = new Date(currentYear, currentMonth, 25); // Current month 25th
   }
 
   const formatDateToISOString = (date, startOfDay = true) => {
