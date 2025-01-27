@@ -8,7 +8,8 @@ const {
   todayAttendanceData,
   TotalEmployee,
   employeeAttendanceReport,
-  attendanceReportTesting
+  attendanceReportTesting,
+  biometricAttendance
 } = require("../controllers/attendanceController.js");
 const router = require("express").Router();
 router.post("/register", user.register);
@@ -30,6 +31,7 @@ router.get("/oneday_attendance", auth, todayAttendanceData);
 router.get("/employeecount", auth, TotalEmployee);
 router.get("/emp_attendance", auth, employeeAttendanceReport);
 router.get("/emp_attendance_report_test", auth, attendanceReportTesting);
+router.post("/biometric_attendance", auth, biometricAttendance);
 
 router.get("/roles", auth, user.ViewRoleApi);
 

@@ -5,11 +5,48 @@ const AttendanceModel = require("../models/Attendance.model.js");
 const Leave = require("../models/Leave.model.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
+const multer = require("multer");
+const fs = require("fs");
 
 const apiHandler = new ApiCRUDController(AttendanceModel);
 const apiHandlerUSER = new ApiCRUDController(Employee);
 const { create } = apiHandler;
 const { readAllandPopulate } = apiHandlerUSER;
+
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      const empId = await Employee.findOne({ _id: req.user.userObjectId });
+      if (!empId) {
+        throw new Error("Employee not found");
+      }
+
+      let uploadPath = "uploads/excel";
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+
+      cb(null, uploadPath);
+    } catch (error) {
+      console.error("Error in finding employee ID:", error);
+      cb(error, null);
+    }
+  },
+  filename: (req, file, cb) => {
+    const lastDotIndex = file.originalname.lastIndexOf(".");
+    cb(
+      null,
+      file.originalname.slice(0, lastDotIndex).replace(" ", "_") +
+        Date.now() +
+        "." +
+        file.originalname.split(".").pop()
+    );
+  }
+});
+
+const uploadExcel = multer({
+  storage: storage
+}).single("excel");
 
 const checkLeaves = (attendance, leaves) => {
   return attendance.map(item => {
@@ -929,6 +966,79 @@ const attendanceReportTesting = async (req, res, next) => {
   }
 };
 
+const biometricAttendance = async (req, res) => {
+  uploadExcel(req, res, async err => {
+    try {
+      if (err) {
+        console.error("File upload error:", err);
+        return res.status(500).json({ message: assetLabels.fileUpload_error });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: assetLabels.file_error });
+      }
+
+      const filePath = req.file.path;
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(filePath);
+      const worksheet = workbook.getWorksheet(1);
+
+      if (!worksheet) {
+        return res
+          .status(400)
+          .json({ message: "Worksheet not found in the Excel file." });
+      }
+
+      const attendanceRecords = [];
+      worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        if (rowNumber === 1) return; // Skip the header row
+
+        const empid = row.getCell(1).value;
+        const date = moment(row.getCell(2).value, moment.ISO_8601, true);
+        const status = row.getCell(3).value;
+
+        if (empid && date.isValid() && status) {
+          attendanceRecords.push({
+            empid,
+            date: new Date(date.toDate()),
+            status
+          });
+        } else {
+          console.warn(`Invalid row data at row ${rowNumber}:`, row.values);
+        }
+      });
+
+      // Bulk insert attendance records
+      if (attendanceRecords.length > 0) {
+        await Attendance.insertMany(attendanceRecords);
+      } else {
+        return res
+          .status(400)
+          .json({ message: "No valid attendance records found in the file." });
+      }
+
+      // Save Excel file information
+      const empId = await Employee.findOne({ _id: req.user.userObjectId });
+      if (!empId) {
+        return res.status(404).json({ message: "Employee not found." });
+      }
+
+      const excelPath = `uploads/excel/${empId.employeeID}/${req.file
+        .filename}`;
+      const newExcelFile = new Excel({ excelfile: excelPath });
+      await newExcelFile.save();
+
+      fs.unlinkSync(filePath);
+
+      res.status(200).json({ message: assetLabels.upload_And_save_message });
+    } catch (error) {
+      console.error("Error processing attendance:", error);
+      return res
+        .status(500)
+        .json({ message: assetLabels.internal_server_message });
+    }
+  });
+};
+
 module.exports = {
   attendance,
   attendanceReport,
@@ -937,5 +1047,6 @@ module.exports = {
   updateAttendance,
   TotalEmployee,
   employeeAttendanceReport,
-  attendanceReportTesting
+  attendanceReportTesting,
+  biometricAttendance
 };

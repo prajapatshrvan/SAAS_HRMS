@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const AttendanceSchema = new mongoose.Schema(
   {
     updateby: {
-      type: mongoose.Schema.Types.ObjectId
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee"
     },
     empid: {
       type: mongoose.Schema.Types.ObjectId,

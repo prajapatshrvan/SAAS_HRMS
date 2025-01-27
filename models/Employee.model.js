@@ -27,6 +27,10 @@ const EmployeeSchema = new mongoose.Schema(
       type: String,
       required: false
     },
+    date_of_joining: {
+      type: Date,
+      default: null
+    },
     documentDob: {
       type: String,
       required: false
@@ -51,12 +55,11 @@ const EmployeeSchema = new mongoose.Schema(
       type: String,
       required: false
     },
-
-    joining_date: {
+    marital_status: {
       type: String,
+      enum: ["married", "unmarried", "other"],
       required: false
     },
-
     emergency_number: {
       type: String,
       required: false

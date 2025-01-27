@@ -51,11 +51,11 @@ module.exports.createSalary = async (req, res) => {
         0
       );
 
-      let remainingDays = monthdays - unpaidLeave;
-
       if (totalLeaveDays > 1) {
         unpaidLeave = totalLeaveDays - paidLeave;
       }
+
+      let remainingDays = monthdays - unpaidLeave;
 
       const totalGrossSalary =
         parseFloat(emp.ctcDetails.monthlycompensation) || 0;
@@ -125,7 +125,8 @@ module.exports.createSalary = async (req, res) => {
         totalnetsalary: parseFloat(totalnetSalary),
         leaveDeduction: leaveDeduction,
         miscellaneous: 0,
-        totaldeduction: parseFloat(totaldeduction)
+        totaldeduction: parseFloat(totaldeduction),
+        absent_day: totalLeaveDays || 0
       });
       await salary.save();
 
@@ -272,8 +273,6 @@ module.exports.salaryList = async (req, res) => {
 
 module.exports.EmployeeSalaryList = async (req, res) => {
   try {
-    // Fetch salary data for the logged-in user
-    console.log(req.user.userObjectId);
     const salaryList = await Salary.find({
       empid: req.user.userObjectId
     }).populate({
@@ -285,7 +284,6 @@ module.exports.EmployeeSalaryList = async (req, res) => {
     const newData = salaryList.map(salary => {
       const { empid, ...rest } = salary.toObject(); // Convert document to plain object
 
-      // Handle case where empid is null or undefined
       if (!empid) {
         return {
           ...rest,
