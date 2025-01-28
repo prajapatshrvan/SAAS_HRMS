@@ -237,7 +237,6 @@ module.exports.leaveCount = async (req, res) => {
       return accumulator + (leave.leave_days || 0); 
     }, 0);
 
-    // Calculate remaining and unpaid leaves
     const remainingLeaves = Math.max(0, paidLeaves - takenLeaves); 
     const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves); 
 
