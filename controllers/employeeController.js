@@ -587,7 +587,7 @@ module.exports.EmployeeList = async (req, res) => {
     if (empstatus) {
       employeeList = await Employee.find({ status: empstatus })
         .select(
-          "firstname lastname middlename mobile_number status employeeID image emergency_number department designation"
+          "firstname lastname middlename mobile_number status employeeID image emergency_number department designation joining_date marital_status"
         )
         .sort({ createdAt: -1 });
     } else if (statusParam === "onleave") {
