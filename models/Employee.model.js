@@ -59,6 +59,10 @@ const EmployeeSchema = new mongoose.Schema(
       type: Date,
       required: false
     },
+    cf: {
+      type: Number,
+      default: 0
+    },
     marital_status: {
       type: String,
       enum: ["married", "unmarried", "other"],
