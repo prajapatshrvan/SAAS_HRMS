@@ -79,203 +79,6 @@ function countSundays(startDate, endDate) {
   return count;
 }
 
-// const createSalary = async (req, res) => {
-//   try {
-//     const Year = moment().format("YYYY");
-//     const Month = moment().format("MM");
-
-//     const existingSalary = await Salary.findOne({ month: Month, year: Year });
-//     if (existingSalary) {
-//       return res.status(400).json({
-//         message: `Salary for ${Month}-${Year} Already Created.`
-//       });
-//     }
-
-//     // Remove this after testing
-//     const employees = await Employee.find({ status: "completed" });
-//     const date = new Date();
-//     const currentMonth = date.getMonth();
-//     const currentYear = date.getFullYear();
-//     const totalDaysInCurrentMonth = new Date(
-//       currentYear,
-//       currentMonth + 1,
-//       0
-//     ).getDate();
-//     const monthdays = totalDaysInCurrentMonth - 25 + 25;
-
-//     const startDate = moment(`${Year}-${Month}-26`)
-//       .subtract(1, "month")
-//       .startOf("day");
-//     const endDate = moment(`${Year}-${Month}-25`).endOf("day");
-//     const currentDate = moment().format("YYYY-MM-DD");
-
-//     const salaries = [];
-//     for (const emp of employees) {
-
-//       const absentCount = await Attendance.countDocuments({
-//         empid: emp._id,
-//         status: "absent",
-//         date: { $gte: startDate, $lte: endDate }
-//       });
-
-//       console.log(absentCount)
-
-//       const fullleave = await Attendance.countDocuments({
-//         empid: emp._id,
-//         status: "full_leave",
-//         date: { $gte: startDate, $lte: endDate }
-//       });
-
-//       console.log(fullleave)
-
-//       const halfLeave = await Attendance.countDocuments({
-//         empid: emp._id,
-//         status: "half_leave",
-//         date: { $gte: startDate, $lte: endDate }
-//       });
-
-//       console.log(halfLeave)
-
-//       const totalAbsent = absentCount + fullleave + (halfLeave/2)
-
-//       const workingDayCount = await Attendance.countDocuments({
-//         empid: emp._id,
-//         status: "present",
-//         date: { $gte: startDate, $lte: endDate }
-//       });
-
-//      const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
-
-//      const sundays = countSundays(STARTDATE ,endDate)
-
-//      console.log(emp.firstname , "joining date =>" , emp.joining_date,  " total Absent=>", totalAbsent, " total  presentdays => ",workingDayCount + sundays , " total workingdays =>" , monthdays )
-
-//       const {remainingAbsent} = await leave_carry_forward(emp._id, totalAbsent)
-
-//       const totalPaidDays = sundays + workingDayCount
-
-//       const remainingDays = monthdays - remainingAbsent;
-
-//       if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
-//         console.error(`Missing monthly compensation for employee ${emp._id}`);
-//         continue;
-//       }
-//       const totalGrossSalary = parseInt(emp.ctcDetails.monthlycompensation.replaceAll("," , "")) || 0;
-//       const perDaySalary = (totalGrossSalary / monthdays).toFixed(2);
-//       const leaveDeduction = perDaySalary * remainingAbsent;
-//       const totalPaidAmount = totalPaidDays * perDaySalary;
-
-//       const { basicSalary } = calculateSalaryComponents(totalPaidAmount);
-
-//       const pf = (totalPaidAmount * 0.3 * 0.24).toFixed(2);
-//       let esi = 0;
-//       if (totalGrossSalary < 21000) {
-//         esi = (totalPaidAmount * 0.04).toFixed(2);
-//       }
-
-//       let netSalary = parseFloat(totalPaidAmount - (parseFloat(pf) - parseFloat(esi)) ).toFixed(2);
-//       netSalary = isNaN(netSalary) ? 0 : netSalary;
-
-//      const totalNetSalary = netSalary
-
-//       const advanceSalary = await AdvanceSalary.findOne({
-//         empid: emp._id,
-//         status: "pending"
-//       });
-
-//       let advanceDeduction = 0;
-//       if (advanceSalary) {
-//         advanceDeduction = advanceSalary.emi_amount || 0;
-//         netSalary -= advanceDeduction;
-
-//         advanceSalary.instalment -= 1;
-//         advanceSalary.paidAmount += advanceDeduction;
-
-//         if (advanceSalary.instalment < 1) {
-//           advanceSalary.status = "completed";
-//         }
-
-//         // await advanceSalary.save();
-
-//         await adSalaryTransition.create({
-//           empid: emp._id,
-//           advanceSalaryId: advanceSalary._id,
-//           emiNumber: advanceSalary.emiNumber,
-//           totalEmiCount: advanceSalary.instalment,
-//           totalAmount: advanceSalary.amount,
-//           remainingAmount: advanceSalary.amount - advanceSalary.paidAmount,
-//           emiAmount: advanceDeduction
-//         });
-//       }
-
-//       const cfremaining = await Leave.findOne({
-//         empid: emp._id
-//       }).then(balance => balance?.cfremaining || 0);
-
-//       // const paidLeave = Math.min(1 + cfremaining, totalLeaveDays);
-
-//       const totalDeduction = (parseFloat(pf) +
-//         parseFloat(esi) +
-//         parseFloat(leaveDeduction) +
-//         parseFloat(advanceDeduction)).toFixed(0);
-
-//       salaries.push(
-//         new Salary({
-//           empid: emp._id,
-//           empname: `${emp.firstname} ${emp.middlename} ${emp.lastname}`,
-//           employeeID: emp.employeeID,
-//           designation: emp.designation,
-//           department: emp.department,
-//           date_of_joining: new Date(emp.joining_date).toLocaleDateString(),
-//           pancard_No: emp.pancard_no,
-//           account_no: emp.bankdetails.account_no,
-//           gender: emp.gender,
-//           date: currentDate,
-//           month: Month,
-//           year: Year,
-//           salary_status: "pending",
-//           payment_status: false,
-//           totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
-//           basicSalary: parseInt(basicSalary) || 0,
-//           hra:  0,
-//           ta: 0,
-//           da:  0,
-//           other:  0,
-//           paydays: totalPaidDays ,
-//           pf: parseFloat(pf) || 0,
-//           esi: parseFloat(esi) || 0,
-//           countPardaysalary: parseFloat(perDaySalary) || 0,
-//           remainingDays: remainingDays,
-//           presentDay: workingDayCount,
-//           totalLeave: absentCount || 0,
-//           unpaidLeave : remainingAbsent,
-//           // paidLeave,
-//           netSalary: parseInt(netSalary),
-//           grossSalary : totalPaidAmount.toFixed(0),
-//           totalGrossSalary:totalGrossSalary.toFixed(0),
-//           totalnetsalary: totalNetSalary,
-//           leaveDeduction: parseFloat(leaveDeduction) || 0,
-//           advanceSalary: parseFloat(advanceDeduction) || 0,
-//           miscellaneous: 0,
-//           totaldeduction: parseFloat(totalDeduction) || 0
-//         })
-//       );
-//     }
-
-//     // await Salary.insertMany(salaries);
-
-//     return res.status(200).json({
-//       message: "Salaries created successfully"
-//     });
-//   } catch (error) {
-//     console.error("Error creating salaries:", error);
-//     return res.status(500).json({
-//       message: "Internal server error",
-//       error: error.message
-//     });
-//   }
-// };
-
 const createSalary = async (req, res) => {
   try {
     const Year = moment().format("YYYY");
@@ -292,7 +95,6 @@ const createSalary = async (req, res) => {
         .json({ message: `Salary for ${Month}-${Year} Already Created.` });
     }
 
-    // Fetch employees with completed status
     const employees = await Employee.find({ status: "completed" }).lean();
     if (!employees.length) {
       return res
@@ -300,7 +102,6 @@ const createSalary = async (req, res) => {
         .json({ message: "No employees found for salary processing." });
     }
 
-    // Calculate salary period (26th of previous month to 25th of current month)
     const startDate = moment(`${Year}-${Month}-26`)
       .subtract(1, "month")
       .startOf("day")
@@ -335,6 +136,14 @@ const createSalary = async (req, res) => {
 
     const salaries = [];
 
+    // const holiday = await Holiday.countDocuments({
+    //   status: "approved",
+    //   date: {
+    //     $gte: new Date(startDate).toLocaleDateString(),
+    //     $lte: new Date(endDate).toLocaleDateString()
+    //   }
+    // });
+
     for (const emp of employees) {
       const empAttendance = attendanceMap[emp._id] || {
         absent: 0,
@@ -358,6 +167,7 @@ const createSalary = async (req, res) => {
           : startDate;
 
       const sundays = countSundays(STARTDATE, endDate);
+
       const workingDayCount = empAttendance.present;
       const totalPaidDays = sundays + workingDayCount;
 
@@ -597,155 +407,24 @@ module.exports = {
   createSalary
 };
 
-// module.exports.salaryList = async (req, res) => {
-//   try {
-//     const { month, year } = req.query;
+const getDaysCount = (month, year) => {
+  let startDate = new Date(year, month - 1, 26);
+  let endDate = new Date(year, month, 25);
+  const timeDifference = endDate - startDate;
+  const dayCount = timeDifference / (1000 * 60 * 60 * 24) + 1;
 
-//     const currentDate = new Date();
-
-//     let firstDateOfMonth, lastDateOfMonth;
-
-//     if (month && year) {
-//       const yearInt = parseInt(year, 10);
-//       const monthInt = parseInt(month, 10) - 1;
-
-//       if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
-//         return res.status(400).json({ error: "Invalid year or month" });
-//       }
-
-//       firstDateOfMonth = new Date(yearInt, monthInt, 1).toISOString();
-//       lastDateOfMonth = new Date(yearInt, monthInt + 1, 0).toISOString();
-//     } else {
-//       firstDateOfMonth = new Date(
-//         currentDate.getFullYear(),
-//         currentDate.getMonth(),
-//         1
-//       ).toISOString();
-//       lastDateOfMonth = new Date(
-//         currentDate.getFullYear(),
-//         currentDate.getMonth() + 1,
-//         0
-//       ).toISOString();
-//     }
-
-//     console.log(firstDateOfMonth, "firstDateOfMonth");
-//     console.log(lastDateOfMonth, "lastDateOfMonth");
-
-//     let salaryList;
-//     if (
-//       req.role_name === "ADMIN" ||
-//       req.role_name === "SUPERADMIN" ||
-//       req.role_name === "HR"
-//     ) {
-//       salaryList = await Salary.find({
-//         date: {
-//           $gte: firstDateOfMonth,
-//           $lte: lastDateOfMonth
-//         }
-//       }).populate({
-//         path: "empid",
-//         select: "firstname lastname employeeID image"
-//       });
-//     } else {
-//       salaryList = await Salary.find({
-//         empid: req.user.userObjectId,
-//         date: {
-//           $gte: firstDateOfMonth,
-//           $lte: lastDateOfMonth
-//         }
-//       }).populate({
-//         path: "empid",
-//         select: "firstname lastname employeeID image"
-//       });
-//     }
-
-//     const newData = salaryList.map(salary => {
-//       const { empid, ...rest } = salary.toObject();
-//       if (!empid) {
-//         return {
-//           ...rest,
-//           employee_name: "Unknown",
-//           empid: null,
-//           employeeID: "Unknown",
-//           image: "Unknown"
-//         };
-//       }
-//       return {
-//         ...rest,
-//         employee_name: `${empid.firstname} ${empid.lastname}`,
-//         empid: empid._id,
-//         employeeID: empid.employeeID,
-//         image: empid.image
-//       };
-//     });
-
-//     return res.status(200).json({
-//       SalaryList: newData
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       message: "Internal Server Error"
-//     });
-//   }
-// };
+  return dayCount;
+};
 
 module.exports.salaryList = async (req, res) => {
   try {
     const { month, year } = req.query;
 
-    // let firstDateOfMonth, lastDateOfMonth;
-
-    // if (month && year) {
-    //   const selectedYear = parseInt(year, 10);
-    //   const selectedMonth = parseInt(month, 10) - 1; // Convert to 0-based index
-
-    //   if (
-    //     isNaN(selectedYear) ||
-    //     isNaN(selectedMonth) ||
-    //     selectedMonth < 0 ||
-    //     selectedMonth > 11
-    //   ) {
-    //     return res.status(400).json({ error: "Invalid year or month" });
-    //   }
-
-    //   // Start Date: 26th of the previous month
-    //   firstDateOfMonth = moment(
-    //     `${selectedYear}-${selectedMonth + 1}-26`,
-    //     "YYYY-MM-DD"
-    //   )
-    //     .subtract(1, "month")
-    //     .startOf("day")
-    //     .toISOString();
-
-    //   // End Date: 25th of the current month
-    //   lastDateOfMonth = moment(
-    //     `${selectedYear}-${selectedMonth + 1}-25`,
-    //     "YYYY-MM-DD"
-    //   )
-    //     .endOf("day")
-    //     .toISOString();
-    // } else {
-    //   const currentYear = moment().year();
-    //   const currentMonth = moment().month();
-
-    //   // Start Date: 26th of the previous month
-    //   firstDateOfMonth = moment(
-    //     `${currentYear}-${currentMonth + 1}-26`,
-    //     "YYYY-MM-DD"
-    //   )
-    //     .subtract(1, "month")
-    //     .startOf("day")
-    //     .toISOString();
-
-    //   // End Date: 25th of the current month
-    //   lastDateOfMonth = moment(
-    //     `${currentYear}-${currentMonth + 1}-25`,
-    //     "YYYY-MM-DD"
-    //   )
-    //     .endOf("day")
-    //     .toISOString();
-    // }
+    if (!month || !year) {
+      return res
+        .status(400)
+        .json({ message: "Please provide both month and year" });
+    }
 
     let salaryList;
     if (["ADMIN", "SUPERADMIN", "HR"].includes(req.role_name)) {
@@ -786,8 +465,22 @@ module.exports.salaryList = async (req, res) => {
           };
     });
 
+    const totalEmployee = salaryList.length;
+    const totalPaid = salaryList.reduce((prev, paid) => {
+      return prev + paid.totalnetsalary;
+    }, 0);
+    const totalUnPaid = salaryList.reduce((prev, paid) => {
+      return prev + paid.totaldeduction;
+    }, 0);
+    // Example Usage
+    const workingDays = getDaysCount(month, year);
+
     return res.status(200).json({
-      SalaryList: newData
+      SalaryList: newData,
+      totalEmployee,
+      totalPaid,
+      totalUnPaid,
+      workingDays
     });
   } catch (error) {
     console.error("Error fetching salary list:", error);
