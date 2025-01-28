@@ -2,6 +2,7 @@ const Attendance = require("../models/Attendance.model.js");
 const ApiCRUDController = require("../controllers/ApiCrudController.js");
 const Employee = require("../models/Employee.model.js");
 const AttendanceModel = require("../models/Attendance.model.js");
+const Holidays = require("../models/Holiday.model.js");
 const Leave = require("../models/Leave.model.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
@@ -48,7 +49,7 @@ const uploadExcel = multer({
   storage: storage
 }).single("excel");
 
-const checkLeaves = (attendance, leaves) => {
+const checkLeaves = (attendance, leaves, holidays) => {
   return attendance.map(item => {
     let newItem = { ...item };
     delete newItem.__v;
@@ -348,68 +349,91 @@ const attendanceReport = async (req, res, next) => {
     { $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }
   ];
 
-  const reportData = await readAllandPopulate(collections, undefined, match);
+  try {
+    const reportData = await readAllandPopulate(collections, undefined, match);
 
-  let modifiedData = [];
+    let modifiedData = [];
+    const { month, year } = req.query;
 
-  const { month, year } = req.query;
+    let firstDateOfMonth, lastDateOfMonth;
 
-  let firstDateOfMonth, lastDateOfMonth;
+    // Validating month and year
+    if (month && year) {
+      const yearInt = parseInt(year, 10);
+      const monthInt = parseInt(month, 10) - 1; // Month is 0-based in Date
 
-  if (month && year) {
-    const yearInt = parseInt(year, 10);
-    const monthInt = parseInt(month, 10) - 1;
+      if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
+        return res.status(400).json({ error: "Invalid year or month" });
+      }
 
-    if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
-      return res.status(400).json({ error: "Invalid year or month" });
+      firstDateOfMonth =
+        monthInt === 0
+          ? new Date(yearInt - 1, 11, 26)
+          : new Date(yearInt, monthInt - 1, 26);
+      lastDateOfMonth = new Date(yearInt, monthInt, 25);
+    } else {
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+
+      firstDateOfMonth =
+        currentMonth === 0
+          ? new Date(currentYear - 1, 11, 26)
+          : new Date(currentYear, currentMonth - 1, 26);
+      lastDateOfMonth = new Date(currentYear, currentMonth, 25);
     }
 
-    firstDateOfMonth =
-      monthInt === 0
-        ? new Date(yearInt - 1, 11, 26)
-        : new Date(yearInt, monthInt - 1, 26);
-    lastDateOfMonth = new Date(yearInt, monthInt, 25);
-  } else {
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth();
+    // Format dates to ISO string
+    const formatDateToISOString = (date, startOfDay = true) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
 
-    firstDateOfMonth =
-      currentMonth === 0
-        ? new Date(currentYear - 1, 11, 26)
-        : new Date(currentYear, currentMonth - 1, 26);
-    lastDateOfMonth = new Date(currentYear, currentMonth, 25);
-  }
+      const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
+      return `${year}-${month}-${day}T${time}+00:00`;
+    };
 
-  const formatDateToISOString = (date, startOfDay = true) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
-    return `${year}-${month}-${day}T${time}+00:00`;
-  };
-
-  for (let index = 0; index < reportData.length; index++) {
-    const item = reportData[index];
-
-    let attendances = await AttendanceModel.find({
-      empid: item._id,
+    const holidays = await Holidays.find({
+      holiday_status: "approved",
       date: {
         $gte: formatDateToISOString(firstDateOfMonth, true),
         $lte: formatDateToISOString(lastDateOfMonth, false)
       }
     });
 
-    let newItem = removeUnnecessaryFields(item);
-    if (attendances.length) {
-      let data = checkLeaves(attendances, item.leaves);
-      newItem.attendance = data;
+    // Iterate over reportData
+    for (let index = 0; index < reportData.length; index++) {
+      const item = reportData[index];
+
+      // Fetch holidays in the specified date range
+
+      // Fetch attendance data for the employee
+      let attendances = await AttendanceModel.find({
+        empid: item._id,
+        date: {
+          $gte: formatDateToISOString(firstDateOfMonth, true),
+          $lte: formatDateToISOString(lastDateOfMonth, false)
+        }
+      });
+
+      // Process the data
+      let newItem = removeUnnecessaryFields(item);
+      if (attendances.length) {
+        // Assuming `checkLeaves` correctly processes the data
+        let data = checkLeaves(attendances, item.leaves, holidays);
+        newItem.attendance = data;
+      }
+
+      modifiedData.push(newItem);
     }
 
-    modifiedData.push(newItem);
+    res.status(200).send(modifiedData);
+  } catch (error) {
+    console.error("Error generating attendance report:", error);
+    res.status(500).json({
+      error: "An error occurred while generating the attendance report."
+    });
   }
-  res.status(200).send(modifiedData);
 };
 
 const getStartAndEndOfWeek = () => {
