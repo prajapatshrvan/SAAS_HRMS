@@ -16,15 +16,14 @@ const authLabels = {
   logout_all_message: "All screen logged out successfully",
   invalid_token_message: "Invalid Token",
   internal_server_message: "Internal server error",
-  resetpassword_message: "Password reset successfull",
+  resetpassword_message: "Password reset successfull"
 };
 const roleLabels = {
   role_exist_message: "Role already exists",
   role_create_message: "Role added successfully",
   internal_server_message: "Internal server error",
   role_edit_message: "Role update successfully",
-
-  role_edit_message: "Role Add successfully",
+  role_edit_message: "Role Add successfully"
 };
 
 const resourcesLabels = {
@@ -33,7 +32,7 @@ const resourcesLabels = {
   internal_server_message: "Internal server error",
   resources_edit_message: "Resources update successfully",
 
-  resources_edit_message: "Resources Add successfully",
+  resources_edit_message: "Resources Add successfully"
 };
 
 //  const permissionLabels = {
@@ -44,7 +43,7 @@ const resourcesLabels = {
 const recourcesLabels = {
   resources_create_message: "Recources added successfully",
   internal_server_message: "Internal server error",
-  resources_update_message: "Recources updated successfully",
+  resources_update_message: "Recources updated successfully"
 };
 
 const Auth_Middleware = {
@@ -52,7 +51,7 @@ const Auth_Middleware = {
   payload_message: "Payload is missing",
   token_expire_message: "Token has expired",
   user_not_found_message: "User not found",
-  invalid_token_message: "Invalid token",
+  invalid_token_message: "Invalid token"
 };
 
 const assetLabels = {
@@ -73,7 +72,7 @@ const assetLabels = {
   not_update_message: "No assets found to update",
   file_error: "No file uploaded",
   upload_And_save_message: "Excel File uploaded and saved successfully",
-  internal_server_message: "Internal Server Error",
+  internal_server_message: "Internal Server Error"
 };
 
 module.exports = {
@@ -82,5 +81,5 @@ module.exports = {
   roleLabels,
   recourcesLabels,
   assetLabels,
-  resourcesLabels,
+  resourcesLabels
 };

@@ -481,7 +481,7 @@ module.exports.addBankDetails = async (req, res) => {
 
 module.exports.adddepartment = async (req, res) => {
   try {
-    const { company_email, department,joining_date, designation, empid, country, state, city, zip } = req.body;
+    const { company_email, department, designation, empid, country, state, city, zip } = req.body;
     const exist = await Employee.findOne({ company_email });
     if (exist) {
       return res.status(409).json({
@@ -533,7 +533,6 @@ module.exports.adddepartment = async (req, res) => {
       company_email,
       department,
       designation,
-      joining_date,
       worklocation,
       status: "approved"
     };

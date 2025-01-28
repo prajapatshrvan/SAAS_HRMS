@@ -364,23 +364,21 @@ const attendanceReport = async (req, res, next) => {
       return res.status(400).json({ error: "Invalid year or month" });
     }
 
-    // Calculate first and last dates based on the 26th to 25th range
     firstDateOfMonth =
       monthInt === 0
-        ? new Date(yearInt - 1, 11, 26) // Previous year December 26th
-        : new Date(yearInt, monthInt - 1, 26); // Previous month 26th
-    lastDateOfMonth = new Date(yearInt, monthInt, 25); // Current month 25th
+        ? new Date(yearInt - 1, 11, 26)
+        : new Date(yearInt, monthInt - 1, 26);
+    lastDateOfMonth = new Date(yearInt, monthInt, 25);
   } else {
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
 
-    // Calculate first and last dates based on the 26th to 25th range
     firstDateOfMonth =
       currentMonth === 0
-        ? new Date(currentYear - 1, 11, 26) // Previous year December 26th
-        : new Date(currentYear, currentMonth - 1, 26); // Previous month 26th
-    lastDateOfMonth = new Date(currentYear, currentMonth, 25); // Current month 25th
+        ? new Date(currentYear - 1, 11, 26)
+        : new Date(currentYear, currentMonth - 1, 26);
+    lastDateOfMonth = new Date(currentYear, currentMonth, 25);
   }
 
   const formatDateToISOString = (date, startOfDay = true) => {
