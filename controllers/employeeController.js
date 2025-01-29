@@ -15,6 +15,7 @@ const transporter = require("../config/email_config.js");
 const bcrypt = require("bcrypt");
 const logger = require("../helpers/logger.js");
 const generatePassword = require("../utility/generatePassword.js");
+const { CLIENT_RENEG_LIMIT } = require("tls");
 require("dotenv").config();
 
 const upload = multer({
@@ -245,6 +246,8 @@ module.exports.updateEmployee = async (req, res, next) => {
         joining_date
       } = req.body;
 
+      
+
       const emp = await Employee.findById(empid);
       if (!emp) {
         return res.status(404).json({ errors: "Employee not found" });
@@ -296,6 +299,10 @@ module.exports.updateEmployee = async (req, res, next) => {
         joining_date
       };
 
+ 
+
+      
+
       if (req.files.image && req.files.image[0]) {
         if (fs.existsSync(emp.image)) {
           const imagepath = `${directoryPath}/${emp.image.slice(9 + emp.employeeID.length)}`;
@@ -321,7 +328,9 @@ module.exports.updateEmployee = async (req, res, next) => {
       }
 
       // Update the employee data in parallel with file handling
-      const updatedEmployee = await Employee.findByIdAndUpdate(empid, { $set: updatePayload }, { new: true });
+      const updatedEmployee = await Employee.findByIdAndUpdate(empid, { $set: updatePayload }, { new: true })
+
+
 
       return res.status(200).json({
         data: updatedEmployee,
@@ -604,13 +613,13 @@ module.exports.EmployeeList = async (req, res) => {
         .populate({
           path: "empid",
           select:
-            "firstname middlename lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no  aadhar_image pancard_no pan_image sameAddress status company_email"
+            "firstname middlename lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no  aadhar_image pancard_no pan_image sameAddress status company_email joining_date marital_status"
         })
         .sort({ createdAt: -1 });
     } else {
       employeeList = await Employee.find()
         .select(
-          "firstname lastname middlename mobile_number status employeeID image emergency_number family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email department designation createdAt"
+          "firstname lastname middlename mobile_number status employeeID image emergency_number family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email department joining_date marital_status designation createdAt"
         )
         .sort({ createdAt: -1 });
     }
