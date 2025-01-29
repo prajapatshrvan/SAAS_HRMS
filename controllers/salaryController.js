@@ -12,6 +12,7 @@ const puppeteer = require("puppeteer");
 const numberToWords = require("number-to-words");
 
 const moment = require("moment");
+const { default: mongoose } = require("mongoose");
 
 // module.exports.createSalary = async (req, res) => {
 //   try {
@@ -199,8 +200,10 @@ const moment = require("moment");
 
 const leave_carry_forward = async (empid, absent) => {
   try {
-    const employee = await Employee.findOne({ _id: empid }, { cf: 1 });
+    const employee = await Employee.findOne({ _id: empid }).select("cf");
 
+    
+    
     if (!employee) {
       throw new Error(`Employee with ID ${empid} not found.`);
     }
@@ -219,7 +222,7 @@ const leave_carry_forward = async (empid, absent) => {
     } else {
       cfLeave += 1;
     }
-
+    
     await Employee.findByIdAndUpdate(empid, { cf: cfLeave }, { new: true });
 
     return {
@@ -234,19 +237,34 @@ const leave_carry_forward = async (empid, absent) => {
 
 const calculateSalaryComponents = grossSalary => {
   const basicSalary = grossSalary * 30 / 100;
-  const hra = grossSalary * 25 / 100;
-  const ta = grossSalary * 10 / 100;
-  const da = grossSalary * 10 / 100;
-  const other = grossSalary * 25 / 100;
+  // const hra = grossSalary * 25 / 100;
+  //  const ta = grossSalary * 10 / 100;
+  //  const da = grossSalary * 10 / 100;
+  // const other = grossSalary * 25 / 100;
 
   return {
     basicSalary: parseFloat(basicSalary.toFixed(2)),
-    hra: parseFloat(hra.toFixed(2)),
-    ta: parseFloat(ta.toFixed(2)),
-    da: parseFloat(da.toFixed(2)),
-    other: parseFloat(other.toFixed(2))
+    // hra: parseFloat(hra.toFixed(2)),
+    //  ta: parseFloat(ta.toFixed(2)),
+    //  da: parseFloat(da.toFixed(2)),
+    // other: parseFloat(other.toFixed(2))
   };
 };
+
+ function countSundays(startDate, endDate) {
+  let start = new Date(startDate);
+  let end = new Date(endDate);
+  let count = 0;
+
+  while (start <= end) {
+      if (start.getDay() === 0) { // Sunday is represented by 0
+          count++;
+      }
+      start.setDate(start.getDate() + 1); // Move to the next day
+  }
+
+  return count;
+}
 
 const createSalary = async (req, res) => {
   try {
@@ -260,6 +278,7 @@ const createSalary = async (req, res) => {
       });
     }
 
+    // Remove this after testing
     const employees = await Employee.find({ status: "completed" });
     const date = new Date();
     const currentMonth = date.getMonth();
@@ -277,6 +296,7 @@ const createSalary = async (req, res) => {
     const endDate = moment(`${Year}-${Month}-25`).endOf("day");
     const currentDate = moment().format("YYYY-MM-DD");
 
+    
     const salaries = [];
     for (const emp of employees) {
       const leaves = await Leave.find({
@@ -288,7 +308,7 @@ const createSalary = async (req, res) => {
         (acc, curr) => acc + curr.leave_days,
         0
       );
-      const unpaidLeave = Math.max(totalLeaveDays - 1, 0);
+      // const unpaidLeave = Math.max(totalLeaveDays - 1, 0);
 
       const absentCount = await Attendance.countDocuments({
         empid: emp._id,
@@ -296,31 +316,52 @@ const createSalary = async (req, res) => {
         date: { $gte: startDate, $lte: endDate }
       });
 
-      const {remainingAbsent} = await leave_carry_forward(emp._id, absentCount);
+      const workingDayCount = await Attendance.countDocuments({
+        empid: emp._id,
+        status: true,
+        date: { $gte: startDate, $lte: endDate }
+      });
+
+   const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
+   
+   
+   const sundays = countSundays(STARTDATE ,endDate)
+
+   
+      const {remainingAbsent} = await leave_carry_forward(emp._id, absentCount)
+
+      
+      const totalPaidDays = sundays + workingDayCount
+
+      
+      
 
       const remainingDays = monthdays - remainingAbsent;
       const validRemainingDays = Math.max(remainingDays, 0); 
 
-      if (!emp.ctcDetails || !emp.ctcDetails.monthlycompensation) {
+      if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
         console.error(`Missing monthly compensation for employee ${emp._id}`);
         continue; // Skip this employee
       }
-
-      const totalGrossSalary = parseFloat(emp.ctcDetails.monthlycompensation) || 0;
+      const totalGrossSalary = parseInt(emp.ctcDetails.monthlycompensation.replaceAll("," , "")) || 0;
       const perDaySalary = (totalGrossSalary / monthdays).toFixed(2);
       const leaveDeduction = perDaySalary * remainingAbsent;
-      const grossSalary = totalGrossSalary - leaveDeduction;
+      const totalPaidAmount = totalPaidDays * perDaySalary;
 
-      const { basicSalary, hra, ta, da, other } = calculateSalaryComponents(grossSalary);
+      console.log(totalPaidAmount);
+      
+      // const grossSalary = totalGrossSalary - leaveDeduction;
 
-      const pf = (totalGrossSalary * 0.3 * 0.24).toFixed(2);
+      const { basicSalary } = calculateSalaryComponents(totalPaidAmount);
+
+      const pf = (totalPaidAmount * 0.3 * 0.24).toFixed(2);
       let esi = 0;
       if (totalGrossSalary < 21000) {
-        esi = (grossSalary * 0.04).toFixed(2);
+        esi = (totalPaidAmount * 0.04).toFixed(2);
       }
 
-      let netSalary = parseFloat(grossSalary - parseFloat(pf) - parseFloat(esi) + parseFloat(emp.bonus || 0)).toFixed(2);
-      netSalary = isNaN(netSalary) ? 0 : netSalary; // If NaN, set to 0
+      let netSalary = parseFloat(totalPaidAmount - parseFloat(pf) - parseFloat(esi) + parseFloat(emp.bonus || 0)).toFixed(2);
+      netSalary = isNaN(netSalary) ? 0 : netSalary;
 
       const advanceSalary = await AdvanceSalary.findOne({
         empid: emp._id,
@@ -381,10 +422,10 @@ const createSalary = async (req, res) => {
           payment_status: false,
           totalCTC: parseFloat(emp.ctcDetails.totalctc) || 0,
           basicSalary: parseFloat(basicSalary) || 0,
-          hra: parseFloat(hra) || 0,
-          ta: parseFloat(ta) || 0,
-          da: parseFloat(da) || 0,
-          other: parseFloat(other) || 0,
+          hra:  0,
+          ta: 0,
+          da:  0,
+          other:  0,
           paydays: validRemainingDays * parseFloat(perDaySalary),
           pf: parseFloat(pf) || 0,
           esi: parseFloat(esi) || 0,
@@ -392,10 +433,10 @@ const createSalary = async (req, res) => {
           remainingDays: validRemainingDays,
           presentDay: validRemainingDays, // Ensure valid number
           totalLeave: totalLeaveDays || 0,
-          unpaidLeave,
+          unpaidLeave : remainingAbsent,
           paidLeave,
           netSalary: parseFloat(netSalary),
-          grossSalary,
+          grossSalary : totalPaidAmount,
           totalGrossSalary,
           totalnetsalary: parseFloat(netSalary),
           leaveDeduction: parseFloat(leaveDeduction) || 0,
@@ -421,9 +462,8 @@ const createSalary = async (req, res) => {
 };
 
 
-
 module.exports = {
-  createSalary
+  createSalary,
 };
 
 module.exports.salaryList = async (req, res) => {
@@ -1005,3 +1045,7 @@ module.exports.SalarySlip = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+
+

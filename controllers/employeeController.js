@@ -655,7 +655,6 @@ module.exports.addctcdetails = async (req, res) => {
     const dataPayload = {
       totalctc: data.totalctc,
       monthlycompensation: data.monthlycompensation,
-      monthlycompensation: data.monthlycompensation
     };
 
     let errors = {};
