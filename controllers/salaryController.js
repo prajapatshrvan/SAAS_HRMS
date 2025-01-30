@@ -324,17 +324,12 @@ const createSalary = async (req, res) => {
 
    const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
    
-   
    const sundays = countSundays(STARTDATE ,endDate)
 
    
       const {remainingAbsent} = await leave_carry_forward(emp._id, absentCount)
 
-      
       const totalPaidDays = sundays + workingDayCount
-
-      
-      
 
       const remainingDays = monthdays - remainingAbsent;
       const validRemainingDays = Math.max(remainingDays, 0); 
