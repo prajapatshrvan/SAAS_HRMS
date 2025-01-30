@@ -2,6 +2,7 @@ const Attendance = require("../models/Attendance.model.js");
 const ApiCRUDController = require("../controllers/ApiCrudController.js");
 const Employee = require("../models/Employee.model.js");
 const AttendanceModel = require("../models/Attendance.model.js");
+const Holidays = require("../models/Holiday.model.js");
 const Leave = require("../models/Leave.model.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
@@ -48,7 +49,49 @@ const uploadExcel = multer({
   storage: storage
 }).single("excel");
 
-const checkLeaves = (attendance, leaves) => {
+// const checkLeaves = (attendance, leaves, holidays) => {
+//   return attendance.map(item => {
+//     let newItem = { ...item };
+//     delete newItem.__v;
+
+//     let date = new Date(item.date);
+//     date.setHours(0, 0, 0, 0);
+
+//     let leaveFound = false;
+
+//     for (let leave of leaves) {
+//       let startDate = new Date(leave.start_date).setHours(0, 0, 0, 0);
+//       let endDate = new Date(leave.end_date).setHours(0, 0, 0, 0);
+
+//       if (startDate <= date && endDate >= date) {
+//         leaveFound = true;
+
+//         if (leave.status === "approved") {
+//           if (leave.session === "Session 1" || leave.session === "Session 2") {
+//             newItem.leave_type = "HD";
+//             newItem.color = "FFA800";
+//           } else {
+//             newItem.leave_type = "L";
+//             newItem.color = "0F137E";
+//           }
+//         } else if (leave.status === "cancelled") {
+//           newItem.leave_type = item.status ? "P" : "A";
+//           newItem.color = item.status ? "30991F" : "FF0606";
+//         }
+//         break;
+//       }
+//     }
+
+//     if (!leaveFound) {
+//       newItem.leave_type = item.status ? "P" : "A";
+//       newItem.color = item.status ? "30991F" : "FF0606";
+//     }
+
+//     return newItem;
+//   });
+// };
+
+const checkLeaves = (attendance, leaves, holidays) => {
   return attendance.map(item => {
     let newItem = { ...item };
     delete newItem.__v;
@@ -58,6 +101,23 @@ const checkLeaves = (attendance, leaves) => {
 
     let leaveFound = false;
 
+    // Check if the date falls on a holiday
+    let isHoliday = holidays.some(holiday => {
+      let holidayDate = new Date(holiday.date).setHours(0, 0, 0, 0);
+      return holidayDate === date.getTime();
+    });
+
+    // Check if the date is a Sunday
+    let isSunday = date.getDay() === 0;
+
+    // If the date is a holiday or a Sunday, mark it as "H"
+    if (isHoliday || isSunday) {
+      newItem.leave_type = "H";
+      newItem.color = "808080"; // Gray color for holidays
+      return newItem;
+    }
+
+    // Check for leave records
     for (let leave of leaves) {
       let startDate = new Date(leave.start_date).setHours(0, 0, 0, 0);
       let endDate = new Date(leave.end_date).setHours(0, 0, 0, 0);
@@ -68,14 +128,14 @@ const checkLeaves = (attendance, leaves) => {
         if (leave.status === "approved") {
           if (leave.session === "Session 1" || leave.session === "Session 2") {
             newItem.leave_type = "HD";
-            newItem.color = "FFA800";
+            newItem.color = "FFA800"; // Half-day leave color
           } else {
             newItem.leave_type = "L";
-            newItem.color = "0F137E";
+            newItem.color = "0F137E"; // Full leave color
           }
         } else if (leave.status === "cancelled") {
           newItem.leave_type = item.status ? "P" : "A";
-          newItem.color = item.status ? "30991F" : "FF0606";
+          newItem.color = item.status ? "30991F" : "FF0606"; // Present or Absent color
         }
         break;
       }
@@ -83,7 +143,7 @@ const checkLeaves = (attendance, leaves) => {
 
     if (!leaveFound) {
       newItem.leave_type = item.status ? "P" : "A";
-      newItem.color = item.status ? "30991F" : "FF0606";
+      newItem.color = item.status ? "30991F" : "FF0606"; // Present or Absent color
     }
 
     return newItem;
@@ -348,86 +408,110 @@ const attendanceReport = async (req, res, next) => {
     { $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] } }
   ];
 
-  const reportData = await readAllandPopulate(collections, undefined, match);
+  try {
+    const reportData = await readAllandPopulate(collections, undefined, match);
 
-  let modifiedData = [];
+    let modifiedData = [];
+    const { month, year } = req.query;
 
-  const { month, year } = req.query;
+    let firstDateOfMonth, lastDateOfMonth;
 
-  let firstDateOfMonth, lastDateOfMonth;
+    // Validating month and year
+    if (month && year) {
+      const yearInt = parseInt(year, 10);
+      const monthInt = parseInt(month, 10) - 1; // Month is 0-based in Date
 
-  if (month && year) {
-    const yearInt = parseInt(year, 10);
-    const monthInt = parseInt(month, 10) - 1;
+      if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
+        return res.status(400).json({ error: "Invalid year or month" });
+      }
 
-    if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
-      return res.status(400).json({ error: "Invalid year or month" });
+      firstDateOfMonth =
+        monthInt === 0
+          ? new Date(yearInt - 1, 11, 26)
+          : new Date(yearInt, monthInt - 1, 26);
+      lastDateOfMonth = new Date(yearInt, monthInt, 25);
+    } else {
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+
+      firstDateOfMonth =
+        currentMonth === 0
+          ? new Date(currentYear - 1, 11, 26)
+          : new Date(currentYear, currentMonth - 1, 26);
+      lastDateOfMonth = new Date(currentYear, currentMonth, 25);
     }
 
-    firstDateOfMonth =
-      monthInt === 0
-        ? new Date(yearInt - 1, 11, 26)
-        : new Date(yearInt, monthInt - 1, 26);
-    lastDateOfMonth = new Date(yearInt, monthInt, 25);
-  } else {
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth();
+    // Format dates to ISO string
+    const formatDateToISOString = (date, startOfDay = true) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
 
-    firstDateOfMonth =
-      currentMonth === 0
-        ? new Date(currentYear - 1, 11, 26)
-        : new Date(currentYear, currentMonth - 1, 26);
-    lastDateOfMonth = new Date(currentYear, currentMonth, 25);
-  }
+      const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
+      return `${year}-${month}-${day}T${time}+00:00`;
+    };
 
-  const formatDateToISOString = (date, startOfDay = true) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
-    return `${year}-${month}-${day}T${time}+00:00`;
-  };
-
-  for (let index = 0; index < reportData.length; index++) {
-    const item = reportData[index];
-
-    let attendances = await AttendanceModel.find({
-      empid: item._id,
+    const holidays = await Holidays.find({
+      holiday_status: "approved",
       date: {
         $gte: formatDateToISOString(firstDateOfMonth, true),
         $lte: formatDateToISOString(lastDateOfMonth, false)
       }
     });
 
-    let newItem = removeUnnecessaryFields(item);
-    if (attendances.length) {
-      let data = checkLeaves(attendances, item.leaves);
-      newItem.attendance = data;
+    // Iterate over reportData
+    for (let index = 0; index < reportData.length; index++) {
+      const item = reportData[index];
+
+      // Fetch holidays in the specified date range
+
+      // Fetch attendance data for the employee
+      let attendances = await AttendanceModel.find({
+        empid: item._id,
+        date: {
+          $gte: formatDateToISOString(firstDateOfMonth, true),
+          $lte: formatDateToISOString(lastDateOfMonth, false)
+        }
+      });
+
+      // Process the data
+      let newItem = removeUnnecessaryFields(item);
+      if (attendances.length) {
+        // Assuming `checkLeaves` correctly processes the data
+        let data = checkLeaves(attendances, item.leaves, holidays);
+
+        // newItem.attendance = data.map(item => item._doc);
+        newItem.attendance = data;
+      }
+
+      modifiedData.push(newItem);
     }
 
-    modifiedData.push(newItem);
+    res.status(200).send(modifiedData);
+  } catch (error) {
+    console.error("Error generating attendance report:", error);
+    res.status(500).json({
+      error: "An error occurred while generating the attendance report."
+    });
   }
-  res.status(200).send(modifiedData);
 };
 
 const getStartAndEndOfWeek = () => {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const startOfWeek = new Date(now);
-  const endOfWeek = new Date(now);
+  const today = new Date();
+  const first = today.getDate() - today.getDay(); // Sunday as first day
+  const last = first + 6; // Saturday as last day
 
-  const today = moment().startOf("day");
-  const tomorrow = moment(today).endOf("day");
-
-  startOfWeek.setDate(now.getDate() - dayOfWeek);
+  const startOfWeek = new Date(today.setDate(first));
   startOfWeek.setHours(0, 0, 0, 0);
 
-  endOfWeek.setDate(now.getDate() + (6 - dayOfWeek));
+  const endOfWeek = new Date(today.setDate(last));
   endOfWeek.setHours(23, 59, 59, 999);
 
-  return { startOfWeek, endOfWeek };
+  return {
+    startOfWeek: startOfWeek.toISOString(),
+    endOfWeek: endOfWeek.toISOString()
+  };
 };
 
 const attendanceWeekReport = async (req, res, next) => {
@@ -436,16 +520,13 @@ const attendanceWeekReport = async (req, res, next) => {
       input: "$leaves",
       as: "leave",
       cond: {
-        $and: [
-          {
-            $or: [
-              { $eq: ["$$leave.status", "approved"] },
-              { $eq: ["$$leave.status", "cancelled"] }
-            ]
-          }
+        $or: [
+          { $eq: ["$$leave.status", "approved"] },
+          { $eq: ["$$leave.status", "cancelled"] }
         ]
       }
     };
+
     let collections = [
       {
         name: "leaves",
@@ -464,36 +545,37 @@ const attendanceWeekReport = async (req, res, next) => {
 
     const reportData = await readAllandPopulate(collections, undefined, match);
 
-    let modifiedData = [];
+    if (!Array.isArray(reportData)) {
+      return res.status(500).json({ error: "Failed to fetch employee data" });
+    }
 
     const { startOfWeek, endOfWeek } = getStartAndEndOfWeek();
 
-    for (let index = 0; index < reportData.length; index++) {
-      const item = reportData[index];
-      let attendances = await AttendanceModel.find({
-        empid: item._id,
-        date: {
-          $gte: startOfWeek,
-          $lte: endOfWeek
-        }
-      });
+    // Fetch holidays in bulk to optimize performance
+    const holidays = await Holidays.find({
+      holiday_status: "approved",
+      date: { $gte: startOfWeek, $lte: endOfWeek }
+    });
 
-      let newItem = removeUnnecessaryFields(item);
+    let modifiedData = await Promise.all(
+      reportData.map(async item => {
+        let attendances = await AttendanceModel.find({
+          empid: item._id,
+          date: { $gte: startOfWeek, $lte: endOfWeek }
+        });
 
-      if (attendances.length) {
-        let data = checkLeaves(attendances, item.leaves);
-        newItem.attendance = data;
-      } else {
-        newItem.attendance = [];
-      }
-      modifiedData.push(newItem);
-
-      // console.log(modifiedData);
-    }
+        let newItem = removeUnnecessaryFields(item);
+        newItem.attendance = attendances.length
+          ? checkLeaves(attendances, item.leaves, holidays)
+          : [];
+        return newItem;
+      })
+    );
 
     res.status(200).send(modifiedData);
   } catch (error) {
-    next(error);
+    console.error("Error fetching weekly attendance report:", error);
+    res.status(500).json({ error: "An error occurred while processing data." });
   }
 };
 
@@ -580,22 +662,119 @@ const todayAttendanceData = async (req, res, next) => {
   }
 };
 
+// const TotalEmployee = async (req, res, next) => {
+//   try {
+//     let leaveFilters = {
+//       input: "$leaves",
+//       as: "leave",
+//       cond: {
+//         $and: [
+//           {
+//             $or: [
+//               { $eq: ["$$leave.status", "approved"] },
+//               { $eq: ["$$leave.status", "cancelled"] }
+//             ]
+//           }
+//         ]
+//       }
+//     };
+//     let collections = [
+//       {
+//         name: "leaves",
+//         key: "empid",
+//         as: "leaves",
+//         local: "_id",
+//         filters: leaveFilters
+//       }
+//     ];
+
+//     let match = [
+//       {
+//         $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] }
+//       }
+//     ];
+
+//     const reportData = await readAllandPopulate(collections, undefined, match);
+
+//     let modifiedData = [];
+//     const currentDate = new Date().toISOString();
+//     const { startOfDay, endOfDay } = getStartAndEndOfDay(currentDate);
+
+//     for (let index = 0; index < reportData.length; index++) {
+//       const item = reportData[index];
+//       let attendances = await AttendanceModel.find({
+//         empid: item._id,
+//         date: {
+//           $gte: startOfDay,
+//           $lte: endOfDay
+//         }
+//       });
+
+//       let newItem = removeUnnecessaryFields(item);
+
+//       if (attendances.length) {
+//         let data = checkLeaves(attendances, item.leaves);
+//         newItem.attendance = data;
+//       } else {
+//         newItem.attendance = [];
+//       }
+//       modifiedData.push(newItem);
+//     }
+
+//     const TotalEmployees = modifiedData.length;
+//     let Present = modifiedData.reduce((count, element) => {
+//       return (
+//         count +
+//         element.attendance.filter(record => record.leave_type === "P").length
+//       );
+//     }, 0);
+
+//     let Absent = modifiedData.reduce((count, element) => {
+//       return (
+//         count +
+//         element.attendance.filter(record => record.leave_type === "A").length
+//       );
+//     }, 0);
+
+//     let OnLeave = modifiedData.reduce((count, element) => {
+//       return (
+//         count +
+//         element.attendance.filter(record => record.leave_type === "L").length
+//       );
+//     }, 0);
+
+//     let HalfDay = modifiedData.reduce((count, element) => {
+//       return (
+//         count +
+//         element.attendance.filter(record => record.leave_type === "H").length
+//       );
+//     }, 0);
+
+//     res.status(200).json({
+//       totalEmployeeCount: TotalEmployees,
+//       TotalEmployeePresent: Present,
+//       TotalEmployeeAbsent: Absent,
+//       totalEmployeeLeaveToday: OnLeave,
+//       TotalEmployeeHalfDay: HalfDay
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const TotalEmployee = async (req, res, next) => {
   try {
     let leaveFilters = {
       input: "$leaves",
       as: "leave",
       cond: {
-        $and: [
-          {
-            $or: [
-              { $eq: ["$$leave.status", "approved"] },
-              { $eq: ["$$leave.status", "cancelled"] }
-            ]
-          }
+        $or: [
+          { $eq: ["$$leave.status", "approved"] },
+          { $eq: ["$$leave.status", "cancelled"] }
         ]
       }
     };
+
     let collections = [
       {
         name: "leaves",
@@ -615,23 +794,33 @@ const TotalEmployee = async (req, res, next) => {
     const reportData = await readAllandPopulate(collections, undefined, match);
 
     let modifiedData = [];
-    const currentDate = new Date().toISOString();
-    const { startOfDay, endOfDay } = getStartAndEndOfDay(currentDate);
+    const currentDate = new Date();
+
+    // Get start and end of day
+    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(
+      currentDate.setHours(23, 59, 59, 999)
+    ).toISOString();
+
+    // Fetch holidays for the day
+    const holidays = await Holidays.find({
+      holiday_status: "approved",
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
 
     for (let index = 0; index < reportData.length; index++) {
       const item = reportData[index];
+
+      // Fetch attendance data for today
       let attendances = await AttendanceModel.find({
         empid: item._id,
-        date: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        }
+        date: { $gte: startOfDay, $lte: endOfDay }
       });
 
       let newItem = removeUnnecessaryFields(item);
 
       if (attendances.length) {
-        let data = checkLeaves(attendances, item.leaves);
+        let data = checkLeaves(attendances, item.leaves, holidays);
         newItem.attendance = data;
       } else {
         newItem.attendance = [];
@@ -640,42 +829,52 @@ const TotalEmployee = async (req, res, next) => {
     }
 
     const TotalEmployees = modifiedData.length;
-    let Present = modifiedData.reduce((count, element) => {
-      return (
-        count +
-        element.attendance.filter(record => record.leave_type === "P").length
-      );
-    }, 0);
 
-    let Absent = modifiedData.reduce((count, element) => {
-      return (
+    let Present = modifiedData.reduce(
+      (count, element) =>
         count +
-        element.attendance.filter(record => record.leave_type === "A").length
-      );
-    }, 0);
+        element.attendance.filter(record => record.leave_type === "P").length,
+      0
+    );
 
-    let OnLeave = modifiedData.reduce((count, element) => {
-      return (
+    let Absent = modifiedData.reduce(
+      (count, element) =>
         count +
-        element.attendance.filter(record => record.leave_type === "L").length
-      );
-    }, 0);
+        element.attendance.filter(record => record.leave_type === "A").length,
+      0
+    );
 
-    let HalfDay = modifiedData.reduce((count, element) => {
-      return (
+    let OnLeave = modifiedData.reduce(
+      (count, element) =>
         count +
-        element.attendance.filter(record => record.leave_type === "H").length
-      );
-    }, 0);
+        element.attendance.filter(record => record.leave_type === "L").length,
+      0
+    );
+
+    let HalfDay = modifiedData.reduce(
+      (count, element) =>
+        count +
+        element.attendance.filter(record => record.leave_type === "HD").length,
+      0
+    );
+
+    let Holiday = modifiedData.reduce(
+      (count, element) =>
+        count +
+        element.attendance.filter(record => record.leave_type === "H").length,
+      0
+    );
 
     res.status(200).json({
       totalEmployeeCount: TotalEmployees,
       TotalEmployeePresent: Present,
       TotalEmployeeAbsent: Absent,
       totalEmployeeLeaveToday: OnLeave,
-      TotalEmployeeHalfDay: HalfDay
+      TotalEmployeeHalfDay: HalfDay,
+      TotalEmployeeHoliday: Holiday
     });
   } catch (error) {
+    console.error("Error fetching total employee count:", error);
     next(error);
   }
 };
@@ -684,8 +883,6 @@ const updateAttendance = async (req, res, next) => {
   try {
     const updateby = req.user.userObjectId;
     const { empid, date, status } = req.body;
-
-    console.log(req.body);
 
     if (!empid || !date || !updateby || status === undefined) {
       return res.status(400).json({ message: "All fields are required" });
@@ -761,8 +958,6 @@ const employeeAttendanceReport = async (req, res, next) => {
       59,
       59
     );
-
-    // console.log(startOfMonth, endOfMonth);
 
     const attendanceReport = await Attendance.aggregate([
       {

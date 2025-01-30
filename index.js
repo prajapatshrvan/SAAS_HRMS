@@ -17,6 +17,9 @@ const PORT = process.env.PORT || 5000;
 const createAdmin = require("./config/createAdmin");
 createAdmin();
 
+// const controller = require("./controllers/salaryController");
+// app.get("/create", controller.bulkupdateAttendanceAttendance);
+
 // CORS setup
 const corsOptions = {
   origin: "*",
