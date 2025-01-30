@@ -9,7 +9,7 @@ module.exports.candidateDetails = async (req, res, next) => {
   }
 
   let keys =
-    "firstname middlename lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email aadhar_image pancard_no pan_image status";
+    "firstname middlename joining_date marital_status lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email aadhar_image pancard_no pan_image status";
 
   let data = await getEmployeeData(empId, keys);
 
