@@ -656,10 +656,8 @@ const updateAttendance = async (req, res, next) => {
         .json({ success: false, message: "Invalid date format" });
     }
 
-    // Normalize to start of the day (UTC)
     dateObj.setUTCHours(0, 0, 0, 0);
 
-    // Get first day of current month and today's date
     const currentDate = new Date();
     currentDate.setUTCHours(0, 0, 0, 0);
     const startOfMonth = new Date(
@@ -675,15 +673,22 @@ const updateAttendance = async (req, res, next) => {
       });
     }
 
-    // Check for existing attendance
     let attendanceRecord = await Attendance.findOne({ empid, date: dateObj });
+
+    let attendance;
+
+    if (status == "true") {
+      attendance = "present";
+    } else {
+      attendance = "absent";
+    }
 
     if (!attendanceRecord) {
       // Create new attendance record if not found
       await Attendance.create({
         empid,
         date: dateObj,
-        status,
+        status: attendance,
         updateby
       });
 
