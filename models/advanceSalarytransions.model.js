@@ -5,36 +5,39 @@ const advSalayTransionsSchema = new mongoose.Schema(
     empid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
-      required: true,
+      required: true
     },
     advanceSalaryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "advanceSalary",
-      required: true,
+      required: true
     },
     emiNumber: {
       type: Number,
       required: true,
-      default: 0,
+      default: 0
     },
     totalEmiCount: {
-      type: Number,
+      type: Number
     },
     totalAmount: {
       type: Number,
-      default:0,
+      default: 0
     },
     emiAmount: {
       type: Number,
-      default: 0,
+      default: 0
     },
     remainingAmount: {
-      type: Number,
-    },
+      type: Number
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
-const transionHistory = mongoose.model("transionHistory", advSalayTransionsSchema);
+const transionHistory = mongoose.model(
+  "transionHistory",
+  advSalayTransionsSchema
+);
 module.exports = transionHistory;
