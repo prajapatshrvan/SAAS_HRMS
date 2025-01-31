@@ -14,28 +14,28 @@ const salarySchema = new mongoose.Schema(
       type: String
     },
     pf: {
-      type: String
+      type: Number
     },
     esi: {
-      type: String
+      type: Number
     },
     hra: {
-      type: String
+      type: Number
     },
     da: {
-      type: String
+      type: Number
     },
     advance_amount: {
-      type: String
+      type: Number
     },
     date: {
       type: String
     },
     month: {
-      type: String
+      type: Number
     },
     year: {
-      type: String
+      type: Number
     },
 
     payment_mode: {
@@ -77,7 +77,7 @@ const salarySchema = new mongoose.Schema(
       default: 0
     },
     paydays: {
-      type: String
+      type: Number
     },
     bonus: {
       type: Number,
@@ -95,13 +95,13 @@ const salarySchema = new mongoose.Schema(
       default: 0
     },
     totalCTC: {
-      type: String
+      type: Number
     },
     countPardaysalary: {
-      type: String
+      type: Number
     },
     monthlyAmount: {
-      type: String
+      type: Number
     },
     advanceSalary: {
       type: Number,
@@ -129,23 +129,23 @@ const salarySchema = new mongoose.Schema(
       type: String
     },
     account_no: {
-      type: String
+      type: Number
     },
     remainingDays: {
-      type: String
+      type: Number
     },
     grossSalary: {
-      type: String
+      type: Number
     },
     totalGrossSalary: {
-      type: String
+      type: Number
     },
     absent_day: {
-      type: String
+      type: Number
     },
 
     totalnetsalary: {
-      type: String
+      type: Number
     },
     salary_status: {
       type: String,
