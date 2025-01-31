@@ -433,11 +433,11 @@ const createSalary = async (req, res) => {
         department: emp.department,
         date_of_joining: new Date(emp.joining_date).toLocaleDateString(),
         pancard_No: emp.pancard_no,
-        account_no: emp.bankdetails.account_no,
+        account_no: parseInt(emp.bankdetails.account_no),
         gender: emp.gender,
         date: new Date(),
-        month: Month,
-        year: Year,
+        month: parseInt(Month),
+        year: parseInt(Year),
         salary_status: "pending",
         payment_status: false,
         totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
@@ -446,18 +446,18 @@ const createSalary = async (req, res) => {
         ta: 0,
         da: 0,
         other: 0,
-        paydays: totalPaidDays,
+        paydays: parseInt(totalPaidDays),
         pf: parseFloat(pf) || 0,
         esi: parseFloat(esi) || 0,
         countPardaysalary: parseFloat(perDaySalary) || 0,
-        remainingDays: remainingDays,
-        presentDay: workingDayCount,
-        totalLeave: empAttendance.absent || 0,
-        unpaidLeave: remainingAbsent,
+        remainingDays: parseInt(remainingDays),
+        presentDay: parseInt(workingDayCount),
+        totalLeave: parseInt(totalAbsent) || 0,
+        unpaidLeave: parseInt(remainingAbsent),
         netSalary: parseInt(netSalary),
-        grossSalary: totalPaidAmount.toFixed(0),
-        totalGrossSalary: totalGrossSalary.toFixed(0),
-        totalnetsalary: netSalary,
+        grossSalary: parseInt(totalPaidAmount.toFixed(0)),
+        totalGrossSalary: parseInt(totalGrossSalary.toFixed(0)),
+        totalnetsalary: parseInt(netSalary),
         leaveDeduction: parseFloat(leaveDeduction) || 0,
         advanceSalary: parseFloat(advanceDeduction) || 0,
         miscellaneous: 0,
@@ -597,51 +597,161 @@ module.exports = {
   createSalary
 };
 
+// module.exports.salaryList = async (req, res) => {
+//   try {
+//     const { month, year } = req.query;
+
+//     const currentDate = new Date();
+
+//     let firstDateOfMonth, lastDateOfMonth;
+
+//     if (month && year) {
+//       const yearInt = parseInt(year, 10);
+//       const monthInt = parseInt(month, 10) - 1;
+
+//       if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
+//         return res.status(400).json({ error: "Invalid year or month" });
+//       }
+
+//       firstDateOfMonth = new Date(yearInt, monthInt, 1).toISOString();
+//       lastDateOfMonth = new Date(yearInt, monthInt + 1, 0).toISOString();
+//     } else {
+//       firstDateOfMonth = new Date(
+//         currentDate.getFullYear(),
+//         currentDate.getMonth(),
+//         1
+//       ).toISOString();
+//       lastDateOfMonth = new Date(
+//         currentDate.getFullYear(),
+//         currentDate.getMonth() + 1,
+//         0
+//       ).toISOString();
+//     }
+
+//     console.log(firstDateOfMonth, "firstDateOfMonth");
+//     console.log(lastDateOfMonth, "lastDateOfMonth");
+
+//     let salaryList;
+//     if (
+//       req.role_name === "ADMIN" ||
+//       req.role_name === "SUPERADMIN" ||
+//       req.role_name === "HR"
+//     ) {
+//       salaryList = await Salary.find({
+//         date: {
+//           $gte: firstDateOfMonth,
+//           $lte: lastDateOfMonth
+//         }
+//       }).populate({
+//         path: "empid",
+//         select: "firstname lastname employeeID image"
+//       });
+//     } else {
+//       salaryList = await Salary.find({
+//         empid: req.user.userObjectId,
+//         date: {
+//           $gte: firstDateOfMonth,
+//           $lte: lastDateOfMonth
+//         }
+//       }).populate({
+//         path: "empid",
+//         select: "firstname lastname employeeID image"
+//       });
+//     }
+
+//     const newData = salaryList.map(salary => {
+//       const { empid, ...rest } = salary.toObject();
+//       if (!empid) {
+//         return {
+//           ...rest,
+//           employee_name: "Unknown",
+//           empid: null,
+//           employeeID: "Unknown",
+//           image: "Unknown"
+//         };
+//       }
+//       return {
+//         ...rest,
+//         employee_name: `${empid.firstname} ${empid.lastname}`,
+//         empid: empid._id,
+//         employeeID: empid.employeeID,
+//         image: empid.image
+//       };
+//     });
+
+//     return res.status(200).json({
+//       SalaryList: newData
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// };
+
 module.exports.salaryList = async (req, res) => {
   try {
     const { month, year } = req.query;
 
-    const currentDate = new Date();
+    // let firstDateOfMonth, lastDateOfMonth;
 
-    let firstDateOfMonth, lastDateOfMonth;
+    // if (month && year) {
+    //   const selectedYear = parseInt(year, 10);
+    //   const selectedMonth = parseInt(month, 10) - 1; // Convert to 0-based index
 
-    if (month && year) {
-      const yearInt = parseInt(year, 10);
-      const monthInt = parseInt(month, 10) - 1;
+    //   if (
+    //     isNaN(selectedYear) ||
+    //     isNaN(selectedMonth) ||
+    //     selectedMonth < 0 ||
+    //     selectedMonth > 11
+    //   ) {
+    //     return res.status(400).json({ error: "Invalid year or month" });
+    //   }
 
-      if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
-        return res.status(400).json({ error: "Invalid year or month" });
-      }
+    //   // Start Date: 26th of the previous month
+    //   firstDateOfMonth = moment(
+    //     `${selectedYear}-${selectedMonth + 1}-26`,
+    //     "YYYY-MM-DD"
+    //   )
+    //     .subtract(1, "month")
+    //     .startOf("day")
+    //     .toISOString();
 
-      firstDateOfMonth = new Date(yearInt, monthInt, 1).toISOString();
-      lastDateOfMonth = new Date(yearInt, monthInt + 1, 0).toISOString();
-    } else {
-      firstDateOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      ).toISOString();
-      lastDateOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0
-      ).toISOString();
-    }
+    //   // End Date: 25th of the current month
+    //   lastDateOfMonth = moment(
+    //     `${selectedYear}-${selectedMonth + 1}-25`,
+    //     "YYYY-MM-DD"
+    //   )
+    //     .endOf("day")
+    //     .toISOString();
+    // } else {
+    //   const currentYear = moment().year();
+    //   const currentMonth = moment().month();
 
-    console.log(firstDateOfMonth, "firstDateOfMonth");
-    console.log(lastDateOfMonth, "lastDateOfMonth");
+    //   // Start Date: 26th of the previous month
+    //   firstDateOfMonth = moment(
+    //     `${currentYear}-${currentMonth + 1}-26`,
+    //     "YYYY-MM-DD"
+    //   )
+    //     .subtract(1, "month")
+    //     .startOf("day")
+    //     .toISOString();
+
+    //   // End Date: 25th of the current month
+    //   lastDateOfMonth = moment(
+    //     `${currentYear}-${currentMonth + 1}-25`,
+    //     "YYYY-MM-DD"
+    //   )
+    //     .endOf("day")
+    //     .toISOString();
+    // }
 
     let salaryList;
-    if (
-      req.role_name === "ADMIN" ||
-      req.role_name === "SUPERADMIN" ||
-      req.role_name === "HR"
-    ) {
+    if (["ADMIN", "SUPERADMIN", "HR"].includes(req.role_name)) {
       salaryList = await Salary.find({
-        date: {
-          $gte: firstDateOfMonth,
-          $lte: lastDateOfMonth
-        }
+        month: parseInt(month),
+        year: parseInt(year)
       }).populate({
         path: "empid",
         select: "firstname lastname employeeID image"
@@ -649,10 +759,8 @@ module.exports.salaryList = async (req, res) => {
     } else {
       salaryList = await Salary.find({
         empid: req.user.userObjectId,
-        date: {
-          $gte: firstDateOfMonth,
-          $lte: lastDateOfMonth
-        }
+        month: parseInt(month),
+        year: parseInt(year)
       }).populate({
         path: "empid",
         select: "firstname lastname employeeID image"
@@ -661,29 +769,28 @@ module.exports.salaryList = async (req, res) => {
 
     const newData = salaryList.map(salary => {
       const { empid, ...rest } = salary.toObject();
-      if (!empid) {
-        return {
-          ...rest,
-          employee_name: "Unknown",
-          empid: null,
-          employeeID: "Unknown",
-          image: "Unknown"
-        };
-      }
-      return {
-        ...rest,
-        employee_name: `${empid.firstname} ${empid.lastname}`,
-        empid: empid._id,
-        employeeID: empid.employeeID,
-        image: empid.image
-      };
+      return empid
+        ? {
+            ...rest,
+            employee_name: `${empid.firstname} ${empid.lastname}`,
+            empid: empid._id,
+            employeeID: empid.employeeID,
+            image: empid.image
+          }
+        : {
+            ...rest,
+            employee_name: "Unknown",
+            empid: null,
+            employeeID: "Unknown",
+            image: "Unknown"
+          };
     });
 
     return res.status(200).json({
       SalaryList: newData
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching salary list:", error);
     return res.status(500).json({
       message: "Internal Server Error"
     });
@@ -701,7 +808,7 @@ module.exports.EmployeeSalaryList = async (req, res) => {
 
     // Map through the results and format the data
     const newData = salaryList.map(salary => {
-      const { empid, ...rest } = salary.toObject(); // Convert document to plain object
+      const { empid, ...rest } = salary.toObject();
 
       if (!empid) {
         return {
