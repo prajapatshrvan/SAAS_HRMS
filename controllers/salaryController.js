@@ -79,103 +79,323 @@ function countSundays(startDate, endDate) {
   return count;
 }
 
+// const createSalary = async (req, res) => {
+//   try {
+//     const Year = moment().format("YYYY");
+//     const Month = moment().format("MM");
+
+//     const existingSalary = await Salary.findOne({ month: Month, year: Year });
+//     if (existingSalary) {
+//       return res.status(400).json({
+//         message: `Salary for ${Month}-${Year} Already Created.`
+//       });
+//     }
+
+//     // Remove this after testing
+//     const employees = await Employee.find({ status: "completed" });
+//     const date = new Date();
+//     const currentMonth = date.getMonth();
+//     const currentYear = date.getFullYear();
+//     const totalDaysInCurrentMonth = new Date(
+//       currentYear,
+//       currentMonth + 1,
+//       0
+//     ).getDate();
+//     const monthdays = totalDaysInCurrentMonth - 25 + 25;
+
+//     const startDate = moment(`${Year}-${Month}-26`)
+//       .subtract(1, "month")
+//       .startOf("day");
+//     const endDate = moment(`${Year}-${Month}-25`).endOf("day");
+//     const currentDate = moment().format("YYYY-MM-DD");
+
+//     const salaries = [];
+//     for (const emp of employees) {
+
+//       const absentCount = await Attendance.countDocuments({
+//         empid: emp._id,
+//         status: "absent",
+//         date: { $gte: startDate, $lte: endDate }
+//       });
+
+//       console.log(absentCount)
+
+//       const fullleave = await Attendance.countDocuments({
+//         empid: emp._id,
+//         status: "full_leave",
+//         date: { $gte: startDate, $lte: endDate }
+//       });
+
+//       console.log(fullleave)
+
+//       const halfLeave = await Attendance.countDocuments({
+//         empid: emp._id,
+//         status: "half_leave",
+//         date: { $gte: startDate, $lte: endDate }
+//       });
+
+//       console.log(halfLeave)
+
+//       const totalAbsent = absentCount + fullleave + (halfLeave/2)
+
+//       const workingDayCount = await Attendance.countDocuments({
+//         empid: emp._id,
+//         status: "present",
+//         date: { $gte: startDate, $lte: endDate }
+//       });
+
+//      const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
+
+//      const sundays = countSundays(STARTDATE ,endDate)
+
+//      console.log(emp.firstname , "joining date =>" , emp.joining_date,  " total Absent=>", totalAbsent, " total  presentdays => ",workingDayCount + sundays , " total workingdays =>" , monthdays )
+
+//       const {remainingAbsent} = await leave_carry_forward(emp._id, totalAbsent)
+
+//       const totalPaidDays = sundays + workingDayCount
+
+//       const remainingDays = monthdays - remainingAbsent;
+
+//       if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
+//         console.error(`Missing monthly compensation for employee ${emp._id}`);
+//         continue;
+//       }
+//       const totalGrossSalary = parseInt(emp.ctcDetails.monthlycompensation.replaceAll("," , "")) || 0;
+//       const perDaySalary = (totalGrossSalary / monthdays).toFixed(2);
+//       const leaveDeduction = perDaySalary * remainingAbsent;
+//       const totalPaidAmount = totalPaidDays * perDaySalary;
+
+//       const { basicSalary } = calculateSalaryComponents(totalPaidAmount);
+
+//       const pf = (totalPaidAmount * 0.3 * 0.24).toFixed(2);
+//       let esi = 0;
+//       if (totalGrossSalary < 21000) {
+//         esi = (totalPaidAmount * 0.04).toFixed(2);
+//       }
+
+//       let netSalary = parseFloat(totalPaidAmount - (parseFloat(pf) - parseFloat(esi)) ).toFixed(2);
+//       netSalary = isNaN(netSalary) ? 0 : netSalary;
+
+//      const totalNetSalary = netSalary
+
+//       const advanceSalary = await AdvanceSalary.findOne({
+//         empid: emp._id,
+//         status: "pending"
+//       });
+
+//       let advanceDeduction = 0;
+//       if (advanceSalary) {
+//         advanceDeduction = advanceSalary.emi_amount || 0;
+//         netSalary -= advanceDeduction;
+
+//         advanceSalary.instalment -= 1;
+//         advanceSalary.paidAmount += advanceDeduction;
+
+//         if (advanceSalary.instalment < 1) {
+//           advanceSalary.status = "completed";
+//         }
+
+//         // await advanceSalary.save();
+
+//         await adSalaryTransition.create({
+//           empid: emp._id,
+//           advanceSalaryId: advanceSalary._id,
+//           emiNumber: advanceSalary.emiNumber,
+//           totalEmiCount: advanceSalary.instalment,
+//           totalAmount: advanceSalary.amount,
+//           remainingAmount: advanceSalary.amount - advanceSalary.paidAmount,
+//           emiAmount: advanceDeduction
+//         });
+//       }
+
+//       const cfremaining = await Leave.findOne({
+//         empid: emp._id
+//       }).then(balance => balance?.cfremaining || 0);
+
+//       // const paidLeave = Math.min(1 + cfremaining, totalLeaveDays);
+
+//       const totalDeduction = (parseFloat(pf) +
+//         parseFloat(esi) +
+//         parseFloat(leaveDeduction) +
+//         parseFloat(advanceDeduction)).toFixed(0);
+
+//       salaries.push(
+//         new Salary({
+//           empid: emp._id,
+//           empname: `${emp.firstname} ${emp.middlename} ${emp.lastname}`,
+//           employeeID: emp.employeeID,
+//           designation: emp.designation,
+//           department: emp.department,
+//           date_of_joining: new Date(emp.joining_date).toLocaleDateString(),
+//           pancard_No: emp.pancard_no,
+//           account_no: emp.bankdetails.account_no,
+//           gender: emp.gender,
+//           date: currentDate,
+//           month: Month,
+//           year: Year,
+//           salary_status: "pending",
+//           payment_status: false,
+//           totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
+//           basicSalary: parseInt(basicSalary) || 0,
+//           hra:  0,
+//           ta: 0,
+//           da:  0,
+//           other:  0,
+//           paydays: totalPaidDays ,
+//           pf: parseFloat(pf) || 0,
+//           esi: parseFloat(esi) || 0,
+//           countPardaysalary: parseFloat(perDaySalary) || 0,
+//           remainingDays: remainingDays,
+//           presentDay: workingDayCount,
+//           totalLeave: absentCount || 0,
+//           unpaidLeave : remainingAbsent,
+//           // paidLeave,
+//           netSalary: parseInt(netSalary),
+//           grossSalary : totalPaidAmount.toFixed(0),
+//           totalGrossSalary:totalGrossSalary.toFixed(0),
+//           totalnetsalary: totalNetSalary,
+//           leaveDeduction: parseFloat(leaveDeduction) || 0,
+//           advanceSalary: parseFloat(advanceDeduction) || 0,
+//           miscellaneous: 0,
+//           totaldeduction: parseFloat(totalDeduction) || 0
+//         })
+//       );
+//     }
+
+//     // await Salary.insertMany(salaries);
+
+//     return res.status(200).json({
+//       message: "Salaries created successfully"
+//     });
+//   } catch (error) {
+//     console.error("Error creating salaries:", error);
+//     return res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message
+//     });
+//   }
+// };
+
 const createSalary = async (req, res) => {
   try {
     const Year = moment().format("YYYY");
     const Month = moment().format("MM");
 
-    const existingSalary = await Salary.findOne({ month: Month, year: Year });
+    // Check if salary already exists
+    const existingSalary = await Salary.findOne({
+      month: Month,
+      year: Year
+    }).lean();
     if (existingSalary) {
-      return res.status(400).json({
-        message: `Salary for ${Month}-${Year} Already Created.`
-      });
+      return res
+        .status(400)
+        .json({ message: `Salary for ${Month}-${Year} Already Created.` });
     }
 
-    // Remove this after testing
-    const employees = await Employee.find({ status: "completed" });
-    const date = new Date();
-    const currentMonth = date.getMonth();
-    const currentYear = date.getFullYear();
-    const totalDaysInCurrentMonth = new Date(
-      currentYear,
-      currentMonth + 1,
-      0
-    ).getDate();
-    const monthdays = totalDaysInCurrentMonth - 25 + 25;
+    // Fetch employees with completed status
+    const employees = await Employee.find({ status: "completed" }).lean();
+    if (!employees.length) {
+      return res
+        .status(404)
+        .json({ message: "No employees found for salary processing." });
+    }
+
+    // Calculate salary period (26th of previous month to 25th of current month)
     const startDate = moment(`${Year}-${Month}-26`)
       .subtract(1, "month")
-      .startOf("day");
-    const endDate = moment(`${Year}-${Month}-25`).endOf("day");
-    const currentDate = moment().format("YYYY-MM-DD");
+      .startOf("day")
+      .toDate();
+    const endDate = moment(`${Year}-${Month}-25`).endOf("day").toDate();
+
+    // Get total days in the month
+    const totalDaysInCurrentMonth = moment(`${Year}-${Month}`).daysInMonth();
+    const monthdays = totalDaysInCurrentMonth;
+
+    // Fetch all attendance records for relevant employees in one go
+    const employeeIds = employees.map(emp => emp._id);
+    const attendanceRecords = await Attendance.find({
+      empid: { $in: employeeIds },
+      date: { $gte: startDate, $lte: endDate }
+    }).lean();
+
+    // Organize attendance by employee
+    const attendanceMap = {};
+    attendanceRecords.forEach(record => {
+      if (!attendanceMap[record.empid]) {
+        attendanceMap[record.empid] = {
+          absent: 0,
+          full_leave: 0,
+          half_leave: 0,
+          present: 0
+        };
+      }
+      attendanceMap[record.empid][record.status] =
+        (attendanceMap[record.empid][record.status] || 0) + 1;
+    });
 
     const salaries = [];
+
     for (const emp of employees) {
-      
-      const absentCount = await Attendance.countDocuments({
-        empid: emp._id,
-        status: "absent",
-        date: { $gte: startDate, $lte: endDate }
-      });
+      const empAttendance = attendanceMap[emp._id] || {
+        absent: 0,
+        full_leave: 0,
+        half_leave: 0,
+        present: 0
+      };
 
-      const fullleave = await Attendance.countDocuments({
-        empid: emp._id,
-        status: "full_leave",
-        date: { $gte: startDate, $lte: endDate }
-      });
+      // Calculate total absent days
+      const totalAbsent =
+        empAttendance.absent +
+        empAttendance.full_leave +
+        empAttendance.half_leave / 2;
 
-      const halfLeave = await Attendance.countDocuments({
-        empid: emp._id,
-        status: "half_leave",
-        date: { $gte: startDate, $lte: endDate }
-      });
+      // Calculate working days (including Sundays)
+      const STARTDATE =
+        emp.joining_date &&
+        (emp.joining_date.getMonth() === new Date().getMonth() &&
+          emp.joining_date.getFullYear() === new Date().getFullYear())
+          ? emp.joining_date
+          : startDate;
 
-      const totalAbsent = absentCount + fullleave + (halfLeave/2)
+      const sundays = countSundays(STARTDATE, endDate);
+      const workingDayCount = empAttendance.present;
+      const totalPaidDays = sundays + workingDayCount;
 
-      const workingDayCount = await Attendance.countDocuments({
-        empid: emp._id,
-        status: "present",
-        date: { $gte: startDate, $lte: endDate }
-      });
-
-   const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
-
-   const sundays = countSundays(STARTDATE ,endDate)
-
-      const {remainingAbsent} = await leave_carry_forward(emp._id, totalAbsent)
-
-      const totalPaidDays = sundays + workingDayCount
-
+      // Handle leave carry forward
+      const { remainingAbsent } = await leave_carry_forward(
+        emp._id,
+        totalAbsent
+      );
       const remainingDays = monthdays - remainingAbsent;
 
+      // Skip employees with missing salary details
       if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
-        console.error(`Missing monthly compensation for employee ${emp._id}`);
+        console.error(`Skipping employee ${emp._id}: Missing salary details`);
         continue;
       }
-      const totalGrossSalary = parseInt(emp.ctcDetails.monthlycompensation.replaceAll("," , "")) || 0;
+
+      const totalGrossSalary =
+        parseInt(emp.ctcDetails.monthlycompensation.replaceAll(",", "")) || 0;
       const perDaySalary = (totalGrossSalary / monthdays).toFixed(2);
       const leaveDeduction = perDaySalary * remainingAbsent;
       const totalPaidAmount = totalPaidDays * perDaySalary;
 
+      // Salary Component Calculation
       const { basicSalary } = calculateSalaryComponents(totalPaidAmount);
-
       const pf = (totalPaidAmount * 0.3 * 0.24).toFixed(2);
-      let esi = 0;
-      if (totalGrossSalary < 21000) {
-        esi = (totalPaidAmount * 0.04).toFixed(2);
-      }
-
-      let netSalary = parseFloat(totalPaidAmount - (parseFloat(pf) - parseFloat(esi)) ).toFixed(2);
+      let esi =
+        totalGrossSalary < 21000 ? (totalPaidAmount * 0.04).toFixed(2) : 0;
+      let netSalary = parseFloat(
+        totalPaidAmount - (parseFloat(pf) - parseFloat(esi))
+      ).toFixed(2);
       netSalary = isNaN(netSalary) ? 0 : netSalary;
-
-
-     const totalNetSalary = netSalary
 
       const advanceSalary = await AdvanceSalary.findOne({
         empid: emp._id,
         status: "pending"
-      });
-
+      }).lean();
       let advanceDeduction = 0;
+
       if (advanceSalary) {
         advanceDeduction = advanceSalary.emi_amount || 0;
         netSalary -= advanceDeduction;
@@ -186,8 +406,6 @@ const createSalary = async (req, res) => {
         if (advanceSalary.instalment < 1) {
           advanceSalary.status = "completed";
         }
-
-        await advanceSalary.save();
 
         await adSalaryTransition.create({
           empid: emp._id,
@@ -200,71 +418,62 @@ const createSalary = async (req, res) => {
         });
       }
 
-      const cfremaining = await Leave.findOne({
-        empid: emp._id
-      }).then(balance => balance?.cfremaining || 0);
-
-      const paidLeave = Math.min(1 + cfremaining, totalLeaveDays);
-
+      // const cfremaining = await Leave.findOne({ empid: emp._id }).lean().then(balance => balance?.cfremaining || 0);
       const totalDeduction = (parseFloat(pf) +
         parseFloat(esi) +
         parseFloat(leaveDeduction) +
         parseFloat(advanceDeduction)).toFixed(0);
 
-      salaries.push(
-        new Salary({
-          empid: emp._id,
-          empname: `${emp.firstname} ${emp.middlename} ${emp.lastname}`,
-          employeeID: emp.employeeID,
-          designation: emp.designation,
-          department: emp.department,
-          date_of_joining: new Date(emp.joining_date).toLocaleDateString(),
-          pancard_No: emp.pancard_no,
-          account_no: emp.bankdetails.account_no,
-          gender: emp.gender,
-          date: currentDate,
-          month: Month,
-          year: Year,
-          salary_status: "pending",
-          payment_status: false,
-          totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
-          basicSalary: parseInt(basicSalary) || 0,
-          hra:  0,
-          ta: 0,
-          da:  0,
-          other:  0,
-          paydays: totalPaidDays ,
-          pf: parseFloat(pf) || 0,
-          esi: parseFloat(esi) || 0,
-          countPardaysalary: parseFloat(perDaySalary) || 0,
-          remainingDays: remainingDays,
-          presentDay: workingDayCount,
-          totalLeave: absentCount || 0,
-          unpaidLeave : remainingAbsent,
-          paidLeave,
-          netSalary: parseInt(netSalary),
-          grossSalary : totalPaidAmount.toFixed(0),
-          totalGrossSalary:totalGrossSalary.toFixed(0),
-          totalnetsalary: totalNetSalary,
-          leaveDeduction: parseFloat(leaveDeduction) || 0,
-          advanceSalary: parseFloat(advanceDeduction) || 0,
-          miscellaneous: 0,
-          totaldeduction: parseFloat(totalDeduction) || 0
-        })
-      );
+      // Push salary data
+      salaries.push({
+        empid: emp._id,
+        empname: `${emp.firstname} ${emp.middlename} ${emp.lastname}`,
+        employeeID: emp.employeeID,
+        designation: emp.designation,
+        department: emp.department,
+        date_of_joining: new Date(emp.joining_date).toLocaleDateString(),
+        pancard_No: emp.pancard_no,
+        account_no: emp.bankdetails.account_no,
+        gender: emp.gender,
+        date: new Date(),
+        month: Month,
+        year: Year,
+        salary_status: "pending",
+        payment_status: false,
+        totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
+        basicSalary: parseInt(basicSalary) || 0,
+        hra: 0,
+        ta: 0,
+        da: 0,
+        other: 0,
+        paydays: totalPaidDays,
+        pf: parseFloat(pf) || 0,
+        esi: parseFloat(esi) || 0,
+        countPardaysalary: parseFloat(perDaySalary) || 0,
+        remainingDays: remainingDays,
+        presentDay: workingDayCount,
+        totalLeave: empAttendance.absent || 0,
+        unpaidLeave: remainingAbsent,
+        netSalary: parseInt(netSalary),
+        grossSalary: totalPaidAmount.toFixed(0),
+        totalGrossSalary: totalGrossSalary.toFixed(0),
+        totalnetsalary: netSalary,
+        leaveDeduction: parseFloat(leaveDeduction) || 0,
+        advanceSalary: parseFloat(advanceDeduction) || 0,
+        miscellaneous: 0,
+        totaldeduction: parseFloat(totalDeduction) || 0
+      });
     }
 
+    // Insert all salaries at once
     await Salary.insertMany(salaries);
 
-    return res.status(200).json({
-      message: "Salaries created successfully"
-    });
+    return res.status(200).json({ message: "Salaries created successfully" });
   } catch (error) {
     console.error("Error creating salaries:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message
-    });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -304,44 +513,39 @@ const createSalary = async (req, res) => {
 //               status: "approved",
 //               start_date: { $gte: startDate, $lte: endDate }
 //             });
-      
-            
+
 //             const totalLeaveDays = leaves.reduce(
 //               (prev, curr) => prev + curr.leave_days,
 //               0
 //             );
-            
+
 //             // const unpaidLeave = Math.max(totalLeaveDays - 1, 0);
-            
+
 //             const absentCount = await Attendance.countDocuments({
 //               empid: emp._id,
 //               status: false,
 //               date: { $gte: startDate, $lte: endDate }
 //             });
-            
-            
+
 //             const workingDayCount = await Attendance.countDocuments({
 //               empid: emp._id,
 //               status: true,
 //               date: { $gte: startDate, $lte: endDate }
 //             });
-            
-            
+
 //             const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
-            
+
 //             const sundays = countSundays(STARTDATE ,endDate)
-            
 
 //             console.log(emp.firstname ,"=>", emp._id , "||"," taken leaves =>", totalLeaveDays ," ||", "system leaves => " , absentCount , "||" , "Working Days =>" , workingDayCount , "||","sundays => ",sundays);
 
 //             const {remainingAbsent} = await leave_carry_forward(emp._id, absentCount)
-      
+
 //             const totalPaidDays = sundays + workingDayCount
 //             const remainingDays = monthdays - remainingAbsent;
-      
-      
+
 //             // const validRemainingDays = Math.max(remainingDays, 0);
-      
+
 //             if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
 //               console.error(`Missing monthly compensation for employee ${emp._id}`);
 //               continue;
@@ -350,33 +554,32 @@ const createSalary = async (req, res) => {
 //             const perDaySalary = (totalGrossSalary / monthdays).toFixed(2);
 //             const leaveDeduction = perDaySalary * remainingAbsent;
 //             const totalPaidAmount = totalPaidDays * perDaySalary;
-      
+
 //             const { basicSalary } = calculateSalaryComponents(totalPaidAmount);
-      
+
 //             const pf = (totalPaidAmount * 0.3 * 0.24).toFixed(2);
 //             let esi = 0;
 //             if (totalGrossSalary < 21000) {
 //               esi = (totalPaidAmount * 0.04).toFixed(2);
 //             }
-      
+
 //             let netSalary = parseFloat(totalPaidAmount - (parseFloat(pf) - parseFloat(esi)) ).toFixed(2);
 //             netSalary = isNaN(netSalary) ? 0 : netSalary;
-      
+
 //              //Total Net Salary=Net Salary+Additional Earnings
 //              const totalNetSalary = netSalary
-      
+
 //             const cfremaining = await Leave.findOne({
 //               empid: emp._id
 //             }).then(balance => balance?.cfremaining || 0);
-      
+
 //             const paidLeave = Math.min(1 + cfremaining, totalLeaveDays);
-      
+
 //             const totalDeduction = (parseFloat(pf) +
 //               parseFloat(esi) +
 //               parseFloat(leaveDeduction))
 //               // parseFloat(advanceDeduction)).toFixed(0);
 //           }
-
 
 //           return res.status(200).send({
 //             success : true
@@ -397,6 +600,7 @@ module.exports = {
 module.exports.salaryList = async (req, res) => {
   try {
     const { month, year } = req.query;
+
     const currentDate = new Date();
 
     let firstDateOfMonth, lastDateOfMonth;
@@ -423,6 +627,9 @@ module.exports.salaryList = async (req, res) => {
         0
       ).toISOString();
     }
+
+    console.log(firstDateOfMonth, "firstDateOfMonth");
+    console.log(lastDateOfMonth, "lastDateOfMonth");
 
     let salaryList;
     if (
