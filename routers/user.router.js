@@ -30,7 +30,7 @@ router.get("/week_attendance", auth, attendanceWeekReport);
 router.get("/oneday_attendance", auth, todayAttendanceData);
 router.get("/employeecount", auth, TotalEmployee);
 router.get("/emp_attendance", auth, employeeAttendanceReport);
-router.get("/emp_attendance_report_test", auth, attendanceReportTesting);
+// router.get("/emp_attendance_report_test", auth, attendanceReportTesting);
 router.post("/biometric_attendance", auth, biometricAttendance);
 
 router.get("/roles", auth, user.ViewRoleApi);
