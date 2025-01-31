@@ -289,7 +289,6 @@ const createSalary = async (req, res) => {
       0
     ).getDate();
     const monthdays = totalDaysInCurrentMonth - 25 + 25;
-
     const startDate = moment(`${Year}-${Month}-26`)
       .subtract(1, "month")
       .startOf("day");
@@ -332,9 +331,6 @@ const createSalary = async (req, res) => {
 
       
       const totalPaidDays = sundays + workingDayCount
-
-      
-      
 
       const remainingDays = monthdays - remainingAbsent;
       const validRemainingDays = Math.max(remainingDays, 0); 
