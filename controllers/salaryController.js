@@ -85,11 +85,11 @@ const createSalary = async (req, res) => {
     const Month = moment().format("MM");
 
     const existingSalary = await Salary.findOne({ month: Month, year: Year });
-    // if (existingSalary) {
-    //   return res.status(400).json({
-    //     message: `Salary for ${Month}-${Year} Already Created.`
-    //   });
-    // }
+    if (existingSalary) {
+      return res.status(400).json({
+        message: `Salary for ${Month}-${Year} Already Created.`
+      });
+    }
 
     // Remove this after testing
     const employees = await Employee.find({ status: "completed" });
@@ -111,28 +111,31 @@ const createSalary = async (req, res) => {
 
     const salaries = [];
     for (const emp of employees) {
-      const leaves = await Leave.find({
-        empid: emp._id,
-        status: "approved",
-        start_date: { $gte: startDate, $lte: endDate }
-      });
-
-      const totalLeaveDays = leaves.reduce(
-        (acc, curr) => acc + curr.leave_days,
-        0
-      );
-
-      // const unpaidLeave = Math.max(totalLeaveDays - 1, 0);
+      
 
       const absentCount = await Attendance.countDocuments({
         empid: emp._id,
-        status: false,
+        status: "absent",
         date: { $gte: startDate, $lte: endDate }
       });
 
+      const leave = await Attendance.countDocuments({
+        empid: emp._id,
+        status: "full_leave",
+        date: { $gte: startDate, $lte: endDate }
+      });
+
+      const halfDay = await Attendance.countDocuments({
+        empid: emp._id,
+        status: "half_leave",
+        date: { $gte: startDate, $lte: endDate }
+      });
+
+      const totalAbsent = absentCount + leave + (halfDay/2)
+
       const workingDayCount = await Attendance.countDocuments({
         empid: emp._id,
-        status: true,
+        status: "present",
         date: { $gte: startDate, $lte: endDate }
       });
 
@@ -140,7 +143,7 @@ const createSalary = async (req, res) => {
 
    const sundays = countSundays(STARTDATE ,endDate)
 
-      const {remainingAbsent} = await leave_carry_forward(emp._id, absentCount)
+      const {remainingAbsent} = await leave_carry_forward(emp._id, totalAbsent)
 
       console.log(remainingAbsent , "remainingAbsent")
 

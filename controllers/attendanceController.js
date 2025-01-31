@@ -147,103 +147,6 @@ const removeUnnecessaryFields = data => {
   return filteredData;
 };
 
-// const attendance = async (req, res, next) => {
-//   const requestData = req.body.attendance;
-
-//   if (!requestData || requestData.length === 0) {
-//     return res.status(400).send("Please send valid attendance");
-//   }
-
-//   const currentDate = new Date();
-//   let startOfDay = new Date(currentDate);
-//   startOfDay.setHours(0, 0, 0, 0);
-
-//   let endOfDay = new Date(currentDate);
-//   endOfDay.setHours(23, 59, 59, 999);
-
-//   for (const element of requestData) {
-//     const leave = await Leave.findOne({
-//       empid: element.empid,
-//       status: "approved",
-//       start_date: { $lte: endOfDay },
-//       end_date: { $gte: startOfDay }
-//     });
-//     if (
-//       element.empid === undefined ||
-//       element.date === undefined ||
-//       element.status === undefined
-//     ) {
-//       return res.status(400).send("Please provide valid employee details");
-//     }
-
-//     const currentDate = new Date();
-
-//     const attendanceDate = new Date(element.date);
-
-//     if (
-//       currentDate.getTime() - attendanceDate.getTime() <
-//       7 * 24 * 60 * 60 * 1000
-//     ) {
-//       const existingAttendance = await Attendance.findOne({
-//         empid: element.empid,
-//         date: {
-//           $gte: new Date(
-//             attendanceDate.getFullYear(),
-//             attendanceDate.getMonth(),
-//             attendanceDate.getDate()
-//           ),
-//           $lt: new Date(
-//             attendanceDate.getFullYear(),
-//             attendanceDate.getMonth(),
-//             attendanceDate.getDate() + 1
-//           )
-//         }
-//       });
-
-//       if (existingAttendance) {
-//         try {
-//           await Attendance.updateOne(
-//             {
-//               empid: element.empid,
-//               date: {
-//                 $gte: new Date(
-//                   attendanceDate.getFullYear(),
-//                   attendanceDate.getMonth(),
-//                   attendanceDate.getDate()
-//                 ),
-//                 $lt: new Date(
-//                   attendanceDate.getFullYear(),
-//                   attendanceDate.getMonth(),
-//                   attendanceDate.getDate() + 1
-//                 )
-//               }
-//             },
-//             { $set: { status: element.status } }
-//           );
-//         } catch (error) {
-//           console.error("Error updating attendance:", error);
-//           return res.status(500).send("Internal Server Error");
-//         }
-//       } else {
-//         let data = {
-//           empid: element.empid,
-//           date: attendanceDate.toISOString(),
-//           status: element.status
-//         };
-//         try {
-//           await create(data);
-//         } catch (error) {
-//           console.error("Error creating attendance:", error);
-//           return res.status(500).send("Internal Server Error");
-//         }
-//       }
-//     } else {
-//       return res.status(400).send("Invalid Date");
-//     }
-//   }
-//   res.status(200).send("Success");
-// };
-
 const attendance = async (req, res, next) => {
   try {
     const requestData = req.body.attendance;
@@ -385,16 +288,15 @@ const attendanceReport = async (req, res, next) => {
 
     // Define status-color mapping
     const statusColors = {
-      present: { short: "P", color: "#30991F" }, // Green
-      absent: { short: "A", color: "#FF0606" }, // Red
-      half_leave: { short: "HD", color: "#FFA800" }, // Orange (Half Day)
-      full_leave: { short: "L", color: "#0F137E" } // Blue (Leave)
+      present: { short: "P", color: "#30991F" },
+      absent: { short: "A", color: "#FF0606" },
+      half_leave: { short: "HD", color: "#FFA800" },
+      full_leave: { short: "L", color: "#0F137E" }
     };
 
-    // Iterate over employees and fetch attendance records
     for (let employee of employees) {
       const attendanceRecords = await Attendance.find({
-        empid: employee._id, // Assuming empid is stored in Attendance
+        empid: employee._id,
         date: {
           $gte: formatDateToISOString(firstDateOfMonth, true),
           $lte: formatDateToISOString(lastDateOfMonth, false)
@@ -403,10 +305,10 @@ const attendanceReport = async (req, res, next) => {
 
       // Process attendance records
       let formattedAttendance = attendanceRecords.map(record => {
-        const statusKey = record.status.toLowerCase(); // No need to replace spaces
+        const statusKey = record.status.toLowerCase();
         const statusInfo = statusColors[statusKey] || {
           short: record.status,
-          color: "#000000" // Default black if status not found
+          color: "#000000"
         };
 
         return {
@@ -418,7 +320,10 @@ const attendanceReport = async (req, res, next) => {
 
       attendanceReportData.push({
         empid: employee._id,
-        name: `${employee.firstname} ${employee.lastname}`, // Fixing name field
+        firstname: employee.firstname,
+        middlename: employee.middlename,
+        lastname: employee.lastname,
+        name: `${employee.firstname} ${employee.lastname}`,
         attendance: formattedAttendance
       });
     }
@@ -517,167 +422,160 @@ const getStartAndEndOfDay = dateStr => {
   return { startOfDay, endOfDay };
 };
 
-const todayAttendanceData = async (req, res, next) => {
-  try {
-    let leaveFilters = {
-      input: "$leaves",
-      as: "leave",
-      cond: {
-        $and: [
-          {
-            $or: [
-              { $eq: ["$$leave.status", "approved"] },
-              { $eq: ["$$leave.status", "cancelled"] }
-            ]
-          }
-        ]
-      }
-    };
-    let collections = [
-      {
-        name: "leaves",
-        key: "empid",
-        as: "leaves",
-        local: "_id",
-        filters: leaveFilters
-      }
-    ];
-
-    let match = [
-      {
-        $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] }
-      }
-    ];
-
-    const reportData = await readAllandPopulate(collections, undefined, match);
-
-    let modifiedData = [];
-    const currentDate = new Date().toISOString();
-    const { startOfDay, endOfDay } = getStartAndEndOfDay(currentDate);
-
-    for (let index = 0; index < reportData.length; index++) {
-      const item = reportData[index];
-      let attendances = await AttendanceModel.find({
-        empid: item._id,
-        date: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        }
-      });
-
-      let newItem = removeUnnecessaryFields(item);
-
-      if (attendances.length) {
-        let data = checkLeaves(attendances, item.leaves);
-        newItem.attendance = data;
-      } else {
-        newItem.attendance = [];
-      }
-      modifiedData.push(newItem);
-    }
-
-    const attendanceData = modifiedData.map(data => {
-      let newData = { ...data }; // Create a copy of the object
-      // Delete unwanted properties
-      delete newData["$__"];
-      delete newData["$isNew"];
-      delete newData["$__"];
-
-      return newData; // Return the cleaned object
-    });
-    res.status(200).send(attendanceData);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// const TotalEmployee = async (req, res, next) => {
+// const todayAttendanceData = async (req, res, next) => {
 //   try {
+//     let leaveFilters = {
+//       input: "$leaves",
+//       as: "leave",
+//       cond: {
+//         $and: [
+//           {
+//             $or: [
+//               { $eq: ["$$leave.status", "approved"] },
+//               { $eq: ["$$leave.status", "cancelled"] }
+//             ]
+//           }
+//         ]
+//       }
+//     };
+//     let collections = [
+//       {
+//         name: "leaves",
+//         key: "empid",
+//         as: "leaves",
+//         local: "_id",
+//         filters: leaveFilters
+//       }
+//     ];
+
 //     let match = [
 //       {
 //         $match: { $or: [{ status: "completed" }, { status: "InNoticePeriod" }] }
 //       }
 //     ];
 
+//     const reportData = await readAllandPopulate(collections, undefined, match);
+
 //     let modifiedData = [];
-//     const currentDate = new Date();
+//     const currentDate = new Date().toISOString();
+//     const { startOfDay, endOfDay } = getStartAndEndOfDay(currentDate);
 
-//     const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0)).toISOString();
-//     const endOfDay = new Date(
-//       currentDate.setHours(23, 59, 59, 999)
-//     ).toISOString();
+//     for (let index = 0; index < reportData.length; index++) {
+//       const item = reportData[index];
+//       let attendances = await AttendanceModel.find({
+//         empid: item._id,
+//         date: {
+//           $gte: startOfDay,
+//           $lte: endOfDay
+//         }
+//       });
 
-//     // Fetch holidays for the day
-//     const holidays = await Holidays.find({
-//       holiday_status: "approved",
-//       date: { $gte: startOfDay, $lte: endOfDay }
+//       let newItem = removeUnnecessaryFields(item);
+
+//       if (attendances.length) {
+//         let data = checkLeaves(attendances, item.leaves);
+//         newItem.attendance = data;
+//       } else {
+//         newItem.attendance = [];
+//       }
+//       modifiedData.push(newItem);
+//     }
+
+//     const attendanceData = modifiedData.map(data => {
+//       let newData = { ...data }; // Create a copy of the object
+//       // Delete unwanted properties
+//       delete newData["$__"];
+//       delete newData["$isNew"];
+//       delete newData["$__"];
+
+//       return newData; // Return the cleaned object
 //     });
-
-//     let Present = modifiedData.reduce(
-//       (count, element) =>
-//         count +
-//         element.attendance.filter(record => record.leave_type === "P").length,
-//       0
-//     );
-
-//     let Absent = modifiedData.reduce(
-//       (count, element) =>
-//         count +
-//         element.attendance.filter(record => record.leave_type === "A").length,
-//       0
-//     );
-
-//     let OnLeave = modifiedData.reduce(
-//       (count, element) =>
-//         count +
-//         element.attendance.filter(record => record.leave_type === "L").length,
-//       0
-//     );
-
-//     let HalfDay = modifiedData.reduce(
-//       (count, element) =>
-//         count +
-//         element.attendance.filter(record => record.leave_type === "HD").length,
-//       0
-//     );
-
-//     let Holiday = modifiedData.reduce(
-//       (count, element) =>
-//         count +
-//         element.attendance.filter(record => record.leave_type === "H").length,
-//       0
-//     );
-
-//     res.status(200).json({
-//       totalEmployeeCount: TotalEmployees,
-//       TotalEmployeePresent: Present,
-//       TotalEmployeeAbsent: Absent,
-//       totalEmployeeLeaveToday: OnLeave,
-//       TotalEmployeeHalfDay: HalfDay,
-//       TotalEmployeeHoliday: Holiday
-//     });
+//     res.status(200).send(attendanceData);
 //   } catch (error) {
-//     console.error("Error fetching total employee count:", error);
 //     next(error);
 //   }
 // };
+
+const todayAttendanceData = async (req, res, next) => {
+  try {
+    // Get today's start and end times
+    const currentDate = new Date();
+    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0)); // Start of today
+    const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999)); // End of today
+
+    // Fetch all employees who are "completed" or "InNoticePeriod"
+    const employees = await Employee.find({
+      $or: [{ status: "completed" }, { status: "InNoticePeriod" }]
+    });
+
+    if (!employees.length) {
+      return res.status(404).json({ message: "No employees found" });
+    }
+
+    const employeeIds = employees.map(emp => emp._id);
+
+    // Fetch today's attendance records for all employees
+    const attendanceRecords = await Attendance.find({
+      empid: { $in: employeeIds },
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    // Status colors for the different attendance types
+    const statusColors = {
+      present: { short: "P", color: "#30991F" }, // Green
+      absent: { short: "A", color: "#FF0606" }, // Red
+      half_leave: { short: "HD", color: "#FFA800" }, // Orange (Half Day)
+      full_leave: { short: "L", color: "#0F137E" } // Blue (Leave)
+    };
+
+    // Build attendance report for each employee
+    const attendanceReportData = employees.map(employee => {
+      const empAttendance = attendanceRecords
+        .filter(record => record.empid.toString() === employee._id.toString())
+        .map(record => {
+          const statusKey = record.status.toLowerCase();
+          const statusInfo = statusColors[statusKey] || {
+            short: record.status,
+            color: "#000000"
+          };
+
+          return {
+            date: record.date,
+            status: statusInfo.short,
+            color: statusInfo.color
+          };
+        });
+
+      return {
+        empid: employee._id,
+        name: `${employee.firstname} ${employee.lastname}`,
+        attendance: empAttendance
+      };
+    });
+
+    res.status(200).json(attendanceReportData);
+  } catch (error) {
+    console.error("Error fetching today's attendance report:", error);
+    res.status(500).json({
+      error: "An error occurred while processing data."
+    });
+  }
+};
 
 const TotalEmployee = async (req, res, next) => {
   try {
     const currentDate = new Date();
 
     const startOfDay = new Date(currentDate);
-    startOfDay.setHours(18, 30, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
 
     const endOfDay = new Date(currentDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
-    console.log(startOfDay, "startOfDay");
-    console.log(endOfDay, "endOfDay");
+    const startOfDayISO = startOfDay.toISOString();
+    const endOfDayISO = endOfDay.toISOString();
 
-    // const startOfDayISO = startOfDay.toISOString();
-    // const endOfDayISO = endOfDay.toISOString();
-
+    // Fetch employee data
     const employees = await Employee.find({
       $or: [{ status: "completed" }, { status: "InNoticePeriod" }]
     });
@@ -694,18 +592,15 @@ const TotalEmployee = async (req, res, next) => {
 
     for (let employee of employees) {
       const attendanceRecords = await Attendance.find({
-        empidObjId: employee._id,
-        date: { $gte: startOfDay, $lte: endOfDay }
+        empid: employee._id,
+        date: { $gte: startOfDayISO, $lte: endOfDayISO }
       });
-
-      console.log(attendanceRecords, "attendanceRecords");
 
       let attendanceStatus = "absent";
       if (attendanceRecords.length > 0) {
         attendanceStatus = attendanceRecords[0].status.toLowerCase();
       }
 
-      // Update counts based on attendance status
       switch (attendanceStatus) {
         case "present":
           presentCount++;
@@ -727,10 +622,8 @@ const TotalEmployee = async (req, res, next) => {
       }
     }
 
-    // Calculate the total number of employees
     const totalEmployees = employees.length;
 
-    // Respond with the counts for each attendance type
     res.status(200).json({
       totalEmployeeCount: totalEmployees,
       TotalEmployeePresent: presentCount,
@@ -815,148 +708,148 @@ const updateAttendance = async (req, res, next) => {
   }
 };
 
-const employeeAttendanceReport = async (req, res, next) => {
-  const empid = new mongoose.Types.ObjectId(req.user.userObjectId);
+// const employeeAttendanceReport = async (req, res, next) => {
+//   const empid = new mongoose.Types.ObjectId(req.user.userObjectId);
 
-  try {
-    const currentDate = new Date();
-    const startOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    const endOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0,
-      23,
-      59,
-      59
-    );
+//   try {
+//     const currentDate = new Date();
+//     const startOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth(),
+//       1
+//     );
+//     const endOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth() + 1,
+//       0,
+//       23,
+//       59,
+//       59
+//     );
 
-    const attendanceReport = await Attendance.aggregate([
-      {
-        $match: {
-          empid: empid,
-          date: { $gte: startOfMonth, $lte: endOfMonth }
-        }
-      },
-      {
-        $lookup: {
-          from: "leaves",
-          localField: "empid",
-          foreignField: "empid",
-          as: "leaveDetails"
-        }
-      },
-      {
-        $addFields: {
-          leaveDetails: {
-            $filter: {
-              input: "$leaveDetails",
-              as: "leave",
-              cond: {
-                $and: [
-                  { $lte: ["$$leave.start_date", "$date"] },
-                  { $gte: ["$$leave.end_date", "$date"] },
-                  { $eq: ["$$leave.status", "approved"] }
-                ]
-              }
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          status: {
-            $switch: {
-              branches: [
-                {
-                  case: {
-                    $and: [
-                      { $gt: [{ $size: "$leaveDetails" }, 0] },
-                      {
-                        $or: [
-                          {
-                            $eq: [
-                              { $arrayElemAt: ["$leaveDetails.session", 0] },
-                              "Session 1"
-                            ]
-                          },
-                          {
-                            $eq: [
-                              { $arrayElemAt: ["$leaveDetails.session", 0] },
-                              "Session 2"
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  then: "HD"
-                },
-                {
-                  case: {
-                    $and: [
-                      { $gt: [{ $size: "$leaveDetails" }, 0] },
-                      {
-                        $ne: [
-                          { $arrayElemAt: ["$leaveDetails.session", 0] },
-                          "Session 1"
-                        ]
-                      },
-                      {
-                        $ne: [
-                          { $arrayElemAt: ["$leaveDetails.session", 0] },
-                          "Session 2"
-                        ]
-                      }
-                    ]
-                  },
-                  then: "L"
-                },
-                {
-                  case: { $eq: ["$status", true] },
-                  then: "P"
-                }
-              ],
-              default: "A"
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          color: {
-            $switch: {
-              branches: [
-                { case: { $eq: ["$status", "P"] }, then: "30991F" },
-                { case: { $eq: ["$status", "A"] }, then: "FF0606" },
-                { case: { $eq: ["$status", "HD"] }, then: "FFA800" },
-                { case: { $eq: ["$status", "L"] }, then: "0F137E" }
-              ],
-              default: "000000"
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          empid: 1,
-          date: 1,
-          status: 1,
-          leave_type: "$status",
-          color: 1,
-          createdAt: 1,
-          updatedAt: 1
-        }
-      }
-    ]);
-    return res.send(attendanceReport);
-  } catch (error) {
-    next(error);
-  }
-};
+//     const attendanceReport = await Attendance.aggregate([
+//       {
+//         $match: {
+//           empid: empid,
+//           date: { $gte: startOfMonth, $lte: endOfMonth }
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: "leaves",
+//           localField: "empid",
+//           foreignField: "empid",
+//           as: "leaveDetails"
+//         }
+//       },
+//       {
+//         $addFields: {
+//           leaveDetails: {
+//             $filter: {
+//               input: "$leaveDetails",
+//               as: "leave",
+//               cond: {
+//                 $and: [
+//                   { $lte: ["$$leave.start_date", "$date"] },
+//                   { $gte: ["$$leave.end_date", "$date"] },
+//                   { $eq: ["$$leave.status", "approved"] }
+//                 ]
+//               }
+//             }
+//           }
+//         }
+//       },
+//       {
+//         $addFields: {
+//           status: {
+//             $switch: {
+//               branches: [
+//                 {
+//                   case: {
+//                     $and: [
+//                       { $gt: [{ $size: "$leaveDetails" }, 0] },
+//                       {
+//                         $or: [
+//                           {
+//                             $eq: [
+//                               { $arrayElemAt: ["$leaveDetails.session", 0] },
+//                               "Session 1"
+//                             ]
+//                           },
+//                           {
+//                             $eq: [
+//                               { $arrayElemAt: ["$leaveDetails.session", 0] },
+//                               "Session 2"
+//                             ]
+//                           }
+//                         ]
+//                       }
+//                     ]
+//                   },
+//                   then: "HD"
+//                 },
+//                 {
+//                   case: {
+//                     $and: [
+//                       { $gt: [{ $size: "$leaveDetails" }, 0] },
+//                       {
+//                         $ne: [
+//                           { $arrayElemAt: ["$leaveDetails.session", 0] },
+//                           "Session 1"
+//                         ]
+//                       },
+//                       {
+//                         $ne: [
+//                           { $arrayElemAt: ["$leaveDetails.session", 0] },
+//                           "Session 2"
+//                         ]
+//                       }
+//                     ]
+//                   },
+//                   then: "L"
+//                 },
+//                 {
+//                   case: { $eq: ["$status", true] },
+//                   then: "P"
+//                 }
+//               ],
+//               default: "A"
+//             }
+//           }
+//         }
+//       },
+//       {
+//         $addFields: {
+//           color: {
+//             $switch: {
+//               branches: [
+//                 { case: { $eq: ["$status", "P"] }, then: "30991F" },
+//                 { case: { $eq: ["$status", "A"] }, then: "FF0606" },
+//                 { case: { $eq: ["$status", "HD"] }, then: "FFA800" },
+//                 { case: { $eq: ["$status", "L"] }, then: "0F137E" }
+//               ],
+//               default: "000000"
+//             }
+//           }
+//         }
+//       },
+//       {
+//         $project: {
+//           empid: 1,
+//           date: 1,
+//           status: 1,
+//           leave_type: "$status",
+//           color: 1,
+//           createdAt: 1,
+//           updatedAt: 1
+//         }
+//       }
+//     ]);
+//     return res.send(attendanceReport);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // const attendanceReportTesting = async (req, res, next) => {
 //   try {
@@ -1129,6 +1022,48 @@ const employeeAttendanceReport = async (req, res, next) => {
 //     res.status(500).json({ error: "Internal server error" });
 //   }
 // };
+
+const employeeAttendanceReport = async (req, res, next) => {
+  try {
+    const empid = req.user.userObjectId;
+    const currentDate = new Date();
+
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+    const statusColors = {
+      present: { short: "P", color: "#30991F" },
+      absent: { short: "A", color: "#FF0606" },
+      half_leave: { short: "HD", color: "#FFA800" },
+      full_leave: { short: "L", color: "#0F137E" }
+    };
+    const employee = await Employee.findById(empid);
+
+    const attendanceReport = await Attendance.find({
+      empid: empid,
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+
+    // Return the attendance report data
+    return res.status(200).json({
+      data: attendanceReport
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const biometricAttendance = async (req, res) => {
   uploadExcel(req, res, async err => {
