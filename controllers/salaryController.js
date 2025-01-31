@@ -111,26 +111,25 @@ const createSalary = async (req, res) => {
     const salaries = [];
     for (const emp of employees) {
       
-
       const absentCount = await Attendance.countDocuments({
         empid: emp._id,
         status: "absent",
         date: { $gte: startDate, $lte: endDate }
       });
 
-      const leave = await Attendance.countDocuments({
+      const fullleave = await Attendance.countDocuments({
         empid: emp._id,
         status: "full_leave",
         date: { $gte: startDate, $lte: endDate }
       });
 
-      const halfDay = await Attendance.countDocuments({
+      const halfLeave = await Attendance.countDocuments({
         empid: emp._id,
         status: "half_leave",
         date: { $gte: startDate, $lte: endDate }
       });
 
-      const totalAbsent = absentCount + leave + (halfDay/2)
+      const totalAbsent = absentCount + fullleave + (halfLeave/2)
 
       const workingDayCount = await Attendance.countDocuments({
         empid: emp._id,
@@ -144,17 +143,9 @@ const createSalary = async (req, res) => {
 
       const {remainingAbsent} = await leave_carry_forward(emp._id, totalAbsent)
 
-      console.log(remainingAbsent , "remainingAbsent")
-
       const totalPaidDays = sundays + workingDayCount
 
-      console.log(totalPaidDays , "totalPaidDays")
-
       const remainingDays = monthdays - remainingAbsent;
-
-      console.log(remainingDays , "remainingDays")
-
-      // const validRemainingDays = Math.max(remainingDays, 0);
 
       if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
         console.error(`Missing monthly compensation for employee ${emp._id}`);
@@ -176,8 +167,8 @@ const createSalary = async (req, res) => {
       let netSalary = parseFloat(totalPaidAmount - (parseFloat(pf) - parseFloat(esi)) ).toFixed(2);
       netSalary = isNaN(netSalary) ? 0 : netSalary;
 
-       //Total Net Salary=Net Salary+Additional Earnings
-       const totalNetSalary = netSalary
+
+     const totalNetSalary = netSalary
 
       const advanceSalary = await AdvanceSalary.findOne({
         empid: emp._id,
@@ -263,7 +254,7 @@ const createSalary = async (req, res) => {
       );
     }
 
-    // await Salary.insertMany(salaries);
+    await Salary.insertMany(salaries);
 
     return res.status(200).json({
       message: "Salaries created successfully"
