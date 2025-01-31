@@ -235,12 +235,12 @@ const leave_carry_forward = async (empid, absent) => {
   }
 };
 
-const calculateSalaryComponents = grossSalary => {
-  const basicSalary = grossSalary * 30 / 100;
-  // const hra = grossSalary * 25 / 100;
-  //  const ta = grossSalary * 10 / 100;
-  //  const da = grossSalary * 10 / 100;
-  // const other = grossSalary * 25 / 100;
+const calculateSalaryComponents = totalPaidAmount => {
+  const basicSalary = totalPaidAmount * 30 / 100;
+  // const hra = totalPaidAmount * 25 / 100;
+  //  const ta = totalPaidAmount * 10 / 100;
+  //  const da = totalPaidAmount * 10 / 100;
+  // const other = totalPaidAmount * 25 / 100;
 
   return {
     basicSalary: parseFloat(basicSalary.toFixed(2)),
@@ -323,17 +323,16 @@ const createSalary = async (req, res) => {
 
    const STARTDATE =  emp.joining_date && (emp.joining_date.getMonth() == new Date().getMonth() && emp.joining_date.getFullYear() == new Date().getFullYear()) ? emp.joining_date : startDate
    
-   
    const sundays = countSundays(STARTDATE ,endDate)
 
    
       const {remainingAbsent} = await leave_carry_forward(emp._id, absentCount)
 
-      
       const totalPaidDays = sundays + workingDayCount
 
       const remainingDays = monthdays - remainingAbsent;
-      const validRemainingDays = Math.max(remainingDays, 0); 
+
+      // const validRemainingDays = Math.max(remainingDays, 0); 
 
       if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
         console.error(`Missing monthly compensation for employee ${emp._id}`);
@@ -344,7 +343,6 @@ const createSalary = async (req, res) => {
       const leaveDeduction = perDaySalary * remainingAbsent;
       const totalPaidAmount = totalPaidDays * perDaySalary;
 
-      console.log(totalPaidAmount);
       
       // const grossSalary = totalGrossSalary - leaveDeduction;
 
@@ -398,7 +396,7 @@ const createSalary = async (req, res) => {
       const totalDeduction = (parseFloat(pf) +
         parseFloat(esi) +
         parseFloat(leaveDeduction) +
-        parseFloat(advanceDeduction)).toFixed(2);
+        parseFloat(advanceDeduction)).toFixed(0);
 
       salaries.push(
         new Salary({
@@ -416,25 +414,25 @@ const createSalary = async (req, res) => {
           year: Year,
           salary_status: "pending",
           payment_status: false,
-          totalCTC: parseFloat(emp.ctcDetails.totalctc) || 0,
-          basicSalary: parseFloat(basicSalary) || 0,
+          totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
+          basicSalary: parseInt(basicSalary) || 0,
           hra:  0,
           ta: 0,
           da:  0,
           other:  0,
-          paydays: validRemainingDays * parseFloat(perDaySalary),
+          paydays: totalPaidDays ,
           pf: parseFloat(pf) || 0,
           esi: parseFloat(esi) || 0,
           countPardaysalary: parseFloat(perDaySalary) || 0,
-          remainingDays: validRemainingDays,
-          presentDay: validRemainingDays, // Ensure valid number
+          remainingDays: remainingDays,
+          presentDay: workingDayCount, 
           totalLeave: totalLeaveDays || 0,
           unpaidLeave : remainingAbsent,
           paidLeave,
-          netSalary: parseFloat(netSalary),
+          netSalary: parseInt(netSalary),
           grossSalary : totalPaidAmount,
           totalGrossSalary,
-          totalnetsalary: parseFloat(netSalary),
+          totalnetsalary: parseInt(emp.ctcDetails.monthlycompensation.replaceAll(",", "")) || 0,
           leaveDeduction: parseFloat(leaveDeduction) || 0,
           advanceSalary: parseFloat(advanceDeduction) || 0,
           miscellaneous: 0,

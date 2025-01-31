@@ -723,247 +723,11 @@ module.exports.addctcdetails = async (req, res) => {
   }
 };
 
-// module.exports.Employeedocument = async (req, res, next) => {
-//   uploaddoc(req, res, async (err) => {
-//     try {
-//       if (err) {
-//         let failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
-//         return next({
-//           message: `File upload failed for fields: ${failedFields.join(", ") || "unknown fields"}`,
-//           status: 400,
-//           error: err.message
-//         });
-//       }
-
-//       const {
-//         empid,
-//         secondary_passing,
-//         senior_passing,
-//         bachelor_passing,
-//         undergraduate_passing,
-//         extraExperience,
-//         extraData,
-//         companyname,
-//         compensation,
-//         experienceletter,
-//         offerletter,
-//         start_date,
-//         end_date,
-//         payslip,
-//         relievingletter,
-//         resignationletter
-//       } = req.body;
-
-//       const empdata = await Employee.findOne({ _id: empid });
-//       if (!empdata) {
-//         return res.status(404).json({ error: "Employee not found" });
-//       }
-
-//       let empId = empdata._id;
-//       let empDocs = await EmpDocument.findOne({ empid: empId });
-
-//       let dataFiles = {};
-//       let extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
-//       let extra = extraData ? JSON.parse(extraData) : [];
-
-//       req.files.forEach((file) => {
-//         let filePathName = `uploads/${empdata.employeeID}/${file.filename}`;
-
-//         extra.forEach((item) => {
-//           if (file.fieldname === item.degreeField) {
-//             item.degreefile = filePathName;
-//           }
-//         });
-
-//         extraExperienceData.forEach((item) => {
-//           Object.keys(item).forEach((key) => {
-//             if (key === file.fieldname) {
-//               item[key] = filePathName;
-//             }
-//           });
-//         });
-
-//         if (file.fieldname && filePathName) {
-//           dataFiles[file.fieldname] = filePathName;
-//         }
-//       });
-
-//       let setUpdateData = {
-//         secondary_passing,
-//         senior_passing,
-//         bachelor_passing,
-//         undergraduate_passing,
-//         ...dataFiles,
-//         extra
-//       };
-
-//       if (companyname) {
-//         setUpdateData = {
-//           ...setUpdateData,
-//           companyname,
-//           start_date,
-//           end_date,
-//           extraExperienceData
-//         };
-//         delete setUpdateData.extra;
-//       }
-
-//       let expfiles = [
-//         "compensation",
-//         "experienceletter",
-//         "offerletter",
-//         "payslip",
-//         "relievingletter",
-//         "resignationletter"
-//       ];
-
-//       if (Object.keys(dataFiles).length > 0) {
-//         let includesExpfiles = expfiles.some((file) => dataFiles[file]);
-
-//         if (includesExpfiles) {
-//           let experienceData = {
-//             compensation,
-//             companyname,
-//             experienceletter,
-//             offerletter,
-//             payslip,
-//             relievingletter,
-//             resignationletter,
-//             start_date,
-//             end_date,
-//             ...dataFiles
-//           };
-//           setUpdateData.experienceData = experienceData;
-//         }
-//       }
-
-//       let empDocument;
-//       if (empDocs) {
-//         empDocument = await EmpDocument.findOneAndUpdate(
-//           { _id: empDocs._id },
-//           { $set: setUpdateData },
-//           { new: true, upsert: true }
-//         );
-//       } else {
-//         empDocument = new EmpDocument({
-//           empid: empId,
-//           secondary_passing,
-//           senior_passing,
-//           bachelor_passing,
-//           undergraduate_passing,
-//           ...dataFiles,
-//           extra
-//         });
-//         await empDocument.save();
-//       }
-
-//       return res.status(201).json({
-//         data: { ...empDocument._doc, documents: [setUpdateData] },
-//         message: "Employee document uploaded successfully"
-//       });
-//     } catch (error) {
-//       console.error("Internal server error", error);
-//       return res.status(500).json({
-//         message: "Internal server error"
-//       });
-//     }
-//   });
-// };
-
-
-
-
-
-
-
-
-
-
-//   uploaddoc(req, res, async (err) => {
-//     try { 
-//       if (err) {
-//         const failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
-//         return res.status(400).json({
-//           message: `File upload failed for fields: ${failedFields.join(", ") || "unknown fields"}`,
-//           error: err.message
-//         });
-//       }
-
-
-//       const {
-//         empid,
-//         secondary_passing,
-//         senior_passing,
-//         bachelor_passing,
-//         undergraduate_passing,
-//         extraExperience,
-//         extraData
-//       } = req.body;
-
-//       const empdata = await Employee.findById(empid);
-//       if (!empdata) {
-//         return res.status(404).json({ error: "Employee not found" });
-//       }
-
-//       const extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
-//       const extra = extraData ? JSON.parse(extraData) : [];
-//       const uploadedFiles = {};
-
-//       // Process uploaded files and map them to fields
-//       req.files.forEach((file) => {
-//         const filePath = `uploads/${empdata.employeeID}/${file.filename}`;
-//         uploadedFiles[file.fieldname] = filePath;
-
-//         extra.forEach((item) => {
-//           if (file.fieldname === item.degreeField) {
-//             item.degreefile = filePath;
-//           }
-//         });
-
-//         extraExperienceData.forEach((item) => {
-//           if (file.fieldname in item) {
-//             item[file.fieldname] = filePath;
-//           }
-//         });
-//       });
-
-//       const updateData = {
-//         secondary_passing,
-//         senior_passing,
-//         bachelor_passing,
-//         undergraduate_passing,
-//         extraExperienceData,
-//         extra,
-//         ...uploadedFiles
-//       };
-
-//       // Upsert the employee document
-//       const empDocument = await EmpDocument.findOneAndUpdate(
-//         { empid },
-//         { $set: updateData },
-//         { new: true, upsert: true }
-//       );
-
-//       return res.status(201).json({
-//         message: "Employee documents uploaded successfully",
-//         data: empDocument
-//       });
-//     } catch (error) {
-//       console.error("Internal server error:", error);
-//       return res.status(500).json({
-//         message: "Internal server error"
-//       });
-//     }
-//   });
-// };
-
-
 module.exports.Employeedocument = async (req, res, next) => {
   uploaddoc(req, res, async (err) => {
     try {
-      // Handle file upload errors
       if (err) {
-        const failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
+        let failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
         return next({
           message: `File upload failed for fields: ${failedFields.join(", ") || "unknown fields"}`,
           status: 400,
@@ -971,7 +735,6 @@ module.exports.Employeedocument = async (req, res, next) => {
         });
       }
 
-      // Destructure body parameters
       const {
         empid,
         secondary_passing,
@@ -991,61 +754,61 @@ module.exports.Employeedocument = async (req, res, next) => {
         resignationletter
       } = req.body;
 
-      // Fetch employee data
-      const empdata = await Employee.findById(empid);
+      const empdata = await Employee.findOne({ _id: empid });
       if (!empdata) {
         return res.status(404).json({ error: "Employee not found" });
       }
 
-      const empId = empdata._id;
-      const empDocs = await EmpDocument.findOne({ empid: empId });
+      let empId = empdata._id;
+      let empDocs = await EmpDocument.findOne({ empid: empId });
 
-      // Parse extra experience and extra data
-      const extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
-      const extra = extraData ? JSON.parse(extraData) : [];
-      const uploadedFiles = {};
+      let dataFiles = {};
+      let extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
+      let extra = extraData ? JSON.parse(extraData) : [];
 
-      // Process uploaded files and map them to the correct fields
       req.files.forEach((file) => {
-        const filePath = `uploads/${empdata.employeeID}/${file.filename}`;
-        uploadedFiles[file.fieldname] = filePath;
+        let filePathName = `uploads/${empdata.employeeID}/${file.filename}`;
 
-        // Update extra experience and extra data with file paths
         extra.forEach((item) => {
           if (file.fieldname === item.degreeField) {
-            item.degreefile = filePath;
+            item.degreefile = filePathName;
           }
         });
 
         extraExperienceData.forEach((item) => {
           Object.keys(item).forEach((key) => {
             if (key === file.fieldname) {
-              item[key] = filePath;
+              item[key] = filePathName;
             }
           });
         });
+
+        if (file.fieldname && filePathName) {
+          dataFiles[file.fieldname] = filePathName;
+        }
       });
 
-      // Prepare data to update
-      const setUpdateData = {
+      let setUpdateData = {
         secondary_passing,
         senior_passing,
         bachelor_passing,
         undergraduate_passing,
-        extraExperienceData,
-        extra,
-        ...uploadedFiles,
+        ...dataFiles,
+        extra
       };
 
-
       if (companyname) {
-        setUpdateData.companyname = companyname;
-        setUpdateData.start_date = start_date;
-        setUpdateData.end_date = end_date;
+        setUpdateData = {
+          ...setUpdateData,
+          companyname,
+          start_date,
+          end_date,
+          extraExperienceData
+        };
+        delete setUpdateData.extra;
       }
 
-      // Experience-related files
-      const expFiles = [
+      let expfiles = [
         "compensation",
         "experienceletter",
         "offerletter",
@@ -1054,47 +817,205 @@ module.exports.Employeedocument = async (req, res, next) => {
         "resignationletter"
       ];
 
-      let experienceData = {};
+      if (Object.keys(dataFiles).length > 0) {
+        let includesExpfiles = expfiles.some((file) => dataFiles[file]);
 
-      expFiles.forEach((file) => {
-        if (uploadedFiles[file]) {
-          experienceData[file] = uploadedFiles[file];
+        if (includesExpfiles) {
+          let experienceData = {
+            compensation,
+            companyname,
+            experienceletter,
+            offerletter,
+            payslip,
+            relievingletter,
+            resignationletter,
+            start_date,
+            end_date,
+            ...dataFiles
+          };
+          setUpdateData.experienceData = experienceData;
         }
-      });
-
-      // If there are experience files, include them in the data
-      if (Object.keys(experienceData).length > 0) {
-        setUpdateData.experienceData = { ...experienceData, companyname, start_date, end_date };
       }
 
-      // If document exists, update it; otherwise, create a new document
       let empDocument;
       if (empDocs) {
         empDocument = await EmpDocument.findOneAndUpdate(
-          { empid: empId },
+          { _id: empDocs._id },
           { $set: setUpdateData },
           { new: true, upsert: true }
         );
       } else {
         empDocument = new EmpDocument({
           empid: empId,
-          ...setUpdateData
+          secondary_passing,
+          senior_passing,
+          bachelor_passing,
+          undergraduate_passing,
+          ...dataFiles,
+          extra
         });
         await empDocument.save();
       }
 
       return res.status(201).json({
-        message: "Employee document uploaded successfully",
-        data: empDocument,
+        data: { ...empDocument._doc, documents: [setUpdateData] },
+        message: "Employee document uploaded successfully"
       });
     } catch (error) {
       console.error("Internal server error", error);
       return res.status(500).json({
-        message: "Internal server error",
+        message: "Internal server error"
       });
     }
   });
 };
+
+
+
+
+
+
+
+// module.exports.Employeedocument = async (req, res, next) => {
+//   uploaddoc(req, res, async (err) => {
+//     try {
+//       // Handle file upload errors
+//       if (err) {
+//         const failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
+//         return next({
+//           message: `File upload failed for fields: ${failedFields.join(", ") || "unknown fields"}`,
+//           status: 400,
+//           error: err.message
+//         });
+//       }
+
+//       // Destructure body parameters
+//       const {
+//         empid,
+//         secondary_passing,
+//         senior_passing,
+//         bachelor_passing,
+//         undergraduate_passing,
+//         extraExperience,
+//         extraData,
+//         companyname,
+//         compensation,
+//         experienceletter,
+//         offerletter,
+//         start_date,
+//         end_date,
+//         payslip,
+//         relievingletter,
+//         resignationletter
+//       } = req.body;
+
+//       // Fetch employee data
+//       const empdata = await Employee.findById(empid);
+//       if (!empdata) {
+//         return res.status(404).json({ error: "Employee not found" });
+//       }
+
+//       const empId = empdata._id;
+//       const empDocs = await EmpDocument.findOne({ empid: empId });
+
+//       // Parse extra experience and extra data
+//       const extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
+//       const extra = extraData ? JSON.parse(extraData) : [];
+//       const uploadedFiles = {};
+
+//       // Process uploaded files and map them to the correct fields
+//       req.files.forEach((file) => {
+//         const filePath = `uploads/${empdata.employeeID}/${file.filename}`;
+//         uploadedFiles[file.fieldname] = filePath;
+
+//         // Update extra experience and extra data with file paths
+//         extra.forEach((item) => {
+//           if (file.fieldname === item.degreeField) {
+//             item.degreefile = filePath;
+//           }
+//         });
+
+//         extraExperienceData.forEach((item) => {
+//           Object.keys(item).forEach((key) => {
+//             if (key === file.fieldname) {
+//               item[key] = filePath;
+//             }
+//           });
+//         });
+//       });
+
+//       // Prepare data to update
+//       const setUpdateData = {
+//         secondary_passing,
+//         senior_passing,
+//         bachelor_passing,
+//         undergraduate_passing,
+//         extraExperienceData,
+//         extra,
+//         ...uploadedFiles,
+//       };
+
+
+      
+
+
+//       if (companyname) {
+//         setUpdateData.companyname = companyname;
+//         setUpdateData.start_date = start_date;
+//         setUpdateData.end_date = end_date;
+//       }
+
+//       // Experience-related files
+//       const expFiles = [
+//         "compensation",
+//         "experienceletter",
+//         "offerletter",
+//         "payslip",
+//         "relievingletter",
+//         "resignationletter"
+//       ];
+
+//       let experienceData = {};
+
+//       expFiles.forEach((file) => {
+//         if (uploadedFiles[file]) {
+//           experienceData[file] = uploadedFiles[file];
+//         }
+//       });
+
+
+//       // If there are experience files, include them in the data
+//       if (Object.keys(experienceData).length > 0) {
+//         setUpdateData.experienceData = { ...experienceData, companyname, start_date, end_date };
+//       }
+
+//       let empDocument;
+//       if (empDocs) {
+//         empDocument = await EmpDocument.findOneAndUpdate(
+//           { empid: empId },
+//           { $set: setUpdateData },
+//           { new: true, upsert: true }
+//         );
+//       } else {
+//         empDocument = new EmpDocument({
+//           empid: empId,
+//           ...setUpdateData
+//         });
+//         await empDocument.save();
+//       }
+
+//       return res.status(201).json({
+//         message: "Employee document uploaded successfully",
+//         data: empDocument,
+//       });
+//     } catch (error) {
+//       console.error("Internal server error", error);
+//       return res.status(500).json({
+//         message: "Internal server error",
+//       });
+//     }
+//   });
+// };
 
 
 
