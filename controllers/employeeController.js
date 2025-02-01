@@ -594,9 +594,9 @@ module.exports.EmployeeList = async (req, res) => {
     let employeeList;
     if (empstatus) {
       employeeList = await Employee.find({ status: empstatus })
-        .select(
-          "firstname lastname middlename mobile_number status employeeID image emergency_number department designation joining_date marital_status"
-        )
+        // .select(
+        //   "firstname lastname middlename mobile_number status employeeID image emergency_number department designation joining_date marital_status"
+        // )
         .sort({ createdAt: -1 });
     } else if (statusParam === "onleave") {
       const currentDate = new Date();
@@ -614,16 +614,16 @@ module.exports.EmployeeList = async (req, res) => {
           path: "empid",
           select:
             "firstname middlename lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no  aadhar_image pancard_no pan_image sameAddress status company_email joining_date marital_status"
-        })
+         })
         .sort({ createdAt: -1 });
     } else {
       employeeList = await Employee.find()
-        .select(
-          "firstname lastname middlename mobile_number status employeeID image emergency_number family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email department joining_date marital_status designation createdAt"
-        )
+        // .select(
+        //   "firstname lastname middlename mobile_number status employeeID image emergency_number family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email department joining_date marital_status designation createdAt"
+        // )
         .sort({ createdAt: -1 });
     }
-    // employeeList = modifyEmpData(employeeList, req);
+    //
     return res.status(200).send(employeeList);
   } catch (error) {
     return res.status(500).json({
