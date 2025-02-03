@@ -661,39 +661,35 @@ module.exports.EmployeeList = async (req, res) => {
             as: "documents",
           },
         },
+        { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, // Flatten documents array
+        { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, // Flatten experienceData array
+        {
+          $project: {
+            firstname: 1,
+            lastname: 1,
+            middlename: 1,
+            mobile_number: 1,
+            status: 1,
+            employeeID: 1,
+            image: 1,
+            emergency_number: 1,
+            department: 1,
+            designation: 1,
+            joining_date: 1,
+            marital_status: 1,
+            monthlycompensation: "$ctcDetails.monthlycompensation",
+            bachelor_doc: "$documents.bachelor_doc",
+            secondary_doc: "$documents.secondary_doc",
+            senior_doc: "$documents.senior_doc",
+            extra: "$documents.extra",
+            companyname: "$documents.experienceData.companyname", 
+            start_date: "$documents.experienceData.start_date",
+            end_date: "$documents.experienceData.end_date",
+            offerletter: "$documents.experienceData.offerletter",
+            payslip: "$documents.experienceData.payslip",
+          },
+        },
       ]);
-    // } else if (statusParam === "onleave") {
-    //   const currentDate = new Date();
-    //   const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
-    //   const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
-
-    //   employeeList = await Leave.aggregate([
-    //     {
-    //       $match: {
-    //         status: "approved",
-    //         start_date: { $lte: endOfDay },
-    //         end_date: { $gte: startOfDay },
-    //       },
-    //     },
-    //     {
-    //       $lookup: {
-    //         from: "employees",
-    //         localField: "empid",
-    //         foreignField: "_id",
-    //         as: "employee",
-    //       },
-    //     },
-    //     { $unwind: "$employee" },
-    //     {
-    //       $lookup: {
-    //         from: "empdocuments",
-    //         localField: "empid",
-    //         foreignField: "empid",
-    //         as: "documents",
-    //       },
-    //     },
-    //     { $sort: { createdAt: -1 } },
-    //   ]);
     } else {
       employeeList = await Employee.aggregate([
         { $sort: { createdAt: -1 } },
@@ -705,14 +701,46 @@ module.exports.EmployeeList = async (req, res) => {
             as: "documents",
           },
         },
+        { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, // Flatten documents array
+        { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, // Flatten experienceData array
+        {
+          $project: {
+            firstname: 1,
+            lastname: 1,
+            middlename: 1,
+            mobile_number: 1,
+            status: 1,
+            employeeID: 1,
+            image: 1,
+            emergency_number: 1,
+            department: 1,
+            designation: 1,
+            joining_date: 1,
+            marital_status: 1,
+            monthlycompensation: "$ctcDetails.monthlycompensation",
+            bachelor_doc: "$documents.bachelor_doc",
+            secondary_doc: "$documents.secondary_doc",
+            senior_doc: "$documents.senior_doc",
+            companyname: "$documents.experienceData.companyname", 
+            start_date: "$documents.experienceData.start_date",
+            end_date: "$documents.experienceData.end_date",
+            offerletter: "$documents.experienceData.offerletter",
+            payslip: "$documents.experienceData.payslip",
+          },
+        },
       ]);
     }
 
-    return res.status(200).json(employeeList);
+    return res.status(200).send(employeeList);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
+
+
+
 
 
 // employee status
