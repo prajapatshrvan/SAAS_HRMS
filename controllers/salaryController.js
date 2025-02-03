@@ -63,17 +63,49 @@ const calculateSalaryComponents = totalPaidAmount => {
   };
 };
 
-function countSundays(startDate, endDate) {
+// function countSundays(startDate, endDate, holiday) {
+//   let start = new Date(startDate);
+//   let end = new Date(endDate);
+//   let count = 0;
+
+//   while (start <= end) {
+//     if (start.getDay() === 0) {
+//       // Sunday is represented by 0
+//       count++;
+//     }
+//     start.setDate(start.getDate() + 1); // Move to the next day
+//   }
+
+//   return count;
+// }
+
+function countSundaysAndHolidays(startDate, endDate, holidays) {
   let start = new Date(startDate);
   let end = new Date(endDate);
   let count = 0;
 
+  // Convert holiday dates to ISO string for easy comparison
+  let holidayDates = new Set(
+    holidays.map(date => new Date(date.date).toISOString())
+  );
+
+  console.log(holidays, "holidayDates");
+
+  let allDates = new Set();
+
   while (start <= end) {
+    let currentDate = start.toISOString();
     if (start.getDay() === 0) {
-      // Sunday is represented by 0
-      count++;
+      if (!allDates.has(currentDate)) {
+        count++;
+        allDates.add(currentDate);
+      }
     }
-    start.setDate(start.getDate() + 1); // Move to the next day
+    if (holidayDates.has(currentDate) && !allDates.has(currentDate)) {
+      count++;
+      allDates.add(currentDate);
+    }
+    start.setDate(start.getDate() + 1);
   }
 
   return count;
@@ -135,13 +167,10 @@ const createSalary = async (req, res) => {
 
     const salaries = [];
 
-    const holiday = await Holiday.countDocuments({
-      status: "approved",
-      date: {
-        $gte: startDate,
-        $lte: endDate
-      }
-    });
+    const holiday = await Holiday.find({
+      holiday_status: "approved",
+      date: { $gt: startDate, $lt: endDate }
+    }).sort({ date: -1 });
 
     for (const emp of employees) {
       const empAttendance = attendanceMap[emp._id] || {
@@ -165,10 +194,16 @@ const createSalary = async (req, res) => {
           ? emp.joining_date
           : startDate;
 
-      const sundays = countSundays(STARTDATE, endDate);
+      const sundaysAndHolidays = countSundaysAndHolidays(
+        STARTDATE,
+        endDate,
+        holiday
+      );
+
+      // console.log(countSundaysAndHolidays);
 
       const workingDayCount = empAttendance.present;
-      const totalPaidDays = sundays + workingDayCount;
+      const totalPaidDays = sundaysAndHolidays + workingDayCount;
 
       // Handle leave carry forward
       const { remainingAbsent } = await leave_carry_forward(
@@ -275,7 +310,7 @@ const createSalary = async (req, res) => {
     }
 
     // Insert all salaries at once
-    await Salary.insertMany(salaries);
+    // await Salary.insertMany(salaries);
 
     return res.status(200).json({ message: "Salaries created successfully" });
   } catch (error) {
