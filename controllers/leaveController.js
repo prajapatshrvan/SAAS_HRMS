@@ -121,16 +121,16 @@ module.exports.createLeave = async (req, res) => {
       let sdateParts = start_date.split("/");
       let edateParts = end_date.split("/");
 
-      // let sdate = new Date(`${sdateParts[2]}-${sdateParts[1]}-${sdateParts[0]}`);
-      // let edate = new Date(`${edateParts[2]}-${edateParts[1]}-${edateParts[0]}`);
+      let sdate = new Date(`${sdateParts[2]}-${sdateParts[1]}-${sdateParts[0]}`);
+      let edate = new Date(`${edateParts[2]}-${edateParts[1]}-${edateParts[0]}`);
 
-      let sdate = new Date(start_date);
-      let edate = new Date(end_date);
+      // let sdate = new Date(start_date);
+      // let edate = new Date(end_date);
 
 
-      // // Normalize Dates to Start of the Day (UTC)
-      // sdate.setUTCHours(0, 0, 0, 0);
-      // edate.setUTCHours(0, 0, 0, 0);
+      // Normalize Dates to Start of the Day (UTC)
+      sdate.setUTCHours(0, 0, 0, 0);
+      edate.setUTCHours(0, 0, 0, 0);
 
       const existingLeave = await Leave.findOne({
         empid: req.user.userObjectId,
