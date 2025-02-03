@@ -5,22 +5,6 @@ const getResourcesForUser = require("../utility/generatePassword.js");
 
 module.exports.addBulkHoliday = async (req, res) => {
   try {
-    // const userRoleMapping = {
-    //   _id: req.user.userObjectId,
-    //   userId: req.user.userId,
-    //   role: req.user.role_name,
-    //   inherits: req.user.userInheritedRoles
-    // };
-    // const userResources = await getResourcesForUser(userRoleMapping);
-
-    // if (
-    //   !userResources &&
-    //   !userResources["holidays"] &&
-    //   !userResources["holidays"].includes("create")
-    // ) {
-    //   return res.status(403).json({ message: "Access denied" });
-    // }
-
     const {
       year: requestedYear,
       country: requestedCountry,
@@ -29,21 +13,16 @@ module.exports.addBulkHoliday = async (req, res) => {
       date
     } = req.body;
 
-    if (!requestedCountry) {
+    // Validate required fields
+    if (!requestedCountry)
       return res.status(400).json({ message: "Please select country" });
-    }
-    if (!requestedState) {
+    if (!requestedState)
       return res.status(400).json({ message: "Please select state" });
-    }
-    if (!requestedYear) {
+    if (!requestedYear)
       return res.status(400).json({ message: "Please select year" });
-    }
-    if (!holiday_name) {
+    if (!holiday_name)
       return res.status(400).json({ message: "Please fill holiday name" });
-    }
-    if (!date) {
-      return res.status(400).json({ message: "Please fill date" });
-    }
+    if (!date) return res.status(400).json({ message: "Please fill date" });
 
     // Validate the date format
     const validDate = new Date(date);
@@ -51,25 +30,30 @@ module.exports.addBulkHoliday = async (req, res) => {
       return res.status(400).json({ message: "Invalid date format" });
     }
 
-    // Check for existing holiday
+    // Normalize the date to start of the day (UTC)
+    const formattedDate = new Date(validDate);
+    formattedDate.setUTCHours(0, 0, 0, 0);
+
+    // Get the day of the week
+    const dayOfWeek = formattedDate.toLocaleDateString("en-US", {
+      weekday: "long"
+    });
+
+    // Check for existing holiday with the same name and date
     const existingHoliday = await Holiday.findOne({
       holiday_name,
       year: requestedYear,
       country: requestedCountry,
-      state: requestedState
+      state: requestedState,
+      date: formattedDate
     });
 
     if (existingHoliday) {
-      return res.status(400).json({ message: "This holiday already exists" });
+      return res
+        .status(400)
+        .json({ message: "This holiday already exists for this date" });
     }
 
-    // Format the date and determine the day of the week
-    const formattedDate = validDate.toISOString().split("T")[0];
-    const dayOfWeek = validDate.toLocaleDateString("en-US", {
-      weekday: "long"
-    });
-
-    // Create and save the new holiday
     const newHoliday = new Holiday({
       country: requestedCountry,
       state: requestedState,
@@ -81,14 +65,10 @@ module.exports.addBulkHoliday = async (req, res) => {
 
     await newHoliday.save();
 
-    return res.status(200).json({
-      message: "Holiday added successfully."
-    });
+    return res.status(200).json({ message: "Holiday added successfully." });
   } catch (error) {
-    console.error("Error in addBulkHoliday:", error); // Improved logging
-    return res.status(500).json({
-      message: "Internal Server Error"
-    });
+    console.error("Error in addBulkHoliday:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

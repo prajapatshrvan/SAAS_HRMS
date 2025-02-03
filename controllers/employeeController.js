@@ -578,61 +578,6 @@ let modifyEmpData = (alldata, req) => {
   return newData;
 };
 
-// module.exports.EmployeeList = async (req, res) => {
-//   let statusParam = req.query.status;
-//   let statusList = {
-//     // active: "completed",
-//     active: ["completed", "InNoticePeriod"],
-//     pending: "pending"
-//   };
-//   let empstatus = null;
-//   if (statusParam === "active" || statusParam === "pending") {
-//     empstatus = statusList[statusParam];
-//   }
-
-//   try {
-//     let employeeList;
-//     if (empstatus) {
-//       employeeList = await Employee.find({ status: empstatus })
-//         // .select(
-//         //   "firstname lastname middlename mobile_number status employeeID image emergency_number department designation joining_date marital_status"
-//         // )
-//         .sort({ createdAt: -1 });
-//     } else if (statusParam === "onleave") {
-//       const currentDate = new Date();
-//       const startOfDay = new Date(currentDate);
-//       startOfDay.setHours(0, 0, 0, 0);
-
-//       const endOfDay = new Date(currentDate);
-//       endOfDay.setHours(23, 59, 59, 999);
-//       employeeList = await Leave.find({
-//         status: "approved",
-//         start_date: { $lte: endOfDay },
-//         end_date: { $gte: startOfDay }
-//       })
-//         .populate({
-//           path: "empid",
-//           select:
-//             "firstname middlename lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no  aadhar_image pancard_no pan_image sameAddress status company_email joining_date marital_status"
-//          })
-//         .sort({ createdAt: -1 });
-//     } else {
-//       employeeList = await Employee.find()
-//         // .select(
-//         //   "firstname lastname middlename mobile_number status employeeID image emergency_number family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email department joining_date marital_status designation createdAt"
-//         // )
-//         .sort({ createdAt: -1 });
-//     }
-//     //
-//     return res.status(200).send(employeeList);
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Internal server error"
-//     });
-//   }
-// };
-
-
 
 module.exports.EmployeeList = async (req, res) => {
   let statusParam = req.query.status;
@@ -701,8 +646,8 @@ module.exports.EmployeeList = async (req, res) => {
             as: "documents",
           },
         },
-        { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, // Flatten documents array
-        { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, // Flatten experienceData array
+        { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, 
+        { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } }, 
         {
           $project: {
             firstname: 1,
@@ -738,10 +683,6 @@ module.exports.EmployeeList = async (req, res) => {
     });
   }
 };
-
-
-
-
 
 // employee status
 module.exports.employeeStatus = async (req, res) => {
@@ -982,11 +923,6 @@ module.exports.Employeedocument = async (req, res, next) => {
 };
 
 
-
-
-
-
-
 // module.exports.Employeedocument = async (req, res, next) => {
 //   uploaddoc(req, res, async (err) => {
 //     try {
@@ -1067,9 +1003,6 @@ module.exports.Employeedocument = async (req, res, next) => {
 //       };
 
 
-      
-
-
 //       if (companyname) {
 //         setUpdateData.companyname = companyname;
 //         setUpdateData.start_date = start_date;
@@ -1127,6 +1060,8 @@ module.exports.Employeedocument = async (req, res, next) => {
 //     }
 //   });
 // };
+
+
 
 
 
