@@ -147,6 +147,94 @@ const removeUnnecessaryFields = data => {
   return filteredData;
 };
 
+// const attendance = async (req, res, next) => {
+//   try {
+//     const requestData = req.body.attendance;
+
+//     if (!requestData || requestData.length === 0) {
+//       return res.status(400).send("Please send valid attendance data");
+//     }
+
+//     const currentDate = new Date();
+//     let errors = [];
+
+//     for (const element of requestData) {
+//       const { empid, date, status } = element;
+
+//       if (!empid || !date || status === undefined) {
+//         errors.push({ empid, message: "Invalid employee details" });
+//         continue;
+//       }
+
+//       const attendanceDate = new Date(date);
+
+//       // Check if the date is within the last 7 days
+//       if (currentDate - attendanceDate > 7 * 24 * 60 * 60 * 1000) {
+//         errors.push({ empid, message: "Invalid date: Out of allowed range" });
+//         continue;
+//       }
+
+//       // Fetch approved leave for the employee
+//       const leave = await Leave.findOne({
+//         empid,
+//         status: "approved",
+//         start_date: { $lte: attendanceDate },
+//         end_date: { $gte: attendanceDate }
+//       });
+
+//       let finalStatus = status ? "present" : "absent";
+
+//       if (leave && leave.session) {
+//         if (leave.session === "Session 1" || leave.session === "Session 2") {
+//           finalStatus = "half_leave";
+//         } else {
+//           finalStatus = "full_leave";
+//         }
+//       }
+
+//       // Check if attendance already exists
+//       const existingAttendance = await Attendance.findOne({
+//         empid,
+//         date: attendanceDate
+//       });
+
+//       if (existingAttendance) {
+//         try {
+//           await Attendance.updateOne(
+//             { empid, date: attendanceDate },
+//             { $set: { status: finalStatus } }
+//           );
+//         } catch (error) {
+//           errors.push({ empid, message: "Error updating attendance" });
+//           console.error("Error updating attendance:", error);
+//         }
+//       } else {
+//         try {
+//           await Attendance.create({
+//             empid,
+//             date: attendanceDate,
+//             status: finalStatus
+//           });
+//         } catch (error) {
+//           errors.push({ empid, message: "Error creating attendance" });
+//           console.error("Error creating attendance:", error);
+//         }
+//       }
+//     }
+
+//     if (errors.length > 0) {
+//       return res.status(400).json({ success: false, errors });
+//     }
+
+//     res
+//       .status(200)
+//       .json({ success: true, message: "Attendance processed successfully" });
+//   } catch (error) {
+//     console.error("Error processing attendance:", error);
+//     res.status(500).json({ success: false, message: "Internal Server Error" });
+//   }
+// };
+
 const attendance = async (req, res, next) => {
   try {
     const requestData = req.body.attendance;
@@ -166,7 +254,13 @@ const attendance = async (req, res, next) => {
         continue;
       }
 
+      // Convert date properly
       const attendanceDate = new Date(date);
+      if (isNaN(attendanceDate.getTime())) {
+        errors.push({ empid, message: "Invalid date format" });
+        continue;
+      }
+      attendanceDate.setUTCHours(0, 0, 0, 0);
 
       // Check if the date is within the last 7 days
       if (currentDate - attendanceDate > 7 * 24 * 60 * 60 * 1000) {
@@ -185,11 +279,10 @@ const attendance = async (req, res, next) => {
       let finalStatus = status ? "present" : "absent";
 
       if (leave && leave.session) {
-        if (leave.session === "Session 1" || leave.session === "Session 2") {
-          finalStatus = "half_leave";
-        } else {
-          finalStatus = "full_leave";
-        }
+        finalStatus =
+          leave.session === "Session 1" || leave.session === "Session 2"
+            ? "half_leave"
+            : "full_leave";
       }
 
       // Check if attendance already exists
