@@ -9,12 +9,15 @@ module.exports.Empdata = async (req, res) => {
   try {
     const startOfMonth = moment().startOf("month").toDate();
     const endOfMonth = moment().endOf("month").toDate();
+    let probationPeriod;
 
-    const empCount = await Employee.countDocuments({ status: "completed" });
+    const empCount = await Employee.find({
+      status: { $in: ["completed", "InNoticePeriod"] }
+    });
 
     const newOnboarding = await Employee.countDocuments({
       status: "completed",
-      createdAt: {
+      joining_date: {
         $gte: startOfMonth,
         $lte: endOfMonth
       }
@@ -29,9 +32,10 @@ module.exports.Empdata = async (req, res) => {
     });
 
     res.status(200).json({
-      totalEmployeeCount: empCount,
+      totalEmployeeCount: empCount.length,
       totalnewOnboarding: newOnboarding,
       totaloffOnboarding: offboarding
+      // probationPeriod: probationPeriod
     });
   } catch (error) {
     console.log(error);
@@ -115,7 +119,6 @@ module.exports.allAssetStatus = async (req, res) => {
     });
   }
 };
-
 
 module.exports.departmentCount = async (req, res) => {
   try {

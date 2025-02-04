@@ -539,7 +539,10 @@ module.exports.PaySalary = async (req, res) => {
       });
       if (salary) {
         await Salary.findByIdAndUpdate(salary._id, {
-          $set: { payment_status: true }
+          $set: {
+            payment_status: true,
+            salary_status: "paid"
+          }
         });
       }
     }
