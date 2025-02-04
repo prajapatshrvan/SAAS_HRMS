@@ -699,7 +699,7 @@ module.exports.EmployeeList = async (req, res) => {
   }
 
   try {
-    let matchStage = {};
+    let matchStage = {};    
     
     if (empstatus) {
       matchStage.status = { $in: empstatus };
@@ -736,6 +736,7 @@ module.exports.EmployeeList = async (req, res) => {
           designation: 1,
           joining_date: 1,
           marital_status: 1,
+          totalctc: "$ctcDetails.totalctc",
           monthlycompensation: "$ctcDetails.monthlycompensation",
           bachelor_doc: "$documents.bachelor_doc",
           secondary_doc: "$documents.secondary_doc",

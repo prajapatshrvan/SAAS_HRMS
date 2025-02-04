@@ -90,17 +90,74 @@ module.exports.approvedStatus = async (req, res) => {
   }
 };
 
+// module.exports.List = async (req, res) => {
+//   try {
+//     const approvedDocuments = await Document.find({}).populate({
+//       path: "empId",
+//       select: "firstname middlename lastname employeeID company_email department designation"
+//     });
+//     const newData = [];
+//     for (let index = 0; index < approvedDocuments.length; index++) {
+//       const element = { ...approvedDocuments[index]?._doc };
+//       if (element.empId) {
+//         element.employeename = element.empId.firstname + " " + element.empId.lastname;
+//         element.company_email = element.empId.company_email;
+//         element.department = element.empId.department;
+//         element.designation = element.empId.designation;
+//         element.employeeID = element.empId.employeeID;
+//         element.empid = element.empId;
+//       }
+//       delete element.empId;
+//       newData.push(element);
+//     }
+
+//     return res.status(200).json({
+//       approvedDocuments: newData
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// };
+
 module.exports.List = async (req, res) => {
   try {
-    const approvedDocuments = await Document.find({}).populate({
-      path: "empId",
-      select: "firstname middlename lastname employeeID company_email department designation"
-    });
-    const newData = [];
-    for (let index = 0; index < approvedDocuments.length; index++) {
-      const element = { ...approvedDocuments[index]?._doc };
+  
+    const searchQuery = req.query.search || ''; 
+
+    
+    const regex = new RegExp(`^${searchQuery}`, 'i'); 
+   
+    const filter = (req.user.role_name === "HR" || req.user.role_name === "ADMIN") 
+      ? {}  
+      : { empId: req.user.userObjectId };  
+
+    let approvedDocuments;
+    if (searchQuery) {
+      
+      approvedDocuments = await Document.find(filter)
+        .populate({
+          path: "empId",
+          select: "firstname middlename lastname employeeID company_email department designation"
+        })
+        .where('empId.firstname') 
+        .regex(regex) 
+        .or([{ 'empId.lastname': { $regex: regex } }]); 
+    } else {
+      approvedDocuments = await Document.find(filter)
+        .populate({
+          path: "empId",
+          select: "firstname middlename lastname employeeID company_email department designation"
+        });
+    }
+
+    // Transform data
+    const newData = approvedDocuments.map(doc => {
+      const element = { ...doc._doc };
       if (element.empId) {
-        element.employeename = element.empId.firstname + " " + element.empId.lastname;
+        element.employeename = `${element.empId.firstname} ${element.empId.lastname}`;
         element.company_email = element.empId.company_email;
         element.department = element.empId.department;
         element.designation = element.empId.designation;
@@ -108,8 +165,8 @@ module.exports.List = async (req, res) => {
         element.empid = element.empId;
       }
       delete element.empId;
-      newData.push(element);
-    }
+      return element;
+    });
 
     return res.status(200).json({
       approvedDocuments: newData
@@ -121,6 +178,7 @@ module.exports.List = async (req, res) => {
     });
   }
 };
+
 
 module.exports.viewDocument = async (req, res) => {
   try {

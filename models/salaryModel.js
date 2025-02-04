@@ -149,7 +149,8 @@ const salarySchema = new mongoose.Schema(
     },
     salary_status: {
       type: String,
-      default: "pending"
+      default: "pending",
+      enum: ["pending", "paid", "approved"]
     }
   },
   {
