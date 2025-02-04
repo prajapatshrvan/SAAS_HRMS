@@ -706,7 +706,31 @@ module.exports.EmployeeList = async (req, res) => {
     }
 
     if (searchParam) {
-      matchStage.firstname = { $regex: `^${searchParam}`, $options: "i" };
+      const nameParts = searchParam.trim().split(/\s+/); // Split by spaces
+  
+      if (nameParts.length > 1) {
+        // If user enters "Jaideep Singh", search firstname and lastname together
+        matchStage.$or = [
+          {
+            $and: [
+              { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+              { lastname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+            ],
+          },
+          {
+            $and: [
+              { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { lastname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+            ],
+          },
+        ];
+      } else {
+        // Single word or three alphabets search, match firstname or lastname
+        matchStage.$or = [
+          { firstname: { $regex: searchParam, $options: "i" } },
+          { lastname: { $regex: searchParam, $options: "i" } },
+        ];
+      }
     }
 
     let employeeList = await Employee.aggregate([
