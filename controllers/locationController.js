@@ -7,7 +7,7 @@ module.exports.country = async (req, res) => {
       throw new Error("MongoDB connection not established");
     }
 
-    const data = await db.collection("countries").find().toArray();
+    const data = await db.collection("countries").find({ id: 101 }).toArray();
 
     if (data) {
       res.status(200).send(data);
@@ -41,6 +41,7 @@ module.exports.city = async (req, res) => {
     let data = await db
       .collection("cities")
       .find({ state_id: stateId })
+      .sort({ name: 1 })
       .toArray();
 
     res.send(data);
@@ -71,6 +72,7 @@ module.exports.state = async (req, res) => {
     let data = await db
       .collection("states")
       .find({ country_id: countryId })
+      .sort({ name: 1 })
       .toArray();
     res.send(data);
   } catch (err) {
@@ -100,6 +102,7 @@ module.exports.state_name = async (req, res) => {
     let data = await db
       .collection("states")
       .find({ country_name: countryName })
+      .sort({ name: 1 })
       .toArray();
     res.send(data);
   } catch (err) {

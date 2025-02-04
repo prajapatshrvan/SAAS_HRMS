@@ -72,62 +72,128 @@ module.exports.addBulkHoliday = async (req, res) => {
   }
 };
 
+// module.exports.UpdateHoliday = async (req, res) => {
+//   try {
+//     // const userRoleMapping = {
+//     //   _id: req.user.userObjectId,
+//     //   userId: req.user.userId,
+//     //   role: req.user.role_name,
+//     //   inherits: req.user.userInheritedRoles
+//     // };
+
+//     // const userResources = await getResourcesForUser(userRoleMapping);
+
+//     // Check if the user has the required permissions
+//     // if (
+//     //   !userResources &&
+//     //   !userResources["holidays"] &&
+//     //   !userResources["holidays"].includes("edit")
+//     // ) {
+//     //   return res.status(403).json({ message: "Access denied" });
+//     // }
+//     const id = req.query.id;
+//     const { country, state, year, holiday_status, holiday } = req.body;
+
+//     if (
+//       !country ||
+//       !state ||
+//       !year ||
+//       !holiday ||
+//       !Array.isArray(holiday) ||
+//       holiday.length === 0
+//     ) {
+//       return res.status(400).json({
+//         message: "Invalid or incomplete request data"
+//       });
+//     }
+
+//     const holidaysWithDay = holiday.map(h => {
+//       const [month, day] = h.date;
+//       if (isNaN(month) || isNaN(day)) {
+//         return { ...h, date: null, day: "Invalid Date" };
+//       }
+
+//       const formattedDate = `${month}-${day}`;
+//       const dayOfWeek = new Date(
+//         `${year}-${formattedDate}`
+//       ).toLocaleDateString("en-US", { weekday: "long" });
+
+//       return { ...h, date: formattedDate, day: dayOfWeek };
+//     });
+
+//     const validHolidays = holidaysWithDay.filter(h => h.date !== null);
+
+//     if (validHolidays.length === 0) {
+//       return res.status(400).json({
+//         message: "No valid dates provided"
+//       });
+//     }
+//     const updateFields = {
+//       country,
+//       state,
+//       year,
+//       holiday_status,
+//       holiday: validHolidays
+//     };
+//     await Holiday.findByIdAndUpdate(id, { $set: updateFields });
+//     return res.status(200).json({
+//       message: "Update Data Sucessfully"
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// };
+
 module.exports.UpdateHoliday = async (req, res) => {
   try {
-    // const userRoleMapping = {
-    //   _id: req.user.userObjectId,
-    //   userId: req.user.userId,
-    //   role: req.user.role_name,
-    //   inherits: req.user.userInheritedRoles
-    // };
-
-    // const userResources = await getResourcesForUser(userRoleMapping);
-
-    // Check if the user has the required permissions
-    // if (
-    //   !userResources &&
-    //   !userResources["holidays"] &&
-    //   !userResources["holidays"].includes("edit")
-    // ) {
-    //   return res.status(403).json({ message: "Access denied" });
-    // }
     const id = req.query.id;
     const { country, state, year, holiday_status, holiday } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Holiday ID is required" });
+    }
 
     if (
       !country ||
       !state ||
       !year ||
-      !holiday ||
       !Array.isArray(holiday) ||
       holiday.length === 0
     ) {
-      return res.status(400).json({
-        message: "Invalid or incomplete request data"
-      });
+      return res
+        .status(400)
+        .json({ message: "Invalid or incomplete request data" });
     }
 
+    // Process holiday array to include correct date and day
     const holidaysWithDay = holiday.map(h => {
-      const [month, day] = h.date.split("-");
-      if (isNaN(month) || isNaN(day)) {
+      const [month, day] = h.date; // Assuming date format [month, day]
+
+      if (!month || !day || isNaN(month) || isNaN(day)) {
         return { ...h, date: null, day: "Invalid Date" };
       }
 
-      const formattedDate = `${month}-${day}`;
-      const dayOfWeek = new Date(
-        `${year}-${formattedDate}`
-      ).toLocaleDateString("en-US", { weekday: "long" });
+      // Create a valid Date object (YYYY-MM-DD format)
+      const formattedDate = new Date(year, month - 1, day);
 
-      return { ...h, date: formattedDate, day: dayOfWeek };
+      return {
+        ...h,
+        date: formattedDate,
+        day: formattedDate.toLocaleDateString("en-US", { weekday: "long" })
+      };
     });
 
+    // Remove invalid dates
     const validHolidays = holidaysWithDay.filter(h => h.date !== null);
 
     if (validHolidays.length === 0) {
-      return res.status(400).json({
-        message: "No valid dates provided"
-      });
+      return res.status(400).json({ message: "No valid dates provided" });
     }
+
+    // Prepare update object
     const updateFields = {
       country,
       state,
@@ -135,15 +201,25 @@ module.exports.UpdateHoliday = async (req, res) => {
       holiday_status,
       holiday: validHolidays
     };
-    await Holiday.findByIdAndUpdate(id, { $set: updateFields });
+
+    // Update holiday in MongoDB
+    const updatedHoliday = await Holiday.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!updatedHoliday) {
+      return res.status(404).json({ message: "Holiday not found" });
+    }
+
     return res.status(200).json({
-      message: "Update Data Sucessfully"
+      message: "Holiday updated successfully",
+      data: updatedHoliday
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Internal Server Error"
-    });
+    console.error("Error in UpdateHoliday:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -209,7 +285,8 @@ module.exports.List = async (req, res) => {
       query.holiday_status = holiday_status;
     }
 
-    const list = await Holiday.find(query);
+    const list = await Holiday.find(query).sort({ date: 1 });
+    console.log(list, "holiday list");
 
     res.status(200).json({
       list

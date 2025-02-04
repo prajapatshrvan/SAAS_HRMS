@@ -63,18 +63,55 @@ const calculateSalaryComponents = totalPaidAmount => {
   };
 };
 
-function countSundays(startDate, endDate) {
+// function countSundays(startDate, endDate, holiday) {
+//   let start = new Date(startDate);
+//   let end = new Date(endDate);
+//   let count = 0;
+
+//   while (start <= end) {
+//     if (start.getDay() === 0) {
+//       // Sunday is represented by 0
+//       count++;
+//     }
+//     start.setDate(start.getDate() + 1); // Move to the next day
+//   }
+
+//   return count;
+// }
+
+function countSundaysAndHolidays(startDate, endDate, holidays) {
   let start = new Date(startDate);
   let end = new Date(endDate);
   let count = 0;
 
+  let holidayDates = new Set(
+    holidays.map(date => new Date(date.date).toDateString())
+  );
+  // console.log(holidayDates, "holidayDates");
+
+  let allDates = new Set();
+
   while (start <= end) {
-    if (start.getDay() === 0) {
-      // Sunday is represented by 0
+    let currentDate = start.toDateString();
+
+    // console.log(currentDate, "currentDate");
+
+    // Check if it's a Sunday
+    if (start.getDay() === 0 && !allDates.has(currentDate)) {
       count++;
+      allDates.add(currentDate);
     }
-    start.setDate(start.getDate() + 1); // Move to the next day
+
+    // Check if it's a holiday
+    if (holidayDates.has(currentDate) && !allDates.has(currentDate)) {
+      count++;
+      allDates.add(currentDate);
+    }
+
+    start.setDate(start.getDate() + 1);
   }
+
+  // console.log(allDates);
 
   return count;
 }
@@ -85,15 +122,15 @@ const createSalary = async (req, res) => {
     const Month = moment().format("MM");
 
     // Check if salary already exists
-    const existingSalary = await Salary.findOne({
-      month: Month,
-      year: Year
-    }).lean();
-    if (existingSalary) {
-      return res
-        .status(400)
-        .json({ message: `Salary for ${Month}-${Year} Already Created.` });
-    }
+    // const existingSalary = await Salary.findOne({
+    //   month: Month,
+    //   year: Year
+    // }).lean();
+    // if (existingSalary) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: `Salary for ${Month}-${Year} Already Created.` });
+    // }
 
     const employees = await Employee.find({ status: "completed" }).lean();
     if (!employees.length) {
@@ -135,13 +172,10 @@ const createSalary = async (req, res) => {
 
     const salaries = [];
 
-    const holiday = await Holiday.countDocuments({
-      status: "approved",
-      date: {
-        $gte: startDate,
-        $lte: endDate
-      }
-    });
+    const holiday = await Holiday.find({
+      holiday_status: "approved",
+      date: { $gt: startDate, $lt: endDate }
+    }).sort({ date: -1 });
 
     for (const emp of employees) {
       const empAttendance = attendanceMap[emp._id] || {
@@ -165,10 +199,16 @@ const createSalary = async (req, res) => {
           ? emp.joining_date
           : startDate;
 
-      const sundays = countSundays(STARTDATE, endDate);
+      const sundaysAndHolidays = countSundaysAndHolidays(
+        STARTDATE,
+        endDate,
+        holiday
+      );
+
+      // console.log(sundaysAndHolidays, "sundaysAndHolidays");
 
       const workingDayCount = empAttendance.present;
-      const totalPaidDays = sundays + workingDayCount;
+      const totalPaidDays = sundaysAndHolidays + workingDayCount;
 
       // Handle leave carry forward
       const { remainingAbsent } = await leave_carry_forward(
@@ -275,7 +315,7 @@ const createSalary = async (req, res) => {
     }
 
     // Insert all salaries at once
-    await Salary.insertMany(salaries);
+    // await Salary.insertMany(salaries);
 
     return res.status(200).json({ message: "Salaries created successfully" });
   } catch (error) {
@@ -499,7 +539,10 @@ module.exports.PaySalary = async (req, res) => {
       });
       if (salary) {
         await Salary.findByIdAndUpdate(salary._id, {
-          $set: { payment_status: true }
+          $set: {
+            payment_status: true,
+            salary_status: "paid"
+          }
         });
       }
     }
