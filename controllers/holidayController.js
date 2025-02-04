@@ -285,7 +285,8 @@ module.exports.List = async (req, res) => {
       query.holiday_status = holiday_status;
     }
 
-    const list = await Holiday.find(query);
+    const list = await Holiday.find(query).sort({ date: 1 });
+    console.log(list, "holiday list");
 
     res.status(200).json({
       list

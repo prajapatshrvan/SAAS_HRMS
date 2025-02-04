@@ -84,29 +84,34 @@ function countSundaysAndHolidays(startDate, endDate, holidays) {
   let end = new Date(endDate);
   let count = 0;
 
-  // Convert holiday dates to ISO string for easy comparison
   let holidayDates = new Set(
-    holidays.map(date => new Date(date.date).toISOString())
+    holidays.map(date => new Date(date.date).toDateString())
   );
-
-  // console.log(holidays, "holidayDates");
+  // console.log(holidayDates, "holidayDates");
 
   let allDates = new Set();
 
   while (start <= end) {
-    let currentDate = start.toISOString();
-    if (start.getDay() === 0) {
-      if (!allDates.has(currentDate)) {
-        count++;
-        allDates.add(currentDate);
-      }
+    let currentDate = start.toDateString();
+
+    // console.log(currentDate, "currentDate");
+
+    // Check if it's a Sunday
+    if (start.getDay() === 0 && !allDates.has(currentDate)) {
+      count++;
+      allDates.add(currentDate);
     }
+
+    // Check if it's a holiday
     if (holidayDates.has(currentDate) && !allDates.has(currentDate)) {
       count++;
       allDates.add(currentDate);
     }
+
     start.setDate(start.getDate() + 1);
   }
+
+  // console.log(allDates);
 
   return count;
 }
@@ -117,15 +122,15 @@ const createSalary = async (req, res) => {
     const Month = moment().format("MM");
 
     // Check if salary already exists
-    const existingSalary = await Salary.findOne({
-      month: Month,
-      year: Year
-    }).lean();
-    if (existingSalary) {
-      return res
-        .status(400)
-        .json({ message: `Salary for ${Month}-${Year} Already Created.` });
-    }
+    // const existingSalary = await Salary.findOne({
+    //   month: Month,
+    //   year: Year
+    // }).lean();
+    // if (existingSalary) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: `Salary for ${Month}-${Year} Already Created.` });
+    // }
 
     const employees = await Employee.find({ status: "completed" }).lean();
     if (!employees.length) {
@@ -200,7 +205,7 @@ const createSalary = async (req, res) => {
         holiday
       );
 
-      // console.log(countSundaysAndHolidays);
+      // console.log(sundaysAndHolidays, "sundaysAndHolidays");
 
       const workingDayCount = empAttendance.present;
       const totalPaidDays = sundaysAndHolidays + workingDayCount;
@@ -310,7 +315,7 @@ const createSalary = async (req, res) => {
     }
 
     // Insert all salaries at once
-    await Salary.insertMany(salaries);
+    // await Salary.insertMany(salaries);
 
     return res.status(200).json({ message: "Salaries created successfully" });
   } catch (error) {
