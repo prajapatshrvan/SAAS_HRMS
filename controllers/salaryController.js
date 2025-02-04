@@ -89,7 +89,7 @@ function countSundaysAndHolidays(startDate, endDate, holidays) {
     holidays.map(date => new Date(date.date).toISOString())
   );
 
-  console.log(holidays, "holidayDates");
+  // console.log(holidays, "holidayDates");
 
   let allDates = new Set();
 
@@ -310,7 +310,7 @@ const createSalary = async (req, res) => {
     }
 
     // Insert all salaries at once
-    // await Salary.insertMany(salaries);
+    await Salary.insertMany(salaries);
 
     return res.status(200).json({ message: "Salaries created successfully" });
   } catch (error) {
