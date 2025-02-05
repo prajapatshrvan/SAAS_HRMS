@@ -92,7 +92,8 @@ module.exports.Status = async (req, res) => {
       } else if (status == "approved") {
         employee.status = "InNoticePeriod";
         await employee.save();
-      }
+      } else if (status == "InNoticePeriod") employee.status = "remove";
+      await employee.save();
       return res.status(200).json({
         message: `Offboarding status updated to ${status}`
       });

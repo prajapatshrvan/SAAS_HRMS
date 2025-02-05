@@ -3,7 +3,7 @@ const Salary = require("../models/salaryModel.js");
 const Holiday = require("../models/Holiday.model");  
 const moment = require("moment");
 const Attendance = require("../models/Attendance.model.js");
-
+     
 module.exports.payrolllist = async (req, res) => {
   try {
     const attendancelist = await Attendance.find().populate({
@@ -95,7 +95,7 @@ module.exports.countNetSalary = async (req, res) => {
     });
   }
 };
-
+ 
 module.exports.payrollcostandemployeepay = async (req, res) => {
   try {
     const countTotalSalary = await Employee.find();
