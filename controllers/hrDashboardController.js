@@ -9,7 +9,9 @@ module.exports.Empdata = async (req, res) => {
   try {
     const startOfMonth = moment().startOf("month").toDate();
     const endOfMonth = moment().endOf("month").toDate();
-    let probationPeriod;
+
+    // console.log(startOfMonth, " startOfMonth");
+    // console.log(endOfMonth, " endOfMonth");
 
     const empCount = await Employee.find({
       status: { $in: ["completed", "InNoticePeriod"] }
@@ -22,6 +24,8 @@ module.exports.Empdata = async (req, res) => {
         $lte: endOfMonth
       }
     });
+
+    console.log(newOnboarding, "newOnboarding");
 
     const offboarding = await Employee.countDocuments({
       status: "InNoticePeriod",
@@ -249,7 +253,7 @@ module.exports.yearlydata = async (req, res) => {
     const onboardingData = await Employee.aggregate([
       {
         $match: {
-          createdAt: {
+          joining_date: {
             $gte: startOfYear,
             $lte: endOfYear
           },
@@ -258,7 +262,7 @@ module.exports.yearlydata = async (req, res) => {
       },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$joining_date" },
           count: { $sum: 1 }
         }
       },
@@ -285,7 +289,7 @@ module.exports.yearlydata = async (req, res) => {
       },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$updatedAt" },
           count: { $sum: 1 }
         }
       },

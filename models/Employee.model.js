@@ -65,7 +65,7 @@ const EmployeeSchema = new mongoose.Schema(
     },
     marital_status: {
       type: String,
-      enum: ["Married", "Unmarried", "Other"],
+      // enum: ["Married", "Unmarried", "Other"],
       required: false
     },
     emergency_number: {

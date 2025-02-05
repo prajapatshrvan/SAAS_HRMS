@@ -333,10 +333,9 @@ const todayAttendanceData = async (req, res, next) => {
   try {
     // Get today's start and end times
     const currentDate = new Date();
-    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0)); // Start of today
-    const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999)); // End of today
+    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
 
-    // Fetch all employees who are "completed" or "InNoticePeriod"
     const employees = await Employee.find({
       $or: [{ status: "completed" }, { status: "InNoticePeriod" }]
     });
@@ -355,10 +354,10 @@ const todayAttendanceData = async (req, res, next) => {
 
     // Status colors for the different attendance types
     const statusColors = {
-      present: { short: "P", color: "#30991F" }, // Green
-      absent: { short: "A", color: "#FF0606" }, // Red
-      half_leave: { short: "HD", color: "#FFA800" }, // Orange (Half Day)
-      full_leave: { short: "L", color: "#0F137E" } // Blue (Leave)
+      present: { short: "P", color: "#30991F" },
+      absent: { short: "A", color: "#FF0606" },
+      half_leave: { short: "HD", color: "#FFA800" },
+      full_leave: { short: "L", color: "#0F137E" }
     };
 
     // Build attendance report for each employee
@@ -398,72 +397,43 @@ const todayAttendanceData = async (req, res, next) => {
 const TotalEmployee = async (req, res, next) => {
   try {
     const currentDate = new Date();
+    const startOfDay = new Date(currentDate.setUTCHours(0, 0, 0, 0));
+    const endOfDay = new Date(currentDate.setUTCHours(23, 59, 59, 999));
 
-    const startOfDay = new Date(currentDate);
-    startOfDay.setUTCHours(0, 0, 0, 0);
+    const attendanceSummary = await Attendance.aggregate([
+      {
+        $match: {
+          date: { $gte: startOfDay, $lte: endOfDay }
+        }
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
 
-    const endOfDay = new Date(currentDate);
-    endOfDay.setUTCHours(23, 59, 59, 999);
+    const attendanceCounts = {
+      present: 0,
+      absent: 0,
+      half_leave: 0,
+      full_leave: 0,
+      holiday: 0
+    };
 
-    const startOfDayISO = startOfDay.toISOString();
-    const endOfDayISO = endOfDay.toISOString();
+    console.log(attendanceCounts, "attendanceCount");
 
-    // Fetch employee data
-    const employees = await Employee.find({
-      $or: [{ status: "completed" }, { status: "InNoticePeriod" }]
+    attendanceSummary.forEach(record => {
+      attendanceCounts[record._id.toLowerCase()] = record.count;
     });
 
-    if (!employees.length) {
-      return res.status(404).json({ message: "No employees found" });
-    }
-
-    let presentCount = 0;
-    let absentCount = 0;
-    let halfDayCount = 0;
-    let fullLeaveCount = 0;
-    let holidayCount = 0;
-
-    for (let employee of employees) {
-      const attendanceRecords = await Attendance.find({
-        empid: employee._id,
-        date: { $gte: startOfDayISO, $lte: endOfDayISO }
-      });
-
-      let attendanceStatus = "absent";
-      if (attendanceRecords.length > 0) {
-        attendanceStatus = attendanceRecords[0].status.toLowerCase();
-      }
-
-      switch (attendanceStatus) {
-        case "present":
-          presentCount++;
-          break;
-        case "absent":
-          absentCount++;
-          break;
-        case "half_leave":
-          halfDayCount++;
-          break;
-        case "full_leave":
-          fullLeaveCount++;
-          break;
-        case "holiday":
-          holidayCount++;
-          break;
-        default:
-          break;
-      }
-    }
-
-    const totalEmployees = employees.length;
-
     res.status(200).json({
-      totalEmployeeCount: totalEmployees,
-      TotalEmployeePresent: presentCount,
-      TotalEmployeeAbsent: absentCount,
-      TotalEmployeeHalfDay: halfDayCount,
-      TotalEmployeeFullLeave: fullLeaveCount,
-      TotalEmployeeHoliday: holidayCount
+      TotalEmployeePresent: attendanceCounts.present,
+      TotalEmployeeAbsent: attendanceCounts.absent,
+      TotalEmployeeHalfDay: attendanceCounts.half_leave,
+      TotalEmployeeFullLeave: attendanceCounts.full_leave,
+      TotalEmployeeHoliday: attendanceCounts.holiday
     });
   } catch (error) {
     console.error("Error fetching total employee count:", error);
