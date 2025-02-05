@@ -331,7 +331,6 @@ const getStartAndEndOfDay = dateStr => {
 
 const todayAttendanceData = async (req, res, next) => {
   try {
-    // Get today's start and end times
     const currentDate = new Date();
     const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
@@ -346,13 +345,11 @@ const todayAttendanceData = async (req, res, next) => {
 
     const employeeIds = employees.map(emp => emp._id);
 
-    // Fetch today's attendance records for all employees
     const attendanceRecords = await Attendance.find({
       empid: { $in: employeeIds },
       date: { $gte: startOfDay, $lte: endOfDay }
     });
 
-    // Status colors for the different attendance types
     const statusColors = {
       present: { short: "P", color: "#30991F" },
       absent: { short: "A", color: "#FF0606" },
@@ -360,7 +357,6 @@ const todayAttendanceData = async (req, res, next) => {
       full_leave: { short: "L", color: "#0F137E" }
     };
 
-    // Build attendance report for each employee
     const attendanceReportData = employees.map(employee => {
       const empAttendance = attendanceRecords
         .filter(record => record.empid.toString() === employee._id.toString())
