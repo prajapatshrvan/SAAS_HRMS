@@ -584,8 +584,7 @@ let modifyEmpData = (alldata, req) => {
 module.exports.EmployeeList = async (req, res) => {
   let statusParam = req.query.status;
   let searchParam = req.query.search;
-  let { month, year } = req.query; // Get month and year from query params
-
+  let { month, year } = req.query;
   let statusList = {
     active: ["completed", "InNoticePeriod"],
     pending: "pending",
@@ -631,20 +630,14 @@ module.exports.EmployeeList = async (req, res) => {
 
     // Filtering by month and year
     if (month && year) {
-      let monthsArray = month.split(",").map(m => parseInt(m)); // Convert month values to numbers
-      let yearsArray = year.split(",").map(y => parseInt(y)); // Convert year values to numbers
-
-      let dateConditions = monthsArray.map((m) => {
-        return yearsArray.map((y) => {
-          let startDate = new Date(y, m - 1, 1); // First day of the month
-          let endDate = new Date(y, m, 1); // First day of the next month
-          return {
-            joining_date: { $gte: startDate, $lt: endDate }
-          };
-        });
-      }).flat();
-
-      matchStage.$or = matchStage.$or ? [...matchStage.$or, ...dateConditions] : dateConditions;
+     
+      if (month && year) {
+        let startDate = new Date(year, month - 1, 1); // First day of the month
+        let endDate = new Date(year, month, 1); // First day of the next month
+      
+        matchStage.joining_date = { $gte: startDate, $lt: endDate };
+      }
+      
     }
 
     let employeeList = await Employee.aggregate([
