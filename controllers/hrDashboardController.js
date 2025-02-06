@@ -25,8 +25,6 @@ module.exports.Empdata = async (req, res) => {
       }
     });
 
-    console.log(newOnboarding, "newOnboarding");
-
     const offboarding = await Employee.countDocuments({
       status: "InNoticePeriod",
       updatedAt: {
