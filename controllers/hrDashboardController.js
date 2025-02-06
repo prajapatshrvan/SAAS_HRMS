@@ -190,6 +190,13 @@ module.exports.departmentCount = async (req, res) => {
   }
 };
 
+
+//monthly emplooye filter data 
+
+module.exports.employeeMonthlyData = async (req , res) => {
+   const {month ,year} = req.body
+}
+
 module.exports.list = async (req, res) => {
   try {
     const { year, month, week } = req.query;
