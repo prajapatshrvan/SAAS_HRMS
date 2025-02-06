@@ -579,9 +579,13 @@ let modifyEmpData = (alldata, req) => {
 };
 
 
+
+
 module.exports.EmployeeList = async (req, res) => {
   let statusParam = req.query.status;
-  let searchParam = req.query.search; 
+  let searchParam = req.query.search;
+  let { month, year } = req.query; // Get month and year from query params
+
   let statusList = {
     active: ["completed", "InNoticePeriod"],
     pending: "pending",
@@ -593,17 +597,16 @@ module.exports.EmployeeList = async (req, res) => {
   }
 
   try {
-    let matchStage = {};    
-    
+    let matchStage = {};
+
     if (empstatus) {
       matchStage.status = { $in: empstatus };
     }
 
     if (searchParam) {
-      const nameParts = searchParam.trim().split(/\s+/); // Split by spaces
-  
+      const nameParts = searchParam.trim().split(/\s+/);
+
       if (nameParts.length > 1) {
-        // If user enters "Jaideep Singh", search firstname and lastname together
         matchStage.$or = [
           {
             $and: [
@@ -619,12 +622,29 @@ module.exports.EmployeeList = async (req, res) => {
           },
         ];
       } else {
-        // Single word or three alphabets search, match firstname or lastname
         matchStage.$or = [
           { firstname: { $regex: searchParam, $options: "i" } },
           { lastname: { $regex: searchParam, $options: "i" } },
         ];
       }
+    }
+
+    // Filtering by month and year
+    if (month && year) {
+      let monthsArray = month.split(",").map(m => parseInt(m)); // Convert month values to numbers
+      let yearsArray = year.split(",").map(y => parseInt(y)); // Convert year values to numbers
+
+      let dateConditions = monthsArray.map((m) => {
+        return yearsArray.map((y) => {
+          let startDate = new Date(y, m - 1, 1); // First day of the month
+          let endDate = new Date(y, m, 1); // First day of the next month
+          return {
+            joining_date: { $gte: startDate, $lt: endDate }
+          };
+        });
+      }).flat();
+
+      matchStage.$or = matchStage.$or ? [...matchStage.$or, ...dateConditions] : dateConditions;
     }
 
     let employeeList = await Employee.aggregate([
@@ -638,7 +658,7 @@ module.exports.EmployeeList = async (req, res) => {
           as: "documents",
         },
       },
-      { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } }, 
+      { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } },
       { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } },
       {
         $project: {
@@ -660,7 +680,7 @@ module.exports.EmployeeList = async (req, res) => {
           secondary_doc: "$documents.secondary_doc",
           senior_doc: "$documents.senior_doc",
           extra: "$documents.extra",
-          companyname: "$documents.experienceData.companyname", 
+          companyname: "$documents.experienceData.companyname",
           start_date: "$documents.experienceData.start_date",
           end_date: "$documents.experienceData.end_date",
           offerletter: "$documents.experienceData.offerletter",
@@ -671,11 +691,11 @@ module.exports.EmployeeList = async (req, res) => {
 
     return res.status(200).send(employeeList);
   } catch (error) {
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    console.error("Error fetching employees:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 // employee status
