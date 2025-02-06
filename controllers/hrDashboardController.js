@@ -307,7 +307,7 @@ module.exports.yearlydata = async (req, res) => {
       year,
       series: [
         {
-          name: "Onboarding",
+          name: "OnBoarding",
           data: formattedOnboardingData
         },
         {
