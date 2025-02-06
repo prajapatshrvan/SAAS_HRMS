@@ -541,7 +541,8 @@ module.exports.PaySalary = async (req, res) => {
         await Salary.findByIdAndUpdate(salary._id, {
           $set: {
             payment_status: true,
-            salary_status: "paid"
+            salary_status: "paid",
+            pay_date: new Date()
           }
         });
       }

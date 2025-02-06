@@ -5,6 +5,7 @@ const AttendanceModel = require("../models/Attendance.model.js");
 const Holidays = require("../models/Holiday.model.js");
 const Leave = require("../models/Leave.model.js");
 const moment = require("moment");
+const ExcelJS = require("exceljs");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const fs = require("fs");
@@ -418,8 +419,6 @@ const TotalEmployee = async (req, res, next) => {
       holiday: 0
     };
 
-    console.log(attendanceCounts, "attendanceCount");
-
     attendanceSummary.forEach(record => {
       attendanceCounts[record._id.toLowerCase()] = record.count;
     });
@@ -559,10 +558,10 @@ const biometricAttendance = async (req, res) => {
     try {
       if (err) {
         console.error("File upload error:", err);
-        return res.status(500).json({ message: assetLabels.fileUpload_error });
+        return res.status(500).json({ message: "File upload error" });
       }
       if (!req.file) {
-        return res.status(400).json({ message: assetLabels.file_error });
+        return res.status(400).json({ message: "No file uploaded" });
       }
 
       const filePath = req.file.path;
@@ -577,25 +576,43 @@ const biometricAttendance = async (req, res) => {
       }
 
       const attendanceRecords = [];
+      const errors = [];
+
       worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-        if (rowNumber === 1) return;
+        if (rowNumber === 1) return; // Skip header row
 
         const empid = row.getCell(1).value;
-        const date = moment(row.getCell(2).value, moment.ISO_8601, true);
+        const date = new Date(row.getCell(2).value);
         const status = row.getCell(3).value;
 
-        if (empid && date.isValid() && status) {
+        // const validStatuses = [
+        //   "present",
+        //   "absent",
+        //   "half_leave",
+        //   "full_leave",
+        //   "quarter_leave"
+        // ];
+
+        // if (!validStatuses.includes(status)) {
+        //   errors.push(`Invalid attendance status at row ${rowNumber}`);
+        //   return;
+        // }
+
+        if (empid && date && status) {
           attendanceRecords.push({
             empid,
-            date: new Date(date.toDate()),
+            date: date,
             status
           });
         } else {
-          console.warn(`Invalid row data at row ${rowNumber}:`, row.values);
+          errors.push(`Invalid data at row ${rowNumber}`);
         }
       });
 
-      // Bulk insert attendance records
+      if (errors.length > 0) {
+        return res.status(400).json({ errors });
+      }
+
       if (attendanceRecords.length > 0) {
         await Attendance.insertMany(attendanceRecords);
       } else {
@@ -610,19 +627,19 @@ const biometricAttendance = async (req, res) => {
         return res.status(404).json({ message: "Employee not found." });
       }
 
-      const excelPath = `uploads/excel/${empId.employeeID}/${req.file
-        .filename}`;
-      const newExcelFile = new Excel({ excelfile: excelPath });
-      await newExcelFile.save();
+      // const excelPath = `uploads/excel/${empId.employeeID}/${req.file
+      //   .filename}`;
+      // const newExcelFile = new Excel({ excelfile: excelPath });
+      // await newExcelFile.save();
 
-      fs.unlinkSync(filePath);
+      // fs.unlinkSync(filePath);
 
-      res.status(200).json({ message: assetLabels.upload_And_save_message });
+      return res
+        .status(200)
+        .json({ message: "Excel File uploaded and saved successfully" });
     } catch (error) {
       console.error("Error processing attendance:", error);
-      return res
-        .status(500)
-        .json({ message: assetLabels.internal_server_message });
+      return res.status(500).json({ message: "Internal Server Error" });
     }
   });
 };

@@ -143,7 +143,9 @@ const salarySchema = new mongoose.Schema(
     absent_day: {
       type: Number
     },
-
+    pay_date: {
+      tupe: Date
+    },
     totalnetsalary: {
       type: Number
     },
