@@ -1,19 +1,16 @@
 const Attendance = require("../models/Attendance.model.js");
-const ApiCRUDController = require("../controllers/ApiCrudController.js");
 const Employee = require("../models/Employee.model.js");
-const AttendanceModel = require("../models/Attendance.model.js");
 const Holidays = require("../models/Holiday.model.js");
 const Leave = require("../models/Leave.model.js");
 const moment = require("moment");
 const ExcelJS = require("exceljs");
-const mongoose = require("mongoose");
 const multer = require("multer");
 const fs = require("fs");
 
-const apiHandler = new ApiCRUDController(AttendanceModel);
-const apiHandlerUSER = new ApiCRUDController(Employee);
-const { create } = apiHandler;
-const { readAllandPopulate } = apiHandlerUSER;
+// const apiHandler = new ApiCRUDController(AttendanceModel);
+// const apiHandlerUSER = new ApiCRUDController(Employee);
+// const { create } = apiHandler;
+// const { readAllandPopulate } = apiHandlerUSER;
 
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
@@ -579,7 +576,7 @@ const TotalEmployee = async (req, res, next) => {
 const updateAttendance = async (req, res, next) => {
   try {
     const updateby = req.user.userObjectId;
-    const { empid, date, status } = req.body;
+    const { empid, date, attendance } = req.body;
 
     if (!empid || !date || !updateby || status === undefined) {
       return res
@@ -613,12 +610,26 @@ const updateAttendance = async (req, res, next) => {
 
     let attendanceRecord = await Attendance.findOne({ empid, date: dateObj });
 
-    let attendance;
+    // let attendance;
 
-    if (status == "true") {
-      attendance = "present";
-    } else {
-      attendance = "absent";
+    // if (status == "true") {
+    //   attendance = "present";
+    // } else {
+    //   attendance = "absent";
+    // }
+
+    let status = [
+      "present",
+      "absent",
+      "half_leave",
+      "full_leave",
+      "quarter_leave"
+    ];
+
+    if (!status.includes(attendance)) {
+      return res
+        .status(400)
+        .json({ message: "please provid valid attendance" });
     }
 
     if (!attendanceRecord) {
