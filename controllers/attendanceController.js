@@ -577,8 +577,8 @@ const updateAttendance = async (req, res, next) => {
   try {
     const updateby = req.user.userObjectId;
     const { empid, date, attendance } = req.body;
-
-    if (!empid || !date || !updateby || status === undefined) {
+console.log(req.body)
+    if (!empid || !date || !attendance ) {
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
@@ -639,7 +639,7 @@ const updateAttendance = async (req, res, next) => {
 
     // Update existing record
     attendanceRecord.updateby = updateby;
-    attendanceRecord.status = status;
+    attendanceRecord.status = attendancevalue;
     await attendanceRecord.save();
 
     res.status(200).json({
