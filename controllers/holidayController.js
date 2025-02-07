@@ -269,7 +269,6 @@ module.exports.HolidayStatus = async (req, res) => {
 module.exports.List = async (req, res) => {
   try {
     const { holiday_status, year, country, state } = req.query;
-    // Set default values if not provided
     const currentYear = moment().format("YYYY");
     const defaultYear = year || currentYear;
     const defaultCountry = country || "India";
@@ -286,7 +285,6 @@ module.exports.List = async (req, res) => {
     }
 
     const list = await Holiday.find(query).sort({ date: 1 });
-    console.log(list, "holiday list");
 
     res.status(200).json({
       list

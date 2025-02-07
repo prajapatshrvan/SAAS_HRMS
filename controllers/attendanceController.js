@@ -143,58 +143,125 @@ const attendance = async (req, res, next) => {
   }
 };
 
-const attendanceReport = async (req, res, next) => {
+// const attendanceReport = async (req, res, next) => {
+//   try {
+//     const { month, year } = req.query;
+
+//     let firstDateOfMonth, lastDateOfMonth;
+
+//     if (month && year) {
+//       const yearInt = parseInt(year, 10);
+//       const monthInt = parseInt(month, 10) - 1;
+
+//       if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
+//         return res.status(400).json({ error: "Invalid year or month" });
+//       }
+
+//       firstDateOfMonth =
+//         monthInt === 0
+//           ? new Date(yearInt - 1, 11, 26)
+//           : new Date(yearInt, monthInt - 1, 26);
+//       lastDateOfMonth = new Date(yearInt, monthInt, 25);
+//     } else {
+//       const currentDate = new Date();
+//       const currentYear = currentDate.getFullYear();
+//       const currentMonth = currentDate.getMonth();
+
+//       firstDateOfMonth =
+//         currentMonth === 0
+//           ? new Date(currentYear - 1, 11, 26)
+//           : new Date(currentYear, currentMonth - 1, 26);
+//       lastDateOfMonth = new Date(currentYear, currentMonth, 25);
+//     }
+
+//     // Format dates for querying
+//     const formatDateToISOString = (date, startOfDay = true) => {
+//       const year = date.getFullYear();
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+
+//       const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
+//       return `${year}-${month}-${day}T${time}+00:00`;
+//     };
+
+//     const employees = await Employee.find({
+//       $or: [{ status: "completed" }, { status: "InNoticePeriod" }]
+//     });
+
+//     if (!employees.length) {
+//       return res.status(404).json({ message: "No employees found" });
+//     }
+
+//     let attendanceReportData = [];
+
+//     // Define status-color mapping
+//     const statusColors = {
+//       present: { short: "P", color: "#30991F" },
+//       absent: { short: "A", color: "#FF0606" },
+//       half_leave: { short: "HD", color: "#FFA800" },
+//       full_leave: { short: "L", color: "#0F137E" }
+//     };
+
+//     for (let employee of employees) {
+//       const attendanceRecords = await Attendance.find({
+//         empid: employee._id,
+//         date: {
+//           $gte: formatDateToISOString(firstDateOfMonth, true),
+//           $lte: formatDateToISOString(lastDateOfMonth, false)
+//         }
+//       });
+
+//       // Process attendance records
+//       let formattedAttendance = attendanceRecords.map(record => {
+//         const statusKey = record.status.toLowerCase();
+//         const statusInfo = statusColors[statusKey] || {
+//           short: record.status,
+//           color: "#000000"
+//         };
+
+//         return {
+//           date: record.date,
+//           status: statusInfo.short,
+//           color: statusInfo.color
+//         };
+//       });
+
+//       attendanceReportData.push({
+//         empid: employee._id,
+//         firstname: employee.firstname,
+//         middlename: employee.middlename,
+//         lastname: employee.lastname,
+//         name: `${employee.firstname} ${employee.lastname}`,
+//         attendance: formattedAttendance
+//       });
+//     }
+
+//     res.status(200).json(attendanceReportData);
+//   } catch (error) {
+//     console.error("Error generating attendance report:", error);
+//     res.status(500).json({
+//       error: "An error occurred while generating the attendance report."
+//     });
+//   }
+// };
+
+const attendanceReport = async (req, res) => {
   try {
     const { month, year } = req.query;
 
-    let firstDateOfMonth, lastDateOfMonth;
+    // Validate month & year
+    const yearInt = parseInt(year, 10);
+    const monthInt = parseInt(month, 10) - 1;
 
-    if (month && year) {
-      const yearInt = parseInt(year, 10);
-      const monthInt = parseInt(month, 10) - 1;
-
-      if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
-        return res.status(400).json({ error: "Invalid year or month" });
-      }
-
-      firstDateOfMonth =
-        monthInt === 0
-          ? new Date(yearInt - 1, 11, 26)
-          : new Date(yearInt, monthInt - 1, 26);
-      lastDateOfMonth = new Date(yearInt, monthInt, 25);
-    } else {
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth();
-
-      firstDateOfMonth =
-        currentMonth === 0
-          ? new Date(currentYear - 1, 11, 26)
-          : new Date(currentYear, currentMonth - 1, 26);
-      lastDateOfMonth = new Date(currentYear, currentMonth, 25);
+    if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 0 || monthInt > 11) {
+      return res.status(400).json({ error: "Invalid year or month" });
     }
 
-    // Format dates for querying
-    const formatDateToISOString = (date, startOfDay = true) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+    // Define date range
+    const firstDateOfMonth = new Date(yearInt, monthInt - 1, 26);
+    const lastDateOfMonth = new Date(yearInt, monthInt, 25);
 
-      const time = startOfDay ? "00:00:00.000" : "23:59:59.999";
-      return `${year}-${month}-${day}T${time}+00:00`;
-    };
-
-    const employees = await Employee.find({
-      $or: [{ status: "completed" }, { status: "InNoticePeriod" }]
-    });
-
-    if (!employees.length) {
-      return res.status(404).json({ message: "No employees found" });
-    }
-
-    let attendanceReportData = [];
-
-    // Define status-color mapping
+    // Status-color mapping
     const statusColors = {
       present: { short: "P", color: "#30991F" },
       absent: { short: "A", color: "#FF0606" },
@@ -202,39 +269,107 @@ const attendanceReport = async (req, res, next) => {
       full_leave: { short: "L", color: "#0F137E" }
     };
 
-    for (let employee of employees) {
-      const attendanceRecords = await Attendance.find({
-        empid: employee._id,
-        date: {
-          $gte: formatDateToISOString(firstDateOfMonth, true),
-          $lte: formatDateToISOString(lastDateOfMonth, false)
+    // MongoDB Aggregation Pipeline
+    const attendanceReportData = await Employee.aggregate([
+      {
+        $match: { status: { $in: ["completed", "InNoticePeriod"] } }
+      },
+
+      {
+        $lookup: {
+          from: "attendances",
+          localField: "_id",
+          foreignField: "empid",
+          pipeline: [
+            {
+              $match: {
+                date: { $gte: firstDateOfMonth, $lte: lastDateOfMonth }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                date: 1,
+                status: {
+                  $toLower: "$status"
+                }
+              }
+            }
+          ],
+          as: "attendance"
         }
-      });
-
-      // Process attendance records
-      let formattedAttendance = attendanceRecords.map(record => {
-        const statusKey = record.status.toLowerCase();
-        const statusInfo = statusColors[statusKey] || {
-          short: record.status,
-          color: "#000000"
-        };
-
-        return {
-          date: record.date,
-          status: statusInfo.short,
-          color: statusInfo.color
-        };
-      });
-
-      attendanceReportData.push({
-        empid: employee._id,
-        firstname: employee.firstname,
-        middlename: employee.middlename,
-        lastname: employee.lastname,
-        name: `${employee.firstname} ${employee.lastname}`,
-        attendance: formattedAttendance
-      });
-    }
+      },
+      {
+        $addFields: {
+          attendance: {
+            $map: {
+              input: "$attendance",
+              as: "record",
+              in: {
+                date: "$$record.date",
+                status: {
+                  $ifNull: [
+                    {
+                      $let: {
+                        vars: {
+                          mapping: {
+                            present: "P",
+                            absent: "A",
+                            half_leave: "HD",
+                            full_leave: "L"
+                          }
+                        },
+                        in: {
+                          $getField: {
+                            input: "$$mapping",
+                            field: "$$record.status"
+                          }
+                        }
+                      }
+                    },
+                    "$$record.status"
+                  ]
+                },
+                color: {
+                  $ifNull: [
+                    {
+                      $let: {
+                        vars: {
+                          mapping: {
+                            present: "#30991F",
+                            absent: "#FF0606",
+                            half_leave: "#FFA800",
+                            full_leave: "#0F137E"
+                          }
+                        },
+                        in: {
+                          $getField: {
+                            input: "$$mapping",
+                            field: "$$record.status"
+                          }
+                        }
+                      }
+                    },
+                    "#000000"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          empid: "$_id",
+          firstname: 1,
+          middlename: 1,
+          lastname: 1,
+          name: { $concat: ["$firstname", " ", "$lastname"] },
+          attendance: 1
+        }
+      }
+    ]);
 
     res.status(200).json(attendanceReportData);
   } catch (error) {
@@ -397,6 +532,10 @@ const TotalEmployee = async (req, res, next) => {
     const startOfDay = new Date(currentDate.setUTCHours(0, 0, 0, 0));
     const endOfDay = new Date(currentDate.setUTCHours(23, 59, 59, 999));
 
+    const totalEmployee = await Employee.countDocuments({
+      status: { $in: ["completed", "inNoticePeriod"] }
+    });
+
     const attendanceSummary = await Attendance.aggregate([
       {
         $match: {
@@ -424,6 +563,7 @@ const TotalEmployee = async (req, res, next) => {
     });
 
     res.status(200).json({
+      totalEmployeeCount: totalEmployee,
       TotalEmployeePresent: attendanceCounts.present,
       TotalEmployeeAbsent: attendanceCounts.absent,
       TotalEmployeeHalfDay: attendanceCounts.half_leave,
@@ -585,18 +725,18 @@ const biometricAttendance = async (req, res) => {
         const date = new Date(row.getCell(2).value);
         const status = row.getCell(3).value;
 
-        // const validStatuses = [
-        //   "present",
-        //   "absent",
-        //   "half_leave",
-        //   "full_leave",
-        //   "quarter_leave"
-        // ];
+        const validStatuses = [
+          "present",
+          "absent",
+          "half_leave",
+          "full_leave",
+          "quarter_leave"
+        ];
 
-        // if (!validStatuses.includes(status)) {
-        //   errors.push(`Invalid attendance status at row ${rowNumber}`);
-        //   return;
-        // }
+        if (!validStatuses.includes(status)) {
+          errors.push(`Invalid attendance status at row ${rowNumber}`);
+          return;
+        }
 
         if (empid && date && status) {
           attendanceRecords.push({
