@@ -610,26 +610,16 @@ const updateAttendance = async (req, res, next) => {
 
     let attendanceRecord = await Attendance.findOne({ empid, date: dateObj });
 
-    // let attendance;
+    let attendancevalue;
 
-    // if (status == "true") {
-    //   attendance = "present";
-    // } else {
-    //   attendance = "absent";
-    // }
-
-    let status = [
-      "present",
-      "absent",
-      "half_leave",
-      "full_leave",
-      "quarter_leave"
-    ];
-
-    if (!status.includes(attendance)) {
-      return res
-        .status(400)
-        .json({ message: "please provid valid attendance" });
+    if (attendance == "present") {
+      attendancevalue = "present";
+    } else if (attendance == "absent") {
+      attendancevalue = "absent";
+    } else if (attendance == "leave") {
+      attendancevalue = "full_leave";
+    } else if (attendance == "half_day") {
+      attendancevalue = "half_leave";
     }
 
     if (!attendanceRecord) {
@@ -637,7 +627,7 @@ const updateAttendance = async (req, res, next) => {
       await Attendance.create({
         empid,
         date: dateObj,
-        status: attendance,
+        status: attendancevalue,
         updateby
       });
 
