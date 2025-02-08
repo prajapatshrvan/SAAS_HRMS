@@ -477,6 +477,7 @@ const updateAttendance = async (req, res, next) => {
     const { empid, date, attendance } = req.body;
 
     if (!empid || !date || !attendance) {
+
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
