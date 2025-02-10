@@ -13,7 +13,7 @@ module.exports.Empdata = async (req, res) => {
     // console.log(startOfMonth, " startOfMonth");
     // console.log(endOfMonth, " endOfMonth");
 
-    const empCount = await Employee.find({
+    const empCount = await Employee.countDocuments({
       status: { $in: ["completed", "InNoticePeriod"] }
     });
 
@@ -33,11 +33,23 @@ module.exports.Empdata = async (req, res) => {
       }
     });
 
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const currentDate = new Date();
+
+    const probationPeriod = await Employee.countDocuments({
+      status: "completed",
+      joining_date: {
+        $gte: threeMonthsAgo,
+        $lte: currentDate
+      }
+    });
+
     res.status(200).json({
-      totalEmployeeCount: empCount.length,
+      totalEmployeeCount: empCount,
       totalnewOnboarding: newOnboarding,
-      totaloffOnboarding: offboarding
-      // probationPeriod: probationPeriod
+      totaloffOnboarding: offboarding,
+      probationPeriod: probationPeriod
     });
   } catch (error) {
     console.log(error);
@@ -188,12 +200,11 @@ module.exports.departmentCount = async (req, res) => {
   }
 };
 
+//monthly emplooye filter data
 
-//monthly emplooye filter data 
-
-module.exports.employeeMonthlyData = async (req , res) => {
-   const {month ,year} = req.body
-}
+module.exports.employeeMonthlyData = async (req, res) => {
+  const { month, year } = req.body;
+};
 
 module.exports.list = async (req, res) => {
   try {

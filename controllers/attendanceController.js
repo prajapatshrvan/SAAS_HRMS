@@ -7,11 +7,6 @@ const ExcelJS = require("exceljs");
 const multer = require("multer");
 const fs = require("fs");
 
-// const apiHandler = new ApiCRUDController(AttendanceModel);
-// const apiHandlerUSER = new ApiCRUDController(Employee);
-// const { create } = apiHandler;
-// const { readAllandPopulate } = apiHandlerUSER;
-
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
@@ -50,7 +45,6 @@ const uploadExcel = multer({
 const attendance = async (req, res, next) => {
   try {
     const requestData = req.body.attendance;
-
     if (!requestData || requestData.length === 0) {
       return res.status(400).send("Please send valid attendance data");
     }
@@ -66,21 +60,17 @@ const attendance = async (req, res, next) => {
         continue;
       }
 
-      // Convert date properly
       const attendanceDate = new Date(date);
       if (isNaN(attendanceDate.getTime())) {
         errors.push({ empid, message: "Invalid date format" });
         continue;
       }
       attendanceDate.setUTCHours(0, 0, 0, 0);
-
-      // Check if the date is within the last 7 days
       if (currentDate - attendanceDate > 7 * 24 * 60 * 60 * 1000) {
         errors.push({ empid, message: "Invalid date: Out of allowed range" });
         continue;
       }
 
-      // Fetch approved leave for the employee
       const leave = await Leave.findOne({
         empid,
         status: "approved",
@@ -97,7 +87,6 @@ const attendance = async (req, res, next) => {
             : "full_leave";
       }
 
-      // Check if attendance already exists
       const existingAttendance = await Attendance.findOne({
         empid,
         date: attendanceDate
@@ -144,7 +133,6 @@ const attendanceReport = async (req, res) => {
   try {
     const { month, year, search } = req.query;
 
-    // Validate month & year
     const yearInt = parseInt(year, 10);
     const monthInt = parseInt(month, 10) - 1;
 
@@ -152,7 +140,6 @@ const attendanceReport = async (req, res) => {
       return res.status(400).json({ error: "Invalid year or month" });
     }
 
-    // Define date range
     const firstDateOfMonth = new Date(yearInt, monthInt - 1, 26);
     const lastDateOfMonth = new Date(yearInt, monthInt, 25);
 
@@ -167,7 +154,6 @@ const attendanceReport = async (req, res) => {
       ];
     }
 
-    // MongoDB Aggregation Pipeline
     const attendanceReportData = await Employee.aggregate([
       { $match: matchStage },
       {
@@ -203,50 +189,50 @@ const attendanceReport = async (req, res) => {
               in: {
                 date: "$$record.date",
                 status: {
-                  $ifNull: [
-                    {
-                      $let: {
-                        vars: {
-                          mapping: {
-                            present: "P",
-                            absent: "A",
-                            half_leave: "HD",
-                            full_leave: "L"
-                          }
-                        },
-                        in: {
-                          $getField: {
-                            input: "$$mapping",
-                            field: "$$record.status"
-                          }
-                        }
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$$record.status", "present"] },
+                        then: "P"
+                      },
+                      {
+                        case: { $eq: ["$$record.status", "absent"] },
+                        then: "A"
+                      },
+                      {
+                        case: { $eq: ["$$record.status", "full_leave"] },
+                        then: "L"
+                      },
+                      {
+                        case: { $eq: ["$$record.status", "half_leave"] },
+                        then: "HD"
                       }
-                    },
-                    "$$record.status"
-                  ]
+                    ],
+                    default: { $literal: "$$record.status" }
+                  }
                 },
                 color: {
-                  $ifNull: [
-                    {
-                      $let: {
-                        vars: {
-                          mapping: {
-                            present: "#30991F",
-                            absent: "#FF0606",
-                            half_leave: "#FFA800",
-                            full_leave: "#0F137E"
-                          }
-                        },
-                        in: {
-                          $getField: {
-                            input: "$$mapping",
-                            field: "$$record.status"
-                          }
-                        }
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$$record.status", "present"] },
+                        then: "#30991F"
+                      },
+                      {
+                        case: { $eq: ["$$record.status", "absent"] },
+                        then: "#FF0606"
+                      },
+                      {
+                        case: { $eq: ["$$record.status", "full_leave"] },
+                        then: "#0F137E"
+                      },
+                      {
+                        case: { $eq: ["$$record.status", "half_leave"] },
+                        then: "#FFA800"
                       }
-                    },
-                    "#000000"
-                  ]
+                    ],
+                    default: "#000000"
+                  }
                 }
               }
             }
@@ -270,7 +256,7 @@ const attendanceReport = async (req, res) => {
   } catch (error) {
     console.error("Error generating attendance report:", error);
     res.status(500).json({
-      error: "An error occurred while generating the attendance report."
+      error: error.message
     });
   }
 };
