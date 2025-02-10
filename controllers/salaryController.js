@@ -122,15 +122,15 @@ const createSalary = async (req, res) => {
     const Month = moment().format("MM");
 
     // Check if salary already exists
-    // const existingSalary = await Salary.findOne({
-    //   month: Month,
-    //   year: Year
-    // }).lean();
-    // if (existingSalary) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: `Salary for ${Month}-${Year} Already Created.` });
-    // }
+    const existingSalary = await Salary.findOne({
+      month: Month,
+      year: Year
+    }).lean();
+    if (existingSalary) {
+      return res
+        .status(400)
+        .json({ message: `Salary for ${Month}-${Year} Already Created.` });
+    }
 
     const employees = await Employee.find({ status: "completed" }).lean();
     if (!employees.length) {
@@ -192,11 +192,20 @@ const createSalary = async (req, res) => {
         empAttendance.half_leave / 2;
 
       // Calculate working days (including Sundays)
+      // const STARTDATE =
+      //   emp.joining_date &&
+      //   (emp.joining_date.getMonth() === new Date().getMonth() &&
+      //     emp.joining_date.getFullYear() === new Date().getFullYear())
+      //     ? emp.joining_date
+      //     : startDate;
+
+      const joiningDate = emp.joining_date ? new Date(emp.joining_date) : null;
       const STARTDATE =
-        emp.joining_date &&
-        (emp.joining_date.getMonth() === new Date().getMonth() &&
-          emp.joining_date.getFullYear() === new Date().getFullYear())
-          ? emp.joining_date
+        joiningDate &&
+        !isNaN(joiningDate) &&
+        (joiningDate.getMonth() === new Date().getMonth() &&
+          joiningDate.getFullYear() === new Date().getFullYear())
+          ? joiningDate
           : startDate;
 
       const sundaysAndHolidays = countSundaysAndHolidays(
@@ -217,14 +226,26 @@ const createSalary = async (req, res) => {
       );
       const remainingDays = monthdays - remainingAbsent;
 
-      // Skip employees with missing salary details
+      // // Skip employees with missing salary details
+      // if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
+      //   console.error(`Skipping employee ${emp._id}: Missing salary details`);
+      //   continue;
+      // }
+
+      // const totalGrossSalary =
+      //   parseInt(emp.ctcDetails.monthlycompensation.replaceAll(",", "")) || 0;
+
       if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
         console.error(`Skipping employee ${emp._id}: Missing salary details`);
         continue;
       }
 
       const totalGrossSalary =
-        parseInt(emp.ctcDetails.monthlycompensation.replaceAll(",", "")) || 0;
+        parseInt(
+          String(emp.ctcDetails.monthlycompensation).replace(/,/g, ""),
+          10
+        ) || 0;
+
       const perDaySalary = (totalGrossSalary / monthdays).toFixed();
       const leaveDeduction = perDaySalary * remainingAbsent;
       const totalPaidAmount = totalPaidDays * perDaySalary;
@@ -289,7 +310,12 @@ const createSalary = async (req, res) => {
         year: parseInt(Year),
         salary_status: "pending",
         payment_status: false,
-        totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
+        // totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
+        totalCTC:
+          parseInt(
+            String(emp.ctcDetails.totalctc || "").replace(/,/g, ""),
+            10
+          ) || 0,
         basicSalary: parseInt(basicSalary) || 0,
         hra: 0,
         ta: 0,
@@ -315,7 +341,7 @@ const createSalary = async (req, res) => {
     }
 
     // Insert all salaries at once
-    // await Salary.insertMany(salaries);
+    await Salary.insertMany(salaries);
 
     return res.status(200).json({ message: "Salaries created successfully" });
   } catch (error) {
