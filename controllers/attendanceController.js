@@ -463,7 +463,6 @@ const updateAttendance = async (req, res, next) => {
     const { empid, date, attendance } = req.body;
 
     if (!empid || !date || !attendance) {
-
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
@@ -486,12 +485,12 @@ const updateAttendance = async (req, res, next) => {
       1
     );
 
-    if (dateObj < startOfMonth || dateObj > currentDate) {
-      return res.status(403).json({
-        success: false,
-        message: "Cannot update attendance record outside of the current month"
-      });
-    }
+    // if (dateObj < startOfMonth || dateObj > currentDate) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Cannot update attendance record outside of the current month"
+    //   });
+    // }
 
     let attendanceRecord = await Attendance.findOne({ empid, date: dateObj });
 

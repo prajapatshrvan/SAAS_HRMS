@@ -609,19 +609,22 @@ module.exports.EmployeeList = async (req, res) => {
         matchStage.$or = [
           {
             $and: [
-              { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
-              { lastname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { employeeID: { $regex: `^${String(nameParts[0])}`, $options: "i" } },
+              { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { lastname: { $regex: `^${nameParts[2]}`, $options: "i", $exists: true } },
             ],
           },
           {
             $and: [
-              { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
-              { lastname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+              { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+              { middlename: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { lastname: { $regex: `^${nameParts[2]}`, $options: "i" } },
             ],
           },
         ];
       } else {
         matchStage.$or = [
+          { employeeID: { $regex: `^${String(searchParam)}`, $options: "i" } },
           { firstname: { $regex: searchParam, $options: "i" } },
           { lastname: { $regex: searchParam, $options: "i" } },
         ];

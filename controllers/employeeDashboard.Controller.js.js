@@ -453,8 +453,6 @@ module.exports.workingHoursList = async (req, res) => {
       query.empid = currentUserId; 
     }
   
-
-
     const workingTimeData = await Workingtime.find(query).populate({
       path: "empid",
       select: "firstname lastname employeeID",
@@ -484,7 +482,7 @@ module.exports.workingHoursList = async (req, res) => {
         worktime: item.worktime || 0,
         breaktime: item.breaktime || 0,
       };
-    });
+     });
 
     // Send response with formatted data
     return res.status(200).json({
