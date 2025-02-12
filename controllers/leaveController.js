@@ -162,23 +162,38 @@ module.exports.ApprovedLeave = async (req, res) => {
       return res.status(404).json({ message: "Leave not found" });
     }
 
-    if (leave.session === "Session 1" || leave.session === "Session 2") {
-      let existingAttendance = await Attendance.findOne({
-        empid: leave.empid,
-        date:  leave.start_date
-      });
+    // if (leave.session === "Session 1" || leave.session === "Session 2") {
+    //   let existingAttendance = await Attendance.findOne({
+    //     empid: leave.empid,
+    //     date:  leave.start_date
+    //   });
 
-      if (existingAttendance) {
-        existingAttendance.status = "half_leave";
-        await existingAttendance.save();
-      } else {
-        await Attendance.create({
-          empid: leave.empid, 
-          date: leave.start_date, 
-          status: "half_leave"
-        });
-      }
-    }
+    //   if (existingAttendance) {
+    //     existingAttendance.status = "half_leave";
+    //     await existingAttendance.save();
+    //   } else {
+    //     await Attendance.create({
+    //       empid: leave.empid, 
+    //       date: leave.start_date, 
+    //       status: "half_leave"
+    //     });
+    //   }
+    // }
+ 
+
+    if (leave.session === "Session 1" || leave.session === "Session 2") {
+      await Attendance.findOneAndUpdate(
+          { empid: leave.empid, date: leave.start_date },
+          { status: "half_leave" },
+          { upsert: true, new: true } 
+      );
+  } else {
+      await Attendance.updateMany(
+          { empid: leave.empid, date: { $gte: leave.start_date, $lte: leave.end_date } },
+          { $set: { status: "full_leave" } } 
+      );
+  }
+  
 
     // Update leave status
     await Leave.findByIdAndUpdate(leaveid, { approvedBy, status }, { new: true });
