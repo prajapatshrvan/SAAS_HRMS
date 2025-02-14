@@ -141,7 +141,7 @@ const attendanceReport = async (req, res) => {
     }
 
     const firstDateOfMonth = new Date(yearInt, monthInt - 1, 26);
-    const lastDateOfMonth = new Date(yearInt, monthInt, 25);
+    const lastDateOfMonth = new Date(yearInt, monthInt, 26);
 
     const matchStage = {
       status: { $in: ["completed", "InNoticePeriod"] }
