@@ -16,6 +16,7 @@ const bcrypt = require("bcrypt");
 const logger = require("../helpers/logger.js");
 const generatePassword = require("../utility/generatePassword.js");
 const { CLIENT_RENEG_LIMIT } = require("tls");
+const Company = require("../models/Company.model");
 require("dotenv").config();
 
 const upload = multer({
@@ -48,6 +49,22 @@ const updateupload = multer({
     name: "pan_image"
   }
 ]);
+
+
+module.exports.companyList = async (req, res, next) => {
+  try {
+    const company = await Company.find()
+    if(!company){
+      return res.status(400).json({message : "Data not found"})
+    }
+      return res.status(200).json({
+        data: company,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to update Employee" });
+  }
+};
 
 module.exports.EmployeeAdd = async (req, res, next) => {
   upload(req, res, async (err) => {
@@ -313,9 +330,6 @@ module.exports.updateEmployee = async (req, res, next) => {
         uan_number
       };
 
- 
-
-      
 
       if (req.files.image && req.files.image[0]) {
         if (fs.existsSync(emp.image)) {
