@@ -31,7 +31,15 @@ const offboardingSchema = new mongoose.Schema(
     offboarding_status: {
       type: String,
       default: "pending",
-      enum: ["pending", "approved", "rejected", "cancelled", "InNoticePeriod", "completed"]
+      enum: [
+        "pending",
+        "approved",
+        "rejected",
+        "cancelled",
+        "InNoticePeriod",
+        "completed",
+        "closing"
+      ]
     },
     cooling_period: {
       type: String
