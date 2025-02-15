@@ -106,43 +106,6 @@ module.exports.EmpCurrectMonthsData = async (req, res) => {
   }
 };
 
-// module.exports.workingHoursList = async (req, res) => {
-//   try {
-//     const workinghoursList = await Workingtime.find().populate({
-//       path: "empid",
-//       select: "firstname lastname employeeID"
-//     });
-
-//     const formattedList = workinghoursList.map((item) => {
-//       const checkInTime = new Date(item.checkInTime);
-//       const checkOutTime = new Date(item.checkOutTime);
-//       const durationMs = checkOutTime - checkInTime;
-//       const hours = Math.floor(durationMs / (1000 * 60 * 60));
-//       const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-//       const seconds = Math.floor((durationMs % (1000 * 60)) / 1000);
-//       const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-//       const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-//       const formattedWorkingHours = `${hours}:${formattedMinutes}:${formattedSeconds}`;
-//       return {
-//         employeeID: item.empid.employeeID,
-//         firstname: item.empid.firstname,
-//         lastname: item.empid.lastname,
-//         date: item.date,
-//         workingHours: formattedWorkingHours
-//       };
-//     });
-
-//     return res.status(200).json({
-//       workinghoursList: formattedList
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       message: "Internal Server Error"
-//     });
-//   }
-// };
-
 module.exports.empdata = async (req, res) => {
   try {
     const empId = req.user.userObjectId;
@@ -453,8 +416,6 @@ module.exports.workingHoursList = async (req, res) => {
       query.empid = currentUserId; 
     }
   
-
-
     const workingTimeData = await Workingtime.find(query).populate({
       path: "empid",
       select: "firstname lastname employeeID",
@@ -484,7 +445,7 @@ module.exports.workingHoursList = async (req, res) => {
         worktime: item.worktime || 0,
         breaktime: item.breaktime || 0,
       };
-    });
+     });
 
     // Send response with formatted data
     return res.status(200).json({
@@ -526,20 +487,50 @@ module.exports.BirthdaysCurrentDay = async (req, res) => {
 module.exports.BirthdaysCurrentMonth = async (req, res) => {
   try {
     const currentDate = new Date();
-
     const currentMonth = currentDate.getMonth() + 1; 
     const currentDay = currentDate.getDate(); 
 
-
-    const birthdays = await Employee.find({
-      $expr: {
-        $and: [
-
-          { $eq: [{ $month: { $dateFromString: { dateString: "$originalDob" } } }, currentMonth] }, // Filter by month
-          { $gt: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, currentDay] } // Filter by day
-        ]
+    const birthdays = await Employee.aggregate([
+      {
+        $match: {
+          status: "completed",
+          $expr: {
+            $and: [
+              {
+                $eq: [
+                  { $month: { $dateFromString: { dateString: "$originalDob" } } },
+                  currentMonth
+                ]
+              }, 
+              {
+                $gt: [
+                  { $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } },
+                  currentDay
+                ]
+              } 
+            ]
+          }
+        }
+      },
+      {
+        $set: {
+          dayOfMonth: { $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }
+        }
+      },
+      {
+        $sort: { dayOfMonth: 1 } 
+      },
+      {
+        $project: {
+          firstname: 1,
+          lastname: 1,
+          middlename: 1,
+          image: 1,
+          originalDob: 1,
+          profile: 1
+        }
       }
-    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1 ,profile:1});
+    ]);
    
     return res.status(200).json({
       data: birthdays,
@@ -556,21 +547,34 @@ module.exports.BirthdaysCurrentMonth = async (req, res) => {
 module.exports.Work_Anniversary = async (req, res) => {
   try {
     const today = new Date();
-    const day = today.getDate('00');
-    const month = today.getMonth('00') + 1;
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
 
-    const work_anniversaries = await Employee.find(
+    const work_anniversaries = await Employee.aggregate([
       {
-        status: "completed",
-        $expr: {
-          $and: [
-            { $eq: [{ $month: "$createdAt" }, month] },
-            { $eq: [{ $dayOfMonth: "$createdAt" }, day] }
-          ]
+        $match: {
+          status: "completed",
+          $expr: {
+            $and: [
+              { $eq: [{ $month: "$joining_date" }, month] },
+              { $eq: [{ $dayOfMonth: "$joining_date" }, day] }
+            ]
+          }
         }
       },
-      "firstname lastname createdAt" 
-    );
+      {
+        $sort: { joining_date: 1 } 
+      },
+      {
+        $project: {
+          firstname: 1,
+          lastname: 1,
+          joining_date: 1,
+          createdAt: 1
+        }
+      }
+    ]);
+
 
     return res.status(200).json({
       success: true,
@@ -585,7 +589,7 @@ module.exports.Work_Anniversary = async (req, res) => {
     });
   }
 };
- 
+
 module.exports.Week_Working_Hours_List = async (req, res) => {
   try {
     const currentUserId = req.user?.userObjectId;
@@ -652,63 +656,6 @@ module.exports.Week_Working_Hours_List = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-
-
-// module.exports.workingHoursCountList = async (req, res) => {
-//   try {
-//     const empid = req.user?.userObjectId;
-
-//     const currentMonth = moment().month() + 1;
-
-//     const query = {
-//       empid: empid,
-//       $expr: {
-//         $eq: [{ $month: { $dateFromString: { dateString: "$date" } } }, currentMonth],
-//       },
-//     };
-
-//     const workingTimeData = await Workingtime.find(query);
-
-//     // if (!workingTimeData.length) {
-//     //   return res.status(404).json({
-//     //     message: "No working time data found for the current month.",
-//     //     data: [],
-//     //   });
-//     // }
-
-//     // Initialize counters
-//     let totalWorkingHours = 0;
-//     let totalOvertime = 0;
-//     let totalBreakTime = 0;
-
-//     // Loop through the data and calculate totals
-//     workingTimeData.forEach((entry) => {
-//       totalWorkingHours += entry.worktime || 0;
-//       totalOvertime += entry.overtime || 0;
-//       totalBreakTime += entry.breaktime || 0;
-//     });
-
-
-//     // Format the response data
-//     const formattedData = {
-//       totalWorkingHours,
-//       totalOvertime,
-//       totalBreakTime
-//     };
-
-//     // Respond with success
-//     return res.status(200).json({
-//       message: "Working time data retrieved successfully.",
-//       data: formattedData,
-//     });
-//   } catch (error) {
-//     console.error("Error in workingHoursList:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
-
-
 
 module.exports.workingHoursCountList = async (req, res) => {
   try {

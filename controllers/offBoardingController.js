@@ -68,7 +68,8 @@ module.exports.Status = async (req, res) => {
       "rejected",
       "cancelled",
       "InNoticePeriod",
-      "completed"
+      "completed",
+      "closing"
     ];
 
     const data = await Offboarding.findById(id);
@@ -92,7 +93,7 @@ module.exports.Status = async (req, res) => {
       } else if (status == "approved") {
         employee.status = "InNoticePeriod";
         await employee.save();
-      } else if (status == "InNoticePeriod") employee.status = "remove";
+      } else if (status == "close") employee.status = "close";
       await employee.save();
       return res.status(200).json({
         message: `Offboarding status updated to ${status}`

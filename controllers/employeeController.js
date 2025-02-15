@@ -76,7 +76,10 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         family_member_email,
         marital_status,
         profile,
-        joining_date
+        joining_date,
+        pf_number,
+        company_name,
+        uan_number,
     
       } = req.body;
 
@@ -191,7 +194,10 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         family_member_email,
         profile,
         marital_status,
-        joining_date
+        joining_date,
+        pf_number,
+        company_name,
+        uan_number
       });
 
       const data = await employee.save();
@@ -232,6 +238,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         originalDob,
         gender,
         email,
+        company_email,
         mobile_number,
         emergency_number,
         aadharcard_no,
@@ -243,7 +250,10 @@ module.exports.updateEmployee = async (req, res, next) => {
         family_member_phone,
         family_member_email,
         marital_status,
-        joining_date
+        joining_date,
+        pf_number,
+        company_name,
+        uan_number
       } = req.body;
 
       
@@ -285,6 +295,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         originalDob,
         gender,
         email,
+        company_email,
         mobile_number,
         emergency_number,
         aadharcard_no,
@@ -296,7 +307,10 @@ module.exports.updateEmployee = async (req, res, next) => {
         family_member_phone,
         family_member_email,
         marital_status,
-        joining_date
+        joining_date,
+        pf_number,
+        company_name,
+        uan_number
       };
 
  
@@ -342,7 +356,6 @@ module.exports.updateEmployee = async (req, res, next) => {
     return res.status(500).json({ message: "Failed to update Employee" });
   }
 };
-
 
 module.exports.EmployeeAddress = async (req, res, next) => {
   try {
@@ -578,9 +591,6 @@ let modifyEmpData = (alldata, req) => {
   return newData;
 };
 
-
-
-
 module.exports.EmployeeList = async (req, res) => {
   let statusParam = req.query.status;
   let searchParam = req.query.search;
@@ -609,19 +619,22 @@ module.exports.EmployeeList = async (req, res) => {
         matchStage.$or = [
           {
             $and: [
-              { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
-              { lastname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { employeeID: { $regex: `^${String(nameParts[0])}`, $options: "i" } },
+              { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { lastname: { $regex: `^${nameParts[2]}`, $options: "i", $exists: true } },
             ],
           },
           {
             $and: [
-              { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
-              { lastname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+              { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+              { middlename: { $regex: `^${nameParts[1]}`, $options: "i" } },
+              { lastname: { $regex: `^${nameParts[2]}`, $options: "i" } },
             ],
           },
         ];
       } else {
         matchStage.$or = [
+          { employeeID: { $regex: `^${String(searchParam)}`, $options: "i" } },
           { firstname: { $regex: searchParam, $options: "i" } },
           { lastname: { $regex: searchParam, $options: "i" } },
         ];
@@ -689,33 +702,49 @@ module.exports.EmployeeList = async (req, res) => {
   }
 };
 
-
-
+const calculateLeaves = (joiningDate) => {
+  const joinMonth = new Date(joiningDate).getMonth() + 1; 
+  console.log(joinMonth,"joinMonth")
+  return 13 - joinMonth; 
+};
+   
 // employee status
 module.exports.employeeStatus = async (req, res) => {
   try {
     const { empid, status } = req.body;
-    let statuses = ["approved", "rejected", "completed", "InProbation", "InNoticePeriod", "Relieved"];
-    if (statuses.includes(status)) {
-      let data = await Employee.findByIdAndUpdate(empid, {
-        $set: { status: status }
-      });
-      res.status(200).json({
-        message: `status ${status} successfully`,
-        data
-      });
-    } else {
-      res.status(200).json({
-        message: "invalid status"
-      });
+    const validStatuses = new Set([
+      "approved", "rejected", "completed", "InProbation", "InNoticePeriod", "close"
+    ]);
+
+    if (!validStatuses.has(status)) {
+      return res.status(400).json({ message: "Invalid status" });
     }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Internal server error"
+
+    const employee = await Employee.findById(empid);
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
+    const totalLeave = calculateLeaves(joiningDate);
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      empid,
+      { $set: { status, totalLeave } },
+      { new: true } 
+    );
+
+    res.status(200).json({
+      message: `Status updated to ${status} successfully`,
+      data: updatedEmployee
     });
+
+  } catch (error) {
+    console.error("Error updating employee status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 module.exports.addctcdetails = async (req, res) => {
   try {
@@ -930,143 +959,7 @@ module.exports.Employeedocument = async (req, res, next) => {
 };
 
 
-// module.exports.Employeedocument = async (req, res, next) => {
-//   uploaddoc(req, res, async (err) => {
-//     try {
-//       // Handle file upload errors
-//       if (err) {
-//         const failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
-//         return next({
-//           message: `File upload failed for fields: ${failedFields.join(", ") || "unknown fields"}`,
-//           status: 400,
-//           error: err.message
-//         });
-//       }
 
-//       // Destructure body parameters
-//       const {
-//         empid,
-//         secondary_passing,
-//         senior_passing,
-//         bachelor_passing,
-//         undergraduate_passing,
-//         extraExperience,
-//         extraData,
-//         companyname,
-//         compensation,
-//         experienceletter,
-//         offerletter,
-//         start_date,
-//         end_date,
-//         payslip,
-//         relievingletter,
-//         resignationletter
-//       } = req.body;
-
-//       // Fetch employee data
-//       const empdata = await Employee.findById(empid);
-//       if (!empdata) {
-//         return res.status(404).json({ error: "Employee not found" });
-//       }
-
-//       const empId = empdata._id;
-//       const empDocs = await EmpDocument.findOne({ empid: empId });
-
-//       // Parse extra experience and extra data
-//       const extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
-//       const extra = extraData ? JSON.parse(extraData) : [];
-//       const uploadedFiles = {};
-
-//       // Process uploaded files and map them to the correct fields
-//       req.files.forEach((file) => {
-//         const filePath = `uploads/${empdata.employeeID}/${file.filename}`;
-//         uploadedFiles[file.fieldname] = filePath;
-
-//         // Update extra experience and extra data with file paths
-//         extra.forEach((item) => {
-//           if (file.fieldname === item.degreeField) {
-//             item.degreefile = filePath;
-//           }
-//         });
-
-//         extraExperienceData.forEach((item) => {
-//           Object.keys(item).forEach((key) => {
-//             if (key === file.fieldname) {
-//               item[key] = filePath;
-//             }
-//           });
-//         });
-//       });
-
-//       // Prepare data to update
-//       const setUpdateData = {
-//         secondary_passing,
-//         senior_passing,
-//         bachelor_passing,
-//         undergraduate_passing,
-//         extraExperienceData,
-//         extra,
-//         ...uploadedFiles,
-//       };
-
-
-//       if (companyname) {
-//         setUpdateData.companyname = companyname;
-//         setUpdateData.start_date = start_date;
-//         setUpdateData.end_date = end_date;
-//       }
-
-//       // Experience-related files
-//       const expFiles = [
-//         "compensation",
-//         "experienceletter",
-//         "offerletter",
-//         "payslip",
-//         "relievingletter",
-//         "resignationletter"
-//       ];
-
-//       let experienceData = {};
-
-//       expFiles.forEach((file) => {
-//         if (uploadedFiles[file]) {
-//           experienceData[file] = uploadedFiles[file];
-//         }
-//       });
-
-
-//       // If there are experience files, include them in the data
-//       if (Object.keys(experienceData).length > 0) {
-//         setUpdateData.experienceData = { ...experienceData, companyname, start_date, end_date };
-//       }
-
-//       let empDocument;
-//       if (empDocs) {
-//         empDocument = await EmpDocument.findOneAndUpdate(
-//           { empid: empId },
-//           { $set: setUpdateData },
-//           { new: true, upsert: true }
-//         );
-//       } else {
-//         empDocument = new EmpDocument({
-//           empid: empId,
-//           ...setUpdateData
-//         });
-//         await empDocument.save();
-//       }
-
-//       return res.status(201).json({
-//         message: "Employee document uploaded successfully",
-//         data: empDocument,
-//       });
-//     } catch (error) {
-//       console.error("Internal server error", error);
-//       return res.status(500).json({
-//         message: "Internal server error",
-//       });
-//     }
-//   });
-// };
 
 
 

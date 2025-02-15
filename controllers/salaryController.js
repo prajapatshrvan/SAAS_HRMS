@@ -23,22 +23,28 @@ const leave_carry_forward = async (empid, absent) => {
 
     let cfLeave = employee.cf || 0;
     let remainingAbsent = absent;
+    let deductedCfLeave = 0;
+
+    // Increase CF leave by 1
+    cfLeave += 1;
 
     if (absent > 0) {
       if (cfLeave >= absent) {
+        deductedCfLeave = absent;
         cfLeave -= absent;
         remainingAbsent = 0;
       } else {
+        deductedCfLeave = cfLeave;
         remainingAbsent -= cfLeave;
         cfLeave = 0;
       }
-    } else {
-      cfLeave += 1;
     }
+
     await Employee.findByIdAndUpdate(empid, { cf: cfLeave }, { new: true });
 
     return {
       updatedCfLeave: cfLeave,
+      deductedCfLeave,
       remainingAbsent
     };
   } catch (error) {
@@ -48,36 +54,20 @@ const leave_carry_forward = async (empid, absent) => {
 };
 
 const calculateSalaryComponents = totalPaidAmount => {
-  const basicSalary = totalPaidAmount * 30 / 100;
+  const basicSalary = (totalPaidAmount * 30 / 100).toFixed(2);
   // const hra = totalPaidAmount * 25 / 100;
   //  const ta = totalPaidAmount * 10 / 100;
   //  const da = totalPaidAmount * 10 / 100;
   // const other = totalPaidAmount * 25 / 100;
 
   return {
-    basicSalary: parseFloat(basicSalary.toFixed())
+    basicSalary: parseFloat(basicSalary)
     // hra: parseFloat(hra.toFixed(2)),
     //  ta: parseFloat(ta.toFixed(2)),
     //  da: parseFloat(da.toFixed(2)),
     // other: parseFloat(other.toFixed(2))
   };
 };
-
-// function countSundays(startDate, endDate, holiday) {
-//   let start = new Date(startDate);
-//   let end = new Date(endDate);
-//   let count = 0;
-
-//   while (start <= end) {
-//     if (start.getDay() === 0) {
-//       // Sunday is represented by 0
-//       count++;
-//     }
-//     start.setDate(start.getDate() + 1); // Move to the next day
-//   }
-
-//   return count;
-// }
 
 function countSundaysAndHolidays(startDate, endDate, holidays) {
   let start = new Date(startDate);
@@ -191,14 +181,6 @@ const createSalary = async (req, res) => {
         empAttendance.full_leave +
         empAttendance.half_leave / 2;
 
-      // Calculate working days (including Sundays)
-      // const STARTDATE =
-      //   emp.joining_date &&
-      //   (emp.joining_date.getMonth() === new Date().getMonth() &&
-      //     emp.joining_date.getFullYear() === new Date().getFullYear())
-      //     ? emp.joining_date
-      //     : startDate;
-
       const joiningDate = emp.joining_date ? new Date(emp.joining_date) : null;
       const STARTDATE =
         joiningDate &&
@@ -214,50 +196,46 @@ const createSalary = async (req, res) => {
         holiday
       );
 
-      // console.log(sundaysAndHolidays, "sundaysAndHolidays");
-
-      const workingDayCount = empAttendance.present;
-      const totalPaidDays = sundaysAndHolidays + workingDayCount;
-
       // Handle leave carry forward
-      const { remainingAbsent } = await leave_carry_forward(
+      const { remainingAbsent, deductedCfLeave } = await leave_carry_forward(
         emp._id,
         totalAbsent
       );
-      const remainingDays = monthdays - remainingAbsent;
 
-      // // Skip employees with missing salary details
-      // if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
-      //   console.error(`Skipping employee ${emp._id}: Missing salary details`);
-      //   continue;
-      // }
+      const workingDayCount =
+        empAttendance.present +
+        (empAttendance.half_leave
+          ? parseFloat(empAttendance.half_leave / 2)
+          : 0);
 
-      // const totalGrossSalary =
-      //   parseInt(emp.ctcDetails.monthlycompensation.replaceAll(",", "")) || 0;
+      const totalPaidDays =
+        sundaysAndHolidays + workingDayCount + deductedCfLeave;
 
-      if (!emp.ctcDetails || !parseInt(emp.ctcDetails.monthlycompensation)) {
-        console.error(`Skipping employee ${emp._id}: Missing salary details`);
+      const remainingDays = parseFloat(monthdays - remainingAbsent);
+
+      if (!emp.ctcDetails || !parseFloat(emp.ctcDetails.monthlycompensation)) {
+        // console.error(`Skipping employee ${emp._id}: Missing salary details`);
         continue;
       }
 
       const totalGrossSalary =
-        parseInt(
+        parseFloat(
           String(emp.ctcDetails.monthlycompensation).replace(/,/g, ""),
           10
         ) || 0;
 
-      const perDaySalary = (totalGrossSalary / monthdays).toFixed();
-      const leaveDeduction = perDaySalary * remainingAbsent;
-      const totalPaidAmount = totalPaidDays * perDaySalary;
+      const perDaySalary = (totalGrossSalary / monthdays).toFixed(2);
+      const leaveDeduction = (perDaySalary * remainingAbsent).toFixed(2);
+      const totalPaidAmount = (totalPaidDays * perDaySalary).toFixed(2);
 
       // Salary Component Calculation
       const { basicSalary } = calculateSalaryComponents(totalPaidAmount);
-      const pf = (totalPaidAmount * 0.3 * 0.24).toFixed();
+      const pf = (totalPaidAmount * 0.3 * 0.24).toFixed(2);
       let esi =
-        totalGrossSalary < 21000 ? (totalPaidAmount * 0.04).toFixed() : 0;
+        totalGrossSalary < 21000 ? (totalPaidAmount * 0.04).toFixed(2) : 0;
       let netSalary = parseFloat(
         totalPaidAmount - (parseFloat(pf) - parseFloat(esi))
-      ).toFixed();
+      ).toFixed(2);
       netSalary = isNaN(netSalary) ? 0 : netSalary;
 
       const advanceSalary = await AdvanceSalary.findOne({
@@ -292,7 +270,7 @@ const createSalary = async (req, res) => {
       const totalDeduction = (parseFloat(pf) +
         parseFloat(esi) +
         parseFloat(leaveDeduction) +
-        parseFloat(advanceDeduction)).toFixed();
+        parseFloat(advanceDeduction)).toFixed(2);
 
       // Push salary data
       salaries.push({
@@ -312,11 +290,11 @@ const createSalary = async (req, res) => {
         payment_status: false,
         // totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
         totalCTC:
-          parseInt(
+          parseFloat(
             String(emp.ctcDetails.totalctc || "").replace(/,/g, ""),
             10
           ) || 0,
-        basicSalary: parseInt(basicSalary) || 0,
+        basicSalary: parseFloat(basicSalary) || 0,
         hra: 0,
         ta: 0,
         da: 0,
@@ -324,19 +302,19 @@ const createSalary = async (req, res) => {
         paydays: parseInt(totalPaidDays),
         pf: parseFloat(pf) || 0,
         esi: parseFloat(esi) || 0,
-        countPardaysalary: parseFloat(perDaySalary) || 0,
-        remainingDays: parseInt(remainingDays),
-        presentDay: parseInt(workingDayCount),
-        totalLeave: parseInt(totalAbsent) || 0,
-        unpaidLeave: parseInt(remainingAbsent),
-        netSalary: parseInt(netSalary),
-        grossSalary: parseInt(totalPaidAmount.toFixed()),
-        totalGrossSalary: parseInt(totalGrossSalary.toFixed()),
-        totalnetsalary: parseInt(netSalary),
-        leaveDeduction: parseFloat(leaveDeduction) || 0,
-        advanceSalary: parseFloat(advanceDeduction) || 0,
+        countPardaysalary: perDaySalary || 0,
+        remainingDays: remainingDays,
+        presentDay: totalPaidDays,
+        totalLeave: totalAbsent || 0,
+        unpaidLeave: remainingAbsent,
+        netSalary: netSalary,
+        grossSalary: totalPaidAmount,
+        totalGrossSalary: totalGrossSalary.toFixed(2),
+        totalnetsalary: netSalary,
+        leaveDeduction: leaveDeduction || 0,
+        advanceSalary: advanceDeduction || 0,
         miscellaneous: 0,
-        totaldeduction: parseFloat(totalDeduction) || 0
+        totaldeduction: totalDeduction || 0
       });
     }
 
