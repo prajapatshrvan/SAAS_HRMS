@@ -26,5 +26,6 @@ router.get("/candidatedocuments/:empid", auth, candidateDocuments);
 router.get("/candidateAllData/:empid", auth, candidateAllData);
 // router.get("/employeedetails/:email", auth, employee.employeeDetails);
 // router.get("/employeedocs/:empId", auth, employee.employeeDocs);
+router.get("/company_list", auth, employee.companyList);
 
 module.exports = router;
