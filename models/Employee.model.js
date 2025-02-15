@@ -63,6 +63,10 @@ const EmployeeSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    totalLeave: {
+      type: Number,
+      default: 0
+    },
     marital_status: {
       type: String,
       // enum: ["Married", "Unmarried", "Other"],
@@ -239,7 +243,19 @@ const EmployeeSchema = new mongoose.Schema(
         type: String,
         default: null
       }
-    ]
+    ],
+    pf_number: {
+      type: Number,
+      default: null
+    },
+    company_name: {
+      type: String,
+      default: null
+    },
+    uan_number: {
+      type: Number,
+      default: null
+    }
   },
   {
     timestamps: true
