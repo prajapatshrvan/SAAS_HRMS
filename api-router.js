@@ -22,6 +22,7 @@ const employeedashboard = require("./routers/employeeDashboard.router");
 const hrdashboard = require("./routers/hrdashboad.router");
 const headerAndfooter = require("./routers/header.footer.router");
 const metaData = require("./routers/metadata.router");
+const role = require("./routers/role.router");
 
 const apiRouter = app => {
   app.use(user);
@@ -46,5 +47,6 @@ const apiRouter = app => {
   app.use(employeedashboard);
   app.use(hrdashboard);
   app.use(headerAndfooter);
+  app.use(role);
 };
 module.exports = apiRouter;

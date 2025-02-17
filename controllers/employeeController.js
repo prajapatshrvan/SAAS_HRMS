@@ -97,10 +97,11 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         pf_number,
         company_name,
         uan_number,
+        role
     
       } = req.body;
 
-      // Capitalize function for first letters
+
       const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
 
       const capFirstName = capitalize(firstname);
@@ -141,7 +142,8 @@ module.exports.EmployeeAdd = async (req, res, next) => {
           valid: Validation.pan_Regex.test(pancard_no.toUpperCase()),
           field: "pancard_no",
           message: "Please provide a valid PAN card number"
-        }
+        },
+        
       ];
 
       validations.forEach(({ valid, field, message }) => {
@@ -214,7 +216,8 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         joining_date,
         pf_number,
         company_name,
-        uan_number
+        uan_number,
+        role
       });
 
       const data = await employee.save();
@@ -270,7 +273,8 @@ module.exports.updateEmployee = async (req, res, next) => {
         joining_date,
         pf_number,
         company_name,
-        uan_number
+        uan_number,
+        role
       } = req.body;
 
       
@@ -327,7 +331,8 @@ module.exports.updateEmployee = async (req, res, next) => {
         joining_date,
         pf_number,
         company_name,
-        uan_number
+        uan_number,
+        role
       };
 
 
@@ -740,6 +745,7 @@ module.exports.employeeStatus = async (req, res) => {
     }
 
     const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
+    
     const totalLeave = calculateLeaves(joiningDate);
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
@@ -824,6 +830,7 @@ module.exports.addctcdetails = async (req, res) => {
     });
   }
 };
+
 
 module.exports.Employeedocument = async (req, res, next) => {
   uploaddoc(req, res, async (err) => {
