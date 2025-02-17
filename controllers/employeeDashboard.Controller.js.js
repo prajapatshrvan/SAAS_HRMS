@@ -18,7 +18,7 @@ module.exports.personalInfo = async (req, res) => {
       FullName: fullName,
       Designation: info.designation,
       EmployeeID: info.employeeID,
-      JoiningDate: info.createdAt,
+      // JoiningDate: info.createdAt,
       Department: info.department,
       info
     });
