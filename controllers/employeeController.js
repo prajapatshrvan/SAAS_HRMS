@@ -722,15 +722,24 @@ module.exports.EmployeeList = async (req, res) => {
 };
 
 const calculateLeaves = (joiningDate) => {
-  const joinMonth = new Date(joiningDate).getMonth() + 1; 
-  console.log(joinMonth,"joinMonth")
-  return 13 - joinMonth; 
+  const joinDate = new Date(joiningDate);
+  const currentYear = new Date().getFullYear();
+  
+  if (joinDate.getFullYear() === currentYear) {
+    const joinMonth = joinDate.getMonth() + 1; 
+    return 13 - joinMonth; 
+  } 
+  
+  return 12; 
 };
+
    
 // employee status
 module.exports.employeeStatus = async (req, res) => {
   try {
     const { empid, status } = req.body;
+
+    console.log(req.body,"saloni@singhsoft.com")
     const validStatuses = new Set([
       "approved", "rejected", "completed", "InProbation", "InNoticePeriod", "close"
     ]);
@@ -745,12 +754,15 @@ module.exports.employeeStatus = async (req, res) => {
     }
 
     const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
+
+    console.log(joiningDate,"joiningDate")
     
     const totalLeave = calculateLeaves(joiningDate);
 
+    console.log(totalLeave,"totalLeave")
     const updatedEmployee = await Employee.findByIdAndUpdate(
       empid,
-      { $set: { status, totalLeave } },
+      { $set: { status : status, totalLeave : totalLeave } },
       { new: true } 
     );
 
