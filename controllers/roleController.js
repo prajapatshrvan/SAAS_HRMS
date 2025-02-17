@@ -7,7 +7,7 @@ module.exports.AddRole = async (req, res) => {
     const existingRole = await Role.findOne({ role: req.body.role });
     if (existingRole) {
       return res.status(400).json({
-        message: roleLabels.role_exist_message,
+        message: roleLabels.role_exist_message
       });
     } else {
       let rolekey = 1;
@@ -21,50 +21,55 @@ module.exports.AddRole = async (req, res) => {
 
       const newRole = new Role({
         rolekey: rolekey,
-        role: req.body.role,
+        role: req.body.role
       });
 
-      const existingInherits = await Resources.findOne({ inherits: req.body.inherits });
+      const existingInherits = await Resources.findOne({
+        inherits: req.body.inherits
+      });
       if (existingInherits) {
         return res.status(400).json({
-          message: roleLabels.role_exist_message,
+          message: roleLabels.role_exist_message
         });
       } else {
         const resources = new Resources({
           role_name: req.body.role,
           resources: {
             name: onboarding,
-            action: ["create", "view"],
+            action: ["create", "view"]
           },
-          inherits: req.body.inherits,
+          inherits: req.body.inherits
         });
 
         await newRole.save();
         await resources.save();
 
         return res.status(200).json({
-          message: roleLabels.role_create_message,
+          message: roleLabels.role_create_message
         });
       }
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: roleLabels.internal_server_message,
+      message: roleLabels.internal_server_message
     });
   }
 };
 
 module.exports.RoleList = async (req, res) => {
   try {
-    const role = await Role.find();
+    const roles = await Role.find();
+
+    const data = roles.map(role => ({ name: role.role, _id: role._id }));
+
     return res.status(200).json({
-      role: role,
+      role: data
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
-      message: roleLabels.internal_server_message,
+      message: roleLabels.internal_server_message
     });
   }
 };
@@ -75,17 +80,17 @@ module.exports.EditRole = async (req, res) => {
     await Role.findByIdAndUpdate(req.body.id, {
       $set: {
         role,
-        isActive,
-      },
+        isActive
+      }
     });
 
     return res.status(200).json({
-      message: roleLabels.role_edit_message,
+      message: roleLabels.role_edit_message
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: roleLabels.internal_server_message,
+      message: roleLabels.internal_server_message
     });
   }
 };

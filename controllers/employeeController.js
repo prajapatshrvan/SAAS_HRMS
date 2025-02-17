@@ -738,6 +738,8 @@ const calculateLeaves = (joiningDate) => {
 module.exports.employeeStatus = async (req, res) => {
   try {
     const { empid, status } = req.body;
+
+    console.log(req.body,"saloni@singhsoft.com")
     const validStatuses = new Set([
       "approved", "rejected", "completed", "InProbation", "InNoticePeriod", "close"
     ]);
