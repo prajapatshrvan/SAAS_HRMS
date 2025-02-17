@@ -101,7 +101,7 @@ module.exports.employeeLogin = async (req, res) => {
             {
               userObjectId: user._id,
               userId: user.firstname,
-              role_name: user.department,
+              role_name: user.role,
               email: user.email,
               company_email: user.company_email ? user.company_email : null,
               userInheritedRoles: user.inherits || []
