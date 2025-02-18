@@ -290,7 +290,7 @@ module.exports.updateEmployee = async (req, res, next) => {
           return res.status(404).json({ errors: "company Email already exist"});
         }
       }
-      if (emp.company_email !== company_email) {
+      if (emp.email !== company_email) {
         const emailExist = await Employee.findOne({ company_email });
         if (emailExist) {
           return res.status(404).json({ errors: "company Email already exist"});
@@ -536,10 +536,17 @@ module.exports.adddepartment = async (req, res) => {
   try {
     const { company_email, department, designation, empid, country, state, city, zip } = req.body;
     const exist = await Employee.findOne({ company_email });
-    if (exist) {
-      return res.status(409).json({
-        message: "Email Already Exists"
-      });
+    // if (exist.company_email !== company_email) {
+    //   return res.status(409).json({
+    //     message: "Email Already Exists"
+    //   });
+    // }
+
+    if (exist.company_email !== company_email) {
+      const emailExist = await Employee.findOne({ company_email });
+      if (emailExist) {
+        return res.status(404).json({ errors: "Email already exist"});
+      }
     }
 
     function isCompanyEmail(company_email) {
