@@ -420,6 +420,7 @@ const TotalEmployee = async (req, res, next) => {
     const attendanceSummary = await Attendance.aggregate([
       {
         $match: {
+          status: { $in: ["completed", "inNoticePeriod"] },
           date: { $gte: startOfDay, $lte: endOfDay }
         }
       },
