@@ -288,7 +288,6 @@ const createSalary = async (req, res) => {
         year: parseInt(Year),
         salary_status: "pending",
         payment_status: false,
-        // totalCTC: parseInt(emp.ctcDetails.totalctc.replaceAll(",", "")) || 0,
         totalCTC:
           parseFloat(
             String(emp.ctcDetails.totalctc || "").replace(/,/g, ""),
