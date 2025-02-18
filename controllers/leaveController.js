@@ -247,30 +247,74 @@ module.exports.leaveDelete = async (req, res) => {
   }
 };
 
+// module.exports.leaveCount = async (req, res) => {
+//   try {
+//     const { userObjectId } = req.user;
+//     const totalLeavesPerYear = 12;
+//     const leavesPerMonth = 1;
+
+//     const currentDate = new Date();
+//     const startOfYear = new Date(currentDate.getFullYear(), 0, 1); 
+//     const monthsElapsed = currentDate.getMonth() + 1;
+
+
+//     const paidLeaves = monthsElapsed * leavesPerMonth;
+//     const leaves = await Leave.find({ empid: userObjectId, status: "approved" }).sort({ createdAt: -1 });
+//     const takenLeaves = leaves.reduce((accumulator, leave) => {
+//       return accumulator + (leave.leave_days || 0); 
+//     }, 0);
+
+//     const remainingLeaves = Math.max(0, paidLeaves - takenLeaves); 
+//     const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves); 
+
+//     return res.status(200).json({
+//       totalLeavesPerYear,
+//       paidLeaves,
+//       takenLeaves,
+//       remainingLeaves,
+//       unpaidLeaves,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching leave count:", error.message);
+//     return res.status(500).json({
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+
 module.exports.leaveCount = async (req, res) => {
   try {
     const { userObjectId } = req.user;
-    const totalLeavesPerYear = 12;
-    const leavesPerMonth = 1;
+    const totalLeavesPerYear = 12; 
 
     const currentDate = new Date();
-    const startOfYear = new Date(currentDate.getFullYear(), 0, 1); 
-    const monthsElapsed = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1);
+    const endOfYear = new Date(currentYear + 1, 0, 1);
+    
+    const emp = await Employee.findById(userObjectId);
+    const carryForwardLeaves = emp?.cf || 0; 
 
+    
+    const paidLeaves = currentDate.getMonth() + 1 * carryForwardLeaves + carryForwardLeaves;
 
-    const paidLeaves = monthsElapsed * leavesPerMonth;
+   
+    const leaves = await Leave.find({
+      empid: userObjectId,
+      status: "approved",
+      createdAt: { $gte: startOfYear, $lt: endOfYear }, 
+    }).sort({ createdAt: -1 });
 
-    const leaves = await Leave.find({ empid: userObjectId, status: "approved" }).sort({ createdAt: -1 });
+    // Calculate total leaves taken this year
+    const takenLeaves = leaves.reduce((acc, leave) => acc + (leave.leave_days || 0), 0);
 
-    const takenLeaves = leaves.reduce((accumulator, leave) => {
-      return accumulator + (leave.leave_days || 0); 
-    }, 0);
-
-    const remainingLeaves = Math.max(0, paidLeaves - takenLeaves); 
-    const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves); 
+    const remainingLeaves = Math.max(0, paidLeaves - takenLeaves);
+    const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves);
 
     return res.status(200).json({
       totalLeavesPerYear,
+      carryForwardLeaves,
       paidLeaves,
       takenLeaves,
       remainingLeaves,
