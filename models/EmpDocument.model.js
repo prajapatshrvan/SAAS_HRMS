@@ -25,6 +25,7 @@ const EmpDocumentSchema = new mongoose.Schema(
     bachelor_doc: {
       type: String
     },
+
     companyname: { type: String, required: false },
     start_date: { type: String, required: false },
     end_date: { type: String, required: false },
