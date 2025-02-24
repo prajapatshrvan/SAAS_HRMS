@@ -290,8 +290,8 @@ module.exports.updateEmployee = async (req, res, next) => {
           return res.status(404).json({ errors: "company Email already exist"});
         }
       }
-      if (emp.email !== company_email) {
-        const emailExist = await Employee.findOne({ company_email });
+      if (emp.email !== email) {
+        const emailExist = await Employee.findOne({ email });
         if (emailExist) {
           return res.status(404).json({ errors: "Email already exist" });
         }
