@@ -293,13 +293,16 @@ module.exports.leaveCount = async (req, res) => {
     const startOfYear = new Date(currentYear, 0, 1);
     const endOfYear = new Date(currentYear + 1, 0, 1);
     
+    // Fetch employee record
     const emp = await Employee.findById(userObjectId);
-    const carryForwardLeaves = emp?.cf || 0; 
+    const carryForwardLeaves = emp ? emp.cf || 0 : 0;
+ 
+    // Correct paidLeaves calculation
+    const paidLeaves = (currentDate.getMonth() + 1) + carryForwardLeaves;
 
-    
-    const paidLeaves = currentDate.getMonth() + 1 * carryForwardLeaves + carryForwardLeaves;
+    console.log(paidLeaves,"paidLeaves")
 
-   
+    // Fetch approved leaves within the year
     const leaves = await Leave.find({
       empid: userObjectId,
       status: "approved",
@@ -307,8 +310,9 @@ module.exports.leaveCount = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     // Calculate total leaves taken this year
-    const takenLeaves = leaves.reduce((acc, leave) => acc + (leave.leave_days || 0), 0);
+    const takenLeaves = leaves.reduce((acc, leave) => acc + (leave.leave_days ?? 0), 0);
 
+    // Calculate remaining & unpaid leaves
     const remainingLeaves = Math.max(0, paidLeaves - takenLeaves);
     const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves);
 
@@ -327,3 +331,4 @@ module.exports.leaveCount = async (req, res) => {
     });
   }
 };
+

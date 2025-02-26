@@ -187,6 +187,7 @@ const attendanceReport = async (req, res) => {
               input: "$attendance",
               as: "record",
               in: {
+                //The in operator replaces each element  with a new object that has
                 date: "$$record.date",
                 status: {
                   $switch: {
@@ -420,7 +421,6 @@ const TotalEmployee = async (req, res, next) => {
     const attendanceSummary = await Attendance.aggregate([
       {
         $match: {
-          status: { $in: ["completed", "inNoticePeriod"] },
           date: { $gte: startOfDay, $lte: endOfDay }
         }
       },

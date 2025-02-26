@@ -258,7 +258,6 @@ module.exports.updateEmployee = async (req, res, next) => {
         originalDob,
         gender,
         email,
-        company_email,
         mobile_number,
         emergency_number,
         aadharcard_no,
@@ -277,19 +276,13 @@ module.exports.updateEmployee = async (req, res, next) => {
         role
       } = req.body;
 
-      
 
       const emp = await Employee.findById(empid);
       if (!emp) {
         return res.status(404).json({ errors: "Employee not found" });
       }
 
-      if (emp.company_email !== company_email) {
-        const emailExist = await Employee.findOne({ company_email });
-        if (emailExist) {
-          return res.status(404).json({ errors: "company Email already exist"});
-        }
-      }
+     
       if (emp.email !== email) {
         const emailExist = await Employee.findOne({ email });
         if (emailExist) {
@@ -322,7 +315,6 @@ module.exports.updateEmployee = async (req, res, next) => {
         originalDob,
         gender,
         email,
-        company_email,
         mobile_number,
         emergency_number,
         aadharcard_no,
@@ -368,8 +360,6 @@ module.exports.updateEmployee = async (req, res, next) => {
 
       // Update the employee data in parallel with file handling
       const updatedEmployee = await Employee.findByIdAndUpdate(empid, { $set: updatePayload }, { new: true })
-
-
 
       return res.status(200).json({
         data: updatedEmployee,
@@ -528,13 +518,8 @@ module.exports.addBankDetails = async (req, res) => {
 
 module.exports.adddepartment = async (req, res) => {
   try {
-    const { company_email, department, designation, empid, country, state, city, zip } = req.body;
+    const { company_email, department, designation, empid, country, state, city, zip, role } = req.body;
     const exist = await Employee.findOne({ company_email });
-    // if (exist.company_email !== company_email) {
-    //   return res.status(409).json({
-    //     message: "Email Already Exists"
-    //   });
-    // }
 
     if (exist.company_email !== company_email) {
       const emailExist = await Employee.findOne({ company_email });
@@ -588,6 +573,7 @@ module.exports.adddepartment = async (req, res) => {
       department,
       designation,
       worklocation,
+      role,
       status: "approved"
     };
 
@@ -752,7 +738,6 @@ module.exports.employeeStatus = async (req, res) => {
   try {
     const { empid, status } = req.body;
 
-    console.log(req.body,"saloni@singhsoft.com")
     const validStatuses = new Set([
       "approved", "rejected", "completed", "InProbation", "InNoticePeriod", "close"
     ]);
@@ -768,11 +753,10 @@ module.exports.employeeStatus = async (req, res) => {
 
     const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
 
-    console.log(joiningDate,"joiningDate")
-    
+  
     const totalLeave = calculateLeaves(joiningDate);
 
-    console.log(totalLeave,"totalLeave")
+
     const updatedEmployee = await Employee.findByIdAndUpdate(
       empid,
       { $set: { status : status, totalLeave : totalLeave } },
