@@ -381,7 +381,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         data: updatedEmployee,
         message: "Employee details updated successfully"
       });
-    });
+    }});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to update Employee" });
