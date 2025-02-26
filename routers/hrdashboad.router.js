@@ -11,7 +11,11 @@ router.get(
 );
 router.get("/hr/dashboard/asset/status", auth, hrdashboard.allAssetStatus);
 router.get("/hr/dashboard/department/count", auth, hrdashboard.departmentCount);
-router.get("/hr/dashboard/department/monthly_emp", auth, hrdashboard.departmentCount);
+router.get(
+  "/hr/dashboard/department/monthly_emp",
+  auth,
+  hrdashboard.departmentCount
+);
 router.get("/hr/dashboard/employee/list", auth, hrdashboard.list);
 router.get("/hr/dashboard/yearly/data", auth, hrdashboard.yearlydata);
 

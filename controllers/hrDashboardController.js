@@ -252,7 +252,7 @@ module.exports.list = async (req, res) => {
 
 module.exports.yearlydata = async (req, res) => {
   try {
-    let { year } = req.body;
+    let { year } = req.query;
 
     if (!year) {
       year = new Date().getFullYear();

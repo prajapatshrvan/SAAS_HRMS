@@ -751,15 +751,15 @@ module.exports.employeeStatus = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
+    // const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
 
   
-    const totalLeave = calculateLeaves(joiningDate);
+    // const totalLeave = calculateLeaves(joiningDate);
 
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
       empid,
-      { $set: { status : status, totalLeave : totalLeave } },
+      { $set: { status : status} },
       { new: true } 
     );
 
