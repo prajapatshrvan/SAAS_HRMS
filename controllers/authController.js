@@ -513,11 +513,16 @@ module.exports.userInfo = async (req, res) => {
       role: loggedInUser.role_name,
       inherits: loggedInUser.userInheritedRoles
     };
+    const empimg = await Employee.findById(userRoleMapping._id, {
+      image: 1,
+      _id: 0
+    });
 
     const userResources = await getResourcesForUser(userRoleMapping);
 
     if (userResources)
       return res.status(200).json({
+        image: empimg.image,
         role: req.role_name,
         resources: userResources
       });
