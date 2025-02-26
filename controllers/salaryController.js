@@ -69,7 +69,11 @@ const calculateSalaryComponents = totalPaidAmount => {
   };
 };
 
-function countSundaysAndHolidays(startDate, endDate, holidays) {
+function countSundaysAndHolidays(startDate, endDate, holidays, Present) {
+  if (Present === 0) {
+    return 0;
+  }
+
   let start = new Date(startDate);
   let end = new Date(endDate);
   let count = 0;
@@ -77,14 +81,11 @@ function countSundaysAndHolidays(startDate, endDate, holidays) {
   let holidayDates = new Set(
     holidays.map(date => new Date(date.date).toDateString())
   );
-  // console.log(holidayDates, "holidayDates");
 
   let allDates = new Set();
 
   while (start <= end) {
     let currentDate = start.toDateString();
-
-    // console.log(currentDate, "currentDate");
 
     // Check if it's a Sunday
     if (start.getDay() === 0 && !allDates.has(currentDate)) {
@@ -100,8 +101,6 @@ function countSundaysAndHolidays(startDate, endDate, holidays) {
 
     start.setDate(start.getDate() + 1);
   }
-
-  // console.log(allDates);
 
   return count;
 }
@@ -131,11 +130,15 @@ const createSalary = async (req, res) => {
 
     const startDate = moment(`${Year}-${Month}-26`)
       .subtract(1, "month")
-      .startOf("day")
-      .toDate();
-    const endDate = moment(`${Year}-${Month}-25`).endOf("day").toDate();
+      .startOf("day");
+    // .toDate();
+    const endDate = moment(`${Year}-${Month}-25`).endOf("day");
+    // .toDate();
 
-    const totalDaysInCurrentMonth = moment(`${Year}-${Month}`).daysInMonth();
+    // const totalDaysInCurrentMonth = moment(`${Year}-${Month}`).daysInMonth();
+
+    const totalDaysInCurrentMonth = endDate.diff(startDate, "days") + 1;
+
     const monthdays = totalDaysInCurrentMonth;
 
     // Fetch all attendance records for relevant employees in one go
@@ -193,7 +196,8 @@ const createSalary = async (req, res) => {
       const sundaysAndHolidays = countSundaysAndHolidays(
         STARTDATE,
         endDate,
-        holiday
+        holiday,
+        empAttendance.present
       );
 
       // Handle leave carry forward
@@ -234,8 +238,8 @@ const createSalary = async (req, res) => {
       let esi =
         totalGrossSalary < 21000 ? (totalPaidAmount * 0.04).toFixed(2) : 0;
       let netSalary = parseFloat(
-        totalPaidAmount - (parseFloat(pf) - parseFloat(esi))
-      ).toFixed(2);
+        totalPaidAmount - (parseFloat(pf) + parseFloat(esi))
+      ).toFixed();
       netSalary = isNaN(netSalary) ? 0 : netSalary;
 
       const advanceSalary = await AdvanceSalary.findOne({
