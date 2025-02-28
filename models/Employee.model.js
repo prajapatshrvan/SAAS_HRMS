@@ -45,7 +45,7 @@ const EmployeeSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true
+      required: false
     },
     mobile_number: {
       type: String,
@@ -192,22 +192,27 @@ const EmployeeSchema = new mongoose.Schema(
         required: false
       }
     },
+
     sameAddress: {
       type: Boolean,
       default: false
     },
+
     status: {
       type: String,
       default: "pending"
     },
+
     company_email: {
       type: String,
       default: null
     },
+
     department: {
       type: String,
       default: null
     },
+
     designation: {
       type: String,
       default: null
@@ -249,6 +254,7 @@ const EmployeeSchema = new mongoose.Schema(
         default: null
       }
     ],
+
     pf_number: {
       type: Number,
       default: null

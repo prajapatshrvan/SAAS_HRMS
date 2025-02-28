@@ -54,3 +54,26 @@ module.exports.AddCompany = async (req, res) => {
     });
   }
 };
+
+module.exports.getCompany = async (req, res) => {
+  try {
+    const company = await Company.find();
+    return res.render("company.ejs", { company: company });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.deleteCompany = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await Company.findByIdAndDelete(id);
+    return res.status(200).json({ message: "Company delete successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
