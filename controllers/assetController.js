@@ -94,7 +94,7 @@ module.exports.addAsset = async (req, res) => {
           message: assetLabels.asset_already_exist
         });
       }
-      const {
+      const {  
         assetname,
         assetId,
         // date_of_asset,

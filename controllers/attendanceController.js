@@ -338,15 +338,6 @@ const attendanceWeekReport = async (req, res, next) => {
   }
 };
 
-const getStartAndEndOfDay = dateStr => {
-  const inputDate = new Date(dateStr);
-  const startOfDay = new Date(inputDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(inputDate);
-  endOfDay.setHours(23, 59, 59, 999);
-  return { startOfDay, endOfDay };
-};
-
 const todayAttendanceData = async (req, res, next) => {
   try {
     const currentDate = new Date();

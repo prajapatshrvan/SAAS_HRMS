@@ -89,9 +89,9 @@ module.exports.employeeLogin = async (req, res) => {
     const { email, password, rememberMe } = req.body;
     if (email && password) {
       const user = await Employee.findOne({
-        company_email: email,
-        status: { $in: ["completed", "InNoticePeriod"] }
+        company_email: email
       });
+      // status: { $in: ["completed", "InNoticePeriod"] }
       if (user) {
         const comparePassword = await bcrypt.compare(password, user.password);
 
