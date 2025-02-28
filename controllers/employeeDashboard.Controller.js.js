@@ -3,23 +3,26 @@ const cron = require("node-cron");
 const Employee = require("../models/Employee.model");
 const moment = require("moment");
 const Salary = require("../models/salaryModel.js");
+const EmpDocument = require("../models/EmpDocument.model.js")
 
 module.exports.personalInfo = async (req, res) => {
   try {
     const empId = req.user?.userObjectId;
     const info = await Employee.findOne({ _id: empId },{password : 0,token : 0,inherits : 0,__v : 0});
+    const empDocument = await EmpDocument.findOne({empid : empId},{__v : 0, empid : 0, _id : 0,createdAt : 0, updatedAt : 0  })
     const First = info.firstname;
     const Middle = info.middlename;
     const Last = info.lastname;
     const fullName = `${First} ${Middle} ${Last}`;
+
     
 
     return res.status(200).json({
       FullName: fullName,
       Designation: info.designation,
       EmployeeID: info.employeeID,
-      // JoiningDate: info.createdAt,
       Department: info.department,
+      empDocument,
       info
     });
   } catch (error) {

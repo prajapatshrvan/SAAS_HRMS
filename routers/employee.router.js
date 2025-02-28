@@ -8,6 +8,7 @@ const {
 const employee = require("../controllers/employeeController");
 const { auth } = require("../middleware/AuthMiddleware");
 const router = require("express").Router();
+router.post("/register_employee", auth, employee.EmployeeRegister);
 router.post("/addemployee", auth, employee.EmployeeAdd);
 router.post("/updateemployee", auth, employee.updateEmployee);
 router.post("/addempaddress", auth, employee.EmployeeAddress);

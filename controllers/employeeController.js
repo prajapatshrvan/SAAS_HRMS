@@ -516,23 +516,22 @@ module.exports.addBankDetails = async (req, res) => {
   }
 };
 
+
 module.exports.adddepartment = async (req, res) => {
   try {
     const { company_email, department, designation, empid, country, state, city, zip, role } = req.body;
-    const exist = await Employee.findOne({ company_email });
 
-    if (exist.company_email !== company_email) {
-      const emailExist = await Employee.findOne({ company_email });
-      if (emailExist) {
-        return res.status(404).json({ errors: "Email already exist"});
-      }
+    // Check if company email already exists
+    const exist = await Employee.findOne({ company_email });
+    if (exist && exist.company_email !== company_email) {
+      return res.status(409).json({ error: "Email already exists" });
     }
 
-    function isCompanyEmail(company_email) {
-      const companyDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
-      const domainRegex = /@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/;
-      const match = company_email.match(domainRegex);
-      return match && companyDomains.includes(match[1]);
+    // Validate email domain
+    function isCompanyEmail(email) {
+      const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
+      const domain = email.split("@").pop();
+      return allowedDomains.includes(domain);
     }
 
     let errors = {};
@@ -541,32 +540,24 @@ module.exports.adddepartment = async (req, res) => {
       errors.empid = "Please provide empid";
     }
     if (!isCompanyEmail(company_email)) {
-      errors.company_email = "Please Enter Valid Email Domain (e.g., @singhsoft.com)";
+      errors.company_email = "Please enter a valid email domain (e.g., @singhsoft.com)";
     }
     if (!department || !department.trim()) {
       errors.department = "Department is required";
     }
-
     if (!designation || !designation.trim()) {
       errors.designation = "Designation is required";
     }
-
     if (Object.keys(errors).length) {
       return res.status(400).json({ error: errors });
     }
 
-    const employee = await Employee.findOne({ _id: empid });
-
+    const employee = await Employee.findById(empid);
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    const worklocation = {
-      country,
-      state,
-      city,
-      zip
-    };
+    const worklocation = { country, state, city, zip };
 
     const setData = {
       company_email,
@@ -577,21 +568,29 @@ module.exports.adddepartment = async (req, res) => {
       status: "approved"
     };
 
-    const updatedEmployee = await Employee.findByIdAndUpdate(empid, {
-      $set: setData
-    });
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      empid,
+      { $set: setData },
+      { new: true }
+    );
+
+    if (!updatedEmployee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
     res.status(200).json({
       message: "Department added successfully",
-      data: { ...updatedEmployee.toObject(), ...setData }
+      data: updatedEmployee
     });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
+      error: error.message
     });
   }
 };
+
 
 let modifyEmpData = (alldata, req) => {
   let empId = req?.user?.userObjectId;
@@ -795,7 +794,7 @@ module.exports.addctcdetails = async (req, res) => {
     // let password = Math.floor(Math.random() * (max - min + 1)) + min;
     // password = String(password);
 
-    const password = generatePassword(8);
+    // const password = generatePassword(8);
 
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
@@ -988,6 +987,89 @@ module.exports.Employeedocument = async (req, res, next) => {
   });
 };
 
+
+module.exports.EmployeeRegister = async (req, res) => {
+  try {
+    if (Object.keys(req.body).length === 0) {
+      throw new Error("Request body is not defined");
+    }
+    
+      const {
+        firstname,
+        middlename,
+        lastname,
+        company_email,
+        documentDob,
+        mobile_number
+       
+      } = req.body;
+
+      console.log(req.body)
+
+      const exist = await Employee.findOne({
+        company_email: req.body.company_email
+      });
+      if (exist) {
+        return res.json({
+          message: "Email Already Exist"
+        });
+      } 
+
+
+      function isCompanyEmail(email) {
+        const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
+        const domain = email.split("@").pop();
+        return allowedDomains.includes(domain);
+      }
+
+      if (!firstname) {
+        return res.status(400).json({ message: "Please fill firstname" });
+      } else if (!lastname) {
+        return res.status(400).json({ message: "Please fill lastname" });
+      } 
+       else if (!company_email) {
+        return res.status(400).json({ message: "Please fill role name" });
+      }else if (!isCompanyEmail(company_email)) {
+       return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
+      }
+
+     // Generate employee ID based on DOB and mobile number
+     const year = documentDob.slice(0, 2);
+     const mobileLast4 = mobile_number.slice(-4);
+     const base_empId = `${year}${mobileLast4}`;
+     let employeeID = base_empId;
+     let numCount = 1;
+
+     while (await Employee.findOne({ employeeID })) {
+       employeeID = `${base_empId}${numCount++}`;
+     }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash("123456", salt);
+      const employee = new Employee({
+        employeeID,
+        firstname,
+        lastname,
+        middlename,
+        mobile_number,
+        password: hashPassword,
+      });
+
+      await employee.save();
+      return res.status(201).json({
+        message: "Employee create successfully"
+      });
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(
+      {
+        message : "Internal server error",
+        error : error.message
+      }
+    );
+  }
+};
 
 
 
