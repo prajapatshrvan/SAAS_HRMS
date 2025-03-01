@@ -507,6 +507,7 @@ module.exports.logOutAll = async (req, res) => {
 
 module.exports.userInfo = async (req, res) => {
   const loggedInUser = req.user;
+
   try {
     const userRoleMapping = {
       _id: loggedInUser.userObjectId,
@@ -521,10 +522,12 @@ module.exports.userInfo = async (req, res) => {
 
     const userResources = await getResourcesForUser(userRoleMapping);
 
+    // console.log(userResources, "userResources");
+
     if (userResources)
       return res.status(200).json({
         image: empimg.image,
-        role: req.role_name,
+        role: userRoleMapping.role,
         resources: userResources
       });
   } catch (error) {
