@@ -74,10 +74,10 @@ module.exports.EmployeeAdd = async (req, res, next) => {
     }
     try {
       const {
-        firstname,
-        middlename,
-        lastname,
-        documentDob,
+        // firstname,
+        // middlename,
+        // lastname,
+        // documentDob,
         originalDob,
         gender,
         email,
@@ -107,6 +107,8 @@ module.exports.EmployeeAdd = async (req, res, next) => {
       if(!employee){
         return res.status(400).json({message : "Employee not found"})
       }
+
+      const employeeID = employee.employeeID
 
       const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
 
@@ -200,16 +202,16 @@ module.exports.EmployeeAdd = async (req, res, next) => {
 
       // Create employee object
       const emp = new Employee({
-        employeeID,
-        firstname: capFirstName,
-        middlename: capMiddleName || "",
-        lastname: capLastName,
+        // employeeID,
+        // firstname: capFirstName,
+        // middlename: capMiddleName || "",
+        // lastname: capLastName,
         ...imagePaths,
-        documentDob,
+        // documentDob,
         originalDob,
         gender: capGender,
         email: email.toLowerCase(),
-        mobile_number,
+        // mobile_number,
         emergency_number,
         aadharcard_no,
         pancard_no: pancard_no.toUpperCase(),
@@ -530,7 +532,6 @@ module.exports.addBankDetails = async (req, res) => {
   }
 };
 
-
 module.exports.adddepartment = async (req, res) => {
   try {
     const { company_email, department, designation, empid, country, state, city, zip, role } = req.body;
@@ -604,7 +605,6 @@ module.exports.adddepartment = async (req, res) => {
     });
   }
 };
-
 
 let modifyEmpData = (alldata, req) => {
   let empId = req?.user?.userObjectId;
@@ -745,7 +745,6 @@ const calculateLeaves = (joiningDate) => {
   return 12; 
 };
 
-   
 // employee status
 module.exports.employeeStatus = async (req, res) => {
   try {
@@ -786,7 +785,6 @@ module.exports.employeeStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 module.exports.addctcdetails = async (req, res) => {
   try {
@@ -852,7 +850,6 @@ module.exports.addctcdetails = async (req, res) => {
     });
   }
 };
-
 
 module.exports.Employeedocument = async (req, res, next) => {
   uploaddoc(req, res, async (err) => {
@@ -1000,7 +997,6 @@ module.exports.Employeedocument = async (req, res, next) => {
     }
   });
 };
-
 
 module.exports.EmployeeRegister = async (req, res) => {
   try {
