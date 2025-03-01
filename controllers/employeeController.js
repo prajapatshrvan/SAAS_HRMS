@@ -17,6 +17,7 @@ const logger = require("../helpers/logger.js");
 const generatePassword = require("../utility/generatePassword.js");
 const { CLIENT_RENEG_LIMIT } = require("tls");
 const Company = require("../models/Company.model");
+const { default: mongoose } = require("mongoose");
 require("dotenv").config();
 
 const upload = multer({
@@ -622,68 +623,172 @@ let modifyEmpData = (alldata, req) => {
   return newData;
 };
 
+// module.exports.EmployeeList = async (req, res) => {
+//   let statusParam = req.query.status;
+//   let searchParam = req.query.search;
+//   let { month, year } = req.query;
+//   let statusList = {
+//     active: ["completed", "InNoticePeriod"],
+//     pending: "pending",
+//   };
+
+//   let empstatus = null;
+//   if (statusParam === "active" || statusParam === "pending") {
+//     empstatus = statusList[statusParam];
+//   }
+
+//   try {
+//     let matchStage = {};
+
+//     if (empstatus) {
+//       matchStage.status = { $in: empstatus };
+//     }
+
+//     if (searchParam) {
+//       const nameParts = searchParam.trim().split(/\s+/);
+
+//       if (nameParts.length > 1) {
+//         matchStage.$or = [
+//           {
+//             $and: [
+//               { employeeID: { $regex: `^${String(nameParts[0])}`, $options: "i" } },
+//               { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+//               { lastname: { $regex: `^${nameParts[2]}`, $options: "i", $exists: true } },
+//             ],
+//           },
+//           {
+//             $and: [
+//               { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+//               { middlename: { $regex: `^${nameParts[1]}`, $options: "i" } },
+//               { lastname: { $regex: `^${nameParts[2]}`, $options: "i" } },
+//             ],
+//           },
+//         ];
+//       } else {
+//         matchStage.$or = [
+//           { employeeID: { $regex: `^${String(searchParam)}`, $options: "i" } },
+//           { firstname: { $regex: searchParam, $options: "i" } },
+//           { lastname: { $regex: searchParam, $options: "i" } },
+//         ];
+//       }
+//     }
+
+//     // Filtering by month and year
+//     if (month && year) {
+     
+//       if (month && year) {
+//         let startDate = new Date(year, month - 1, 1); // First day of the month
+//         let endDate = new Date(year, month, 1); // First day of the next month
+      
+//         matchStage.joining_date = { $gte: startDate, $lt: endDate };
+//       }
+      
+//     }
+
+//     let employeeList = await Employee.aggregate([
+//       { $match: matchStage },
+//       { $sort: { createdAt: -1 } },
+//       {
+//         $lookup: {
+//           from: "empdocuments",
+//           localField: "_id",
+//           foreignField: "empid",
+//           as: "documents",
+//         },
+//       },
+//       { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } },
+//       { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } },
+//       {
+//         $project: {
+//           firstname: 1,
+//           lastname: 1,
+//           middlename: 1,
+//           mobile_number: 1,
+//           status: 1,
+//           employeeID: 1,
+//           image: 1,
+//           emergency_number: 1,
+//           department: 1,
+//           designation: 1,
+//           joining_date: 1,
+//           marital_status: 1,
+//           totalctc: "$ctcDetails.totalctc",
+//           monthlycompensation: "$ctcDetails.monthlycompensation",
+//           bachelor_doc: "$documents.bachelor_doc",
+//           secondary_doc: "$documents.secondary_doc",
+//           senior_doc: "$documents.senior_doc",
+//           extra: "$documents.extra",
+//           companyname: "$documents.experienceData.companyname",
+//           start_date: "$documents.experienceData.start_date",
+//           end_date: "$documents.experienceData.end_date",
+//           offerletter: "$documents.experienceData.offerletter",
+//           payslip: "$documents.experienceData.payslip",
+//         },
+//       },
+//     ]);
+
+//     return res.status(200).send(employeeList);
+//   } catch (error) {
+//     console.error("Error fetching employees:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 module.exports.EmployeeList = async (req, res) => {
-  let statusParam = req.query.status;
-  let searchParam = req.query.search;
-  let { month, year } = req.query;
+  let { status, search, month, year } = req.query;
+  let userId = req.user?.userObjectId; 
+  let role = req.role_name; 
+
   let statusList = {
     active: ["completed", "InNoticePeriod"],
     pending: "pending",
   };
 
-  let empstatus = null;
-  if (statusParam === "active" || statusParam === "pending") {
-    empstatus = statusList[statusParam];
-  }
+  let empstatus = statusList[status] || null;
 
   try {
     let matchStage = {};
 
+    if (role !== "ADMIN") {
+      matchStage._id = new mongoose.Types.ObjectId(userId); 
+    }
+
+    
     if (empstatus) {
       matchStage.status = { $in: empstatus };
     }
 
-    if (searchParam) {
-      const nameParts = searchParam.trim().split(/\s+/);
-
-      if (nameParts.length > 1) {
-        matchStage.$or = [
-          {
-            $and: [
-              { employeeID: { $regex: `^${String(nameParts[0])}`, $options: "i" } },
-              { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
-              { lastname: { $regex: `^${nameParts[2]}`, $options: "i", $exists: true } },
-            ],
-          },
-          {
-            $and: [
-              { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
-              { middlename: { $regex: `^${nameParts[1]}`, $options: "i" } },
-              { lastname: { $regex: `^${nameParts[2]}`, $options: "i" } },
-            ],
-          },
-        ];
-      } else {
-        matchStage.$or = [
-          { employeeID: { $regex: `^${String(searchParam)}`, $options: "i" } },
-          { firstname: { $regex: searchParam, $options: "i" } },
-          { lastname: { $regex: searchParam, $options: "i" } },
-        ];
-      }
+    if (search) {
+      const nameParts = search.trim().split(/\s+/);
+      matchStage.$or = nameParts.length > 1 ? [
+        {
+          $and: [
+            { employeeID: { $regex: `^${String(nameParts[0])}`, $options: "i" } },
+            { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
+            { lastname: { $regex: `^${nameParts[2]}`, $options: "i", $exists: true } },
+          ],
+        },
+        {
+          $and: [
+            { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
+            { middlename: { $regex: `^${nameParts[1]}`, $options: "i" } },
+            { lastname: { $regex: `^${nameParts[2]}`, $options: "i" } },
+          ],
+        },
+      ] : [
+        { employeeID: { $regex: `^${String(search)}`, $options: "i" } },
+        { firstname: { $regex: search, $options: "i" } },
+        { lastname: { $regex: search, $options: "i" } },
+      ];
     }
 
-    // Filtering by month and year
     if (month && year) {
-     
-      if (month && year) {
-        let startDate = new Date(year, month - 1, 1); // First day of the month
-        let endDate = new Date(year, month, 1); // First day of the next month
-      
-        matchStage.joining_date = { $gte: startDate, $lt: endDate };
-      }
-      
+      let startDate = new Date(year, month - 1, 1);
+      let endDate = new Date(year, month, 1);
+      matchStage.joining_date = { $gte: startDate, $lt: endDate };
     }
 
+    
     let employeeList = await Employee.aggregate([
       { $match: matchStage },
       { $sort: { createdAt: -1 } },
@@ -726,12 +831,19 @@ module.exports.EmployeeList = async (req, res) => {
       },
     ]);
 
+    // Check if employees exist
+    if (!employeeList.length) {
+      return res.status(404).json({ message: "No employees found matching the criteria." });
+    }
+
     return res.status(200).send(employeeList);
   } catch (error) {
     console.error("Error fetching employees:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 
 const calculateLeaves = (joiningDate) => {
   const joinDate = new Date(joiningDate);
