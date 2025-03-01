@@ -96,17 +96,23 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         joining_date,
         pf_number,
         company_name,
+        company_email,
         uan_number,
         role
     
       } = req.body;
 
+      const employee = await Employee.findOne({company_email : company_email})
+
+      if(!employee){
+        return res.status(400).json({message : "Employee not found"})
+      }
 
       const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
 
-      const capFirstName = capitalize(firstname);
-      const capMiddleName = capitalize(middlename);
-      const capLastName = capitalize(lastname);
+      // const capFirstName = capitalize(firstname);
+      // const capMiddleName = capitalize(middlename);
+      // const capLastName = capitalize(lastname);
       const capGender = capitalize(gender);
       const capFamilyMemberFirstName = capitalize(family_member_first_name);
       const capFamilyMemberLastName = capitalize(family_member_last_name);
@@ -116,18 +122,18 @@ module.exports.EmployeeAdd = async (req, res, next) => {
 
       // Validation checks
       const validations = [
-        {
-          valid: Validation.name_regex.test(firstname),
-          field: "firstname",
-          message: "Please provide a valid firstname"
-        },
+        // {
+        //   valid: Validation.name_regex.test(firstname),
+        //   field: "firstname",
+        //   message: "Please provide a valid firstname"
+        // },
         // { valid: Validation.name_regex.test(lastname), field: "lastname", message: "Please provide a valid lastname" },
         { valid: Validation.email_regex.test(email), field: "email", message: "Please provide a valid email" },
-        {
-          valid: Validation.mobile_regex.test(mobile_number),
-          field: "mobile_number",
-          message: "Please provide a valid mobile number"
-        },
+        // {
+        //   valid: Validation.mobile_regex.test(mobile_number),
+        //   field: "mobile_number",
+        //   message: "Please provide a valid mobile number"
+        // },
         {
           valid: Validation.mobile_regex.test(emergency_number),
           field: "emergency_number",
@@ -172,15 +178,17 @@ module.exports.EmployeeAdd = async (req, res, next) => {
       }
 
       // Generate employee ID based on DOB and mobile number
-      const year = documentDob.slice(0, 2);
-      const mobileLast4 = mobile_number.slice(-4);
-      const base_empId = `${year}${mobileLast4}`;
-      let employeeID = base_empId;
-      let numCount = 1;
+      // const year = documentDob.slice(0, 2);
+      // const mobileLast4 = mobile_number.slice(-4);
+      // const base_empId = `${year}${mobileLast4}`;
+      // let employeeID = base_empId;
+      // let numCount = 1;
 
-      while (await Employee.findOne({ employeeID })) {
-        employeeID = `${base_empId}${numCount++}`;
-      }
+      // while (await Employee.findOne({ employeeID })) {
+      //   employeeID = `${base_empId}${numCount++}`;
+      // }
+
+
 
       const imagePaths = req.files
         ? {
@@ -191,7 +199,7 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         : {};
 
       // Create employee object
-      const employee = new Employee({
+      const emp = new Employee({
         employeeID,
         firstname: capFirstName,
         middlename: capMiddleName || "",
@@ -220,7 +228,7 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         role
       });
 
-      const data = await employee.save();
+      const data = await emp.save();
       return res.status(201).json({ data, error: "Employee details added successfully" });
     } catch (error) {
       console.error("Error in adding employee details:", error);
@@ -1010,7 +1018,6 @@ module.exports.EmployeeRegister = async (req, res) => {
        
       } = req.body;
 
-      console.log(req.body)
 
       const exist = await Employee.findOne({
         company_email: req.body.company_email
@@ -1050,14 +1057,21 @@ module.exports.EmployeeRegister = async (req, res) => {
        employeeID = `${base_empId}${numCount++}`;
      }
 
+     const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
+
+      const capFirstName = capitalize(firstname);
+      const capMiddleName = capitalize(middlename);
+      const capLastName = capitalize(lastname);
+    
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash("123456", salt);
       const employee = new Employee({
         employeeID,
-        firstname,
-        lastname,
-        middlename,
+        firstname : capFirstName,
+        lastname : capLastName,
+        middlename :capMiddleName || "",
         mobile_number,
+        company_email,
         password: hashPassword,
       });
 
