@@ -576,12 +576,12 @@ module.exports.adddepartment = async (req, res) => {
     const worklocation = { country, state, city, zip };
 
     const setData = {
-      company_email,
+      // company_email,
       department,
       designation,
       worklocation,
       role,
-      status: "approved"
+      // status: "approved"
     };
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
@@ -623,116 +623,6 @@ let modifyEmpData = (alldata, req) => {
   return newData;
 };
 
-// module.exports.EmployeeList = async (req, res) => {
-//   let statusParam = req.query.status;
-//   let searchParam = req.query.search;
-//   let { month, year } = req.query;
-//   let statusList = {
-//     active: ["completed", "InNoticePeriod"],
-//     pending: "pending",
-//   };
-
-//   let empstatus = null;
-//   if (statusParam === "active" || statusParam === "pending") {
-//     empstatus = statusList[statusParam];
-//   }
-
-//   try {
-//     let matchStage = {};
-
-//     if (empstatus) {
-//       matchStage.status = { $in: empstatus };
-//     }
-
-//     if (searchParam) {
-//       const nameParts = searchParam.trim().split(/\s+/);
-
-//       if (nameParts.length > 1) {
-//         matchStage.$or = [
-//           {
-//             $and: [
-//               { employeeID: { $regex: `^${String(nameParts[0])}`, $options: "i" } },
-//               { firstname: { $regex: `^${nameParts[1]}`, $options: "i" } },
-//               { lastname: { $regex: `^${nameParts[2]}`, $options: "i", $exists: true } },
-//             ],
-//           },
-//           {
-//             $and: [
-//               { firstname: { $regex: `^${nameParts[0]}`, $options: "i" } },
-//               { middlename: { $regex: `^${nameParts[1]}`, $options: "i" } },
-//               { lastname: { $regex: `^${nameParts[2]}`, $options: "i" } },
-//             ],
-//           },
-//         ];
-//       } else {
-//         matchStage.$or = [
-//           { employeeID: { $regex: `^${String(searchParam)}`, $options: "i" } },
-//           { firstname: { $regex: searchParam, $options: "i" } },
-//           { lastname: { $regex: searchParam, $options: "i" } },
-//         ];
-//       }
-//     }
-
-//     // Filtering by month and year
-//     if (month && year) {
-     
-//       if (month && year) {
-//         let startDate = new Date(year, month - 1, 1); // First day of the month
-//         let endDate = new Date(year, month, 1); // First day of the next month
-      
-//         matchStage.joining_date = { $gte: startDate, $lt: endDate };
-//       }
-      
-//     }
-
-//     let employeeList = await Employee.aggregate([
-//       { $match: matchStage },
-//       { $sort: { createdAt: -1 } },
-//       {
-//         $lookup: {
-//           from: "empdocuments",
-//           localField: "_id",
-//           foreignField: "empid",
-//           as: "documents",
-//         },
-//       },
-//       { $unwind: { path: "$documents", preserveNullAndEmptyArrays: true } },
-//       { $unwind: { path: "$documents.experienceData", preserveNullAndEmptyArrays: true } },
-//       {
-//         $project: {
-//           firstname: 1,
-//           lastname: 1,
-//           middlename: 1,
-//           mobile_number: 1,
-//           status: 1,
-//           employeeID: 1,
-//           image: 1,
-//           emergency_number: 1,
-//           department: 1,
-//           designation: 1,
-//           joining_date: 1,
-//           marital_status: 1,
-//           totalctc: "$ctcDetails.totalctc",
-//           monthlycompensation: "$ctcDetails.monthlycompensation",
-//           bachelor_doc: "$documents.bachelor_doc",
-//           secondary_doc: "$documents.secondary_doc",
-//           senior_doc: "$documents.senior_doc",
-//           extra: "$documents.extra",
-//           companyname: "$documents.experienceData.companyname",
-//           start_date: "$documents.experienceData.start_date",
-//           end_date: "$documents.experienceData.end_date",
-//           offerletter: "$documents.experienceData.offerletter",
-//           payslip: "$documents.experienceData.payslip",
-//         },
-//       },
-//     ]);
-
-//     return res.status(200).send(employeeList);
-//   } catch (error) {
-//     console.error("Error fetching employees:", error);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 
 module.exports.EmployeeList = async (req, res) => {
   let { status, search, month, year } = req.query;
@@ -805,6 +695,8 @@ module.exports.EmployeeList = async (req, res) => {
       {
         $project: {
           firstname: 1,
+          company_email : 1,
+          documentDob : 1,
           lastname: 1,
           middlename: 1,
           mobile_number: 1,
@@ -842,7 +734,6 @@ module.exports.EmployeeList = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 
 const calculateLeaves = (joiningDate) => {
@@ -1180,6 +1071,7 @@ module.exports.EmployeeRegister = async (req, res) => {
         middlename :capMiddleName || "",
         mobile_number,
         company_email,
+        documentDob,
         password: hashPassword,
       });
 
