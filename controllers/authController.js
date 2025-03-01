@@ -100,7 +100,8 @@ module.exports.employeeLogin = async (req, res) => {
           const token = jwt.sign(
             {
               userObjectId: user._id,
-              userId: user.firstname,
+              userId: user.employeeID,
+              name: user.firstname,
               role_name: user.role,
               email: user.email,
               company_email: user.company_email ? user.company_email : null,
