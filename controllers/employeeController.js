@@ -293,19 +293,15 @@ module.exports.updateEmployee = async (req, res, next) => {
         return res.status(404).json({ errors: "Employee not found" });
       }
 
-     
       if (emp.email !== email) {
         const emailExist = await Employee.findOne({ email });
         if (emailExist) {
-          return res.status(404).json({ errors: "company Email already exist"});
+          return res.status(400).json({ error: "Email already exists" });
         }
       }
-      if (emp.email !== email) {
-        const emailExist = await Employee.findOne({ email });
-        // const emailExist = await Employee.findOne({ company_email });
-        if (emailExist) {
-          return res.status(404).json({ errors: "Email already exist" });
-        }
+   
+     
+     
       if (emp.aadharcard_no !== Number(aadharcard_no)) {
         const aadharExist = await Employee.findOne({ aadharcard_no });
         if (aadharExist) {
@@ -382,7 +378,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         data: updatedEmployee,
         message: "Employee details updated successfully"
       });
-    }});
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to update Employee" });
@@ -576,12 +572,12 @@ module.exports.adddepartment = async (req, res) => {
     const worklocation = { country, state, city, zip };
 
     const setData = {
-      // company_email,
+      company_email,
       department,
       designation,
       worklocation,
       role,
-      // status: "approved"
+      status: "approved"
     };
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
@@ -811,8 +807,8 @@ module.exports.addctcdetails = async (req, res) => {
 
     // const password = generatePassword(8);
 
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
+    // const salt = await bcrypt.genSalt(10);
+    // const hashPassword = await bcrypt.hash(password, salt);
 
     const getemployee = await Employee.findOne({ _id: data.empid });
     if (!getemployee) {
@@ -824,13 +820,13 @@ module.exports.addctcdetails = async (req, res) => {
     const employee = await Employee.findByIdAndUpdate(data.empid, {
       $set: {
         ctcDetails: { ...dataPayload },
-        password: hashPassword,
+        // password: hashPassword,
         resetpassword: true,
         status: "completed"
       }
     });
 
-    const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
+    // const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
     try {
       const info = await transporter.sendMail({
         from: process.env.EMAIL_FROM,
