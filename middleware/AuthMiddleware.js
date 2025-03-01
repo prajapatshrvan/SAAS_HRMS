@@ -35,7 +35,7 @@ const auth = async (req, res, next) => {
     }
     req.user = payload;
     req.token = token;
-    req.role_name = user.department;
+    req.role_name = user.role;
   } catch (error) {
     console.log(error);
     return res.status(401).json({
