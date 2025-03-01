@@ -316,7 +316,6 @@ module.exports.updateEmployee = async (req, res, next) => {
       const employeeID = emp.employeeID;
       const directoryPath = join(process.cwd(), `uploads/${employeeID}`);
 
-      // Build the update payload
       let updatePayload = {
         firstname,
         middlename,
@@ -825,12 +824,12 @@ module.exports.addctcdetails = async (req, res) => {
 
     // const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
     try {
-      const info = await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
-        to: employee.email,
-        subject: "HR-TOOLS - Email",
-        html: emailHtml
-      });
+      // const info = await transporter.sendMail({
+      //   from: process.env.EMAIL_FROM,
+      //   to: employee.email,
+      //   subject: "HR-TOOLS - Email",
+      //   html: emailHtml
+      // });
 
       return res.status(200).json({
         message: "Bank details Add successfully",
