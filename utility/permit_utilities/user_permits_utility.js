@@ -13,6 +13,8 @@ async function getResourcesForUser(userRoleMapping) {
 
   const userRole = userRoleMapping.role;
 
+  console.log(userRole,"userRole",resources)
+
   if (!userRole) {
     console.error("User not found");
     return {};
@@ -70,6 +72,8 @@ async function getResourcesForUser(userRoleMapping) {
 
   // Cache the resolved permissions for future use for 10 minutes
   cache.put(userRoleMapping.userId, formattedUserResources, 10 * 60 * 1000);
+
+  
 
   return formattedUserResources;
 }
