@@ -345,12 +345,10 @@ module.exports.verifyOtp = async (req, res) => {
 
     const userotp = await Otp.findOne({ email: email });
     if (!userotp) {
-      console.log(`User not found for email: ${email}`);
       return res.status(400).send("User not found");
     }
 
     if (isBlocked(userotp)) {
-      console.log(`User is blocked for email: ${email}`);
       return res
         .status(400)
         .send("User is blocked for the day due to too many failed attempts");
@@ -360,7 +358,6 @@ module.exports.verifyOtp = async (req, res) => {
     const storedTimestamp = new Date(userotp.createdAt).getTime();
 
     if (isOTPExpired(storedTimestamp, expiryDuration)) {
-      console.log("OTP has expired");
       return res.status(400).send("OTP has expired");
     }
 
@@ -387,8 +384,6 @@ module.exports.verifyOtp = async (req, res) => {
 
       return res.status(200).json({ token: token });
     } else {
-      console.log("Invalid OTP");
-
       userotp.failedAttempts += 1;
       if (userotp.failedAttempts === 1) {
         userotp.firstFailedAttemptAt = new Date();
@@ -521,8 +516,6 @@ module.exports.userInfo = async (req, res) => {
     });
 
     const userResources = await getResourcesForUser(userRoleMapping);
-
-    // console.log(userResources, "userResources");
 
     if (userResources)
       return res.status(200).json({

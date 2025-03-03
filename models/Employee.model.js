@@ -97,10 +97,10 @@ const EmployeeSchema = new mongoose.Schema(
       type: String,
       required: false
     },
-    cocuments: {
-      type: mongoose.Schema.Types.Mixed,
-      required: false
-    },
+    // cocuments: {
+    //   type: mongoose.Schema.Types.Mixed,
+    //   required: false
+    // },
     pan_image: {
       type: String,
       required: false

@@ -6,7 +6,7 @@ class ApiCRUDController {
   }
 
   // Create operation
-  create = async (data) => {
+  create = async data => {
     return await this.model.create(data);
   };
 
@@ -33,7 +33,7 @@ class ApiCRUDController {
 
     let isFilters = false;
 
-    collections.forEach((item) => {
+    collections.forEach(item => {
       if (item.filters) {
         isFilters = true;
         filters.$addFields[item.name] = {
@@ -65,17 +65,17 @@ class ApiCRUDController {
   };
 
   // Read operation by ID
-  read = async (id) => {
+  read = async id => {
     return await this.model.findById(id);
   };
 
   // Read operation One
-  readOne = async (empid) => {
+  readOne = async empid => {
     return await this.model.findOne({ empid: empid });
   };
 
   // Search operation
-  search = async (query) => {
+  search = async query => {
     return await this.model.find(query);
   };
 
@@ -85,7 +85,7 @@ class ApiCRUDController {
   };
 
   // Delete operation
-  delete = async (id) => {
+  delete = async id => {
     return await this.model.findByIdAndDelete(id);
   };
 }
