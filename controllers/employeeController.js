@@ -255,8 +255,6 @@ module.exports.updateEmployee = async (req, res, next) => {
   try {
     updateupload(req, res, async (err) => {
       if (err) {
-        console.log(err);
-        console.error(err);
         return res.status(400).json({ error: "File upload failed", err });
       }
 
@@ -296,7 +294,7 @@ module.exports.updateEmployee = async (req, res, next) => {
       if (emp.email !== email) {
         const emailExist = await Employee.findOne({ email });
         if (emailExist) {
-          return res.status(409).json({ error: "Email already exists" });
+          return res.status(409).json({ errors: "Email already exists" });
         }
       }
       if (emp.aadharcard_no !== Number(aadharcard_no)) {
@@ -1025,12 +1023,17 @@ module.exports.EmployeeRegister = async (req, res) => {
 
       if (!firstname) {
         return res.status(400).json({ message: "Please fill firstname" });
-      } else if (!lastname) {
-        return res.status(400).json({ message: "Please fill lastname" });
+      } 
+      else if (!mobile_number) {
+        return res.status(400).json({ message: "Please fill mobile number" });
       } 
        else if (!company_email) {
         return res.status(400).json({ message: "Please fill role name" });
-      }else if (!isCompanyEmail(company_email)) {
+      }
+      else if (!documentDob) {
+        return res.status(400).json({ message: "Please fill date" });
+      }
+      else if (!isCompanyEmail(company_email)) {
        return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
       }
 
@@ -1059,7 +1062,7 @@ module.exports.EmployeeRegister = async (req, res) => {
         lastname : capLastName,
         middlename :capMiddleName || "",
         mobile_number,
-        company_email,
+        company_email : company_email.trim(),
         documentDob,
         password: hashPassword,
       });
