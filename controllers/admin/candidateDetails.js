@@ -117,10 +117,8 @@ module.exports.candidateAllData = async (req, res, next) => {
   if (
     empId === userId ||
     role === "ADMIN" ||
-    role === "SALES" ||
-    role === "RECRUITMENT" ||
-    role === "ACCOUNTS:" ||
-    role === "IT"
+    role === "EMPLOYEE" ||
+    role === "HR" 
   ) {
     newData = modifyCandidateData({ ...data });
   } else {

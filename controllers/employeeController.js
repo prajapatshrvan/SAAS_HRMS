@@ -10,7 +10,7 @@ const { storage, fileFilter, updateStorage } = require("../config/multer");
 const ApiCRUDController = require("./ApiCrudController");
 const unlinkfile = require("../helpers/unlinkfile");
 const util = require("util");
-const unlinkAsync = util.promisify(fs.unlink);
+const unlinkAsync = util.promisify(fs.unlink);   
 const transporter = require("../config/email_config.js");
 const bcrypt = require("bcrypt");
 const logger = require("../helpers/logger.js");
@@ -296,7 +296,7 @@ module.exports.updateEmployee = async (req, res, next) => {
       if (emp.email !== email) {
         const emailExist = await Employee.findOne({ email });
         if (emailExist) {
-          return res.status(400).json({ error: "Email already exists" });
+          return res.status(409).json({ error: "Email already exists" });
         }
       }
       if (emp.aadharcard_no !== Number(aadharcard_no)) {
@@ -615,7 +615,6 @@ let modifyEmpData = (alldata, req) => {
   return newData;
 };
 
-
 module.exports.EmployeeList = async (req, res) => {
   let { status, search, month, year } = req.query;
   let userId = req.user?.userObjectId; 
@@ -726,7 +725,6 @@ module.exports.EmployeeList = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const calculateLeaves = (joiningDate) => {
   const joinDate = new Date(joiningDate);
@@ -1014,11 +1012,10 @@ module.exports.EmployeeRegister = async (req, res) => {
         company_email: req.body.company_email
       });
       if (exist) {
-        return res.json({
+        return res.status(409).json({
           message: "Email Already Exist"
         });
       } 
-
 
       function isCompanyEmail(email) {
         const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
