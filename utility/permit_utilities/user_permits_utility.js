@@ -13,7 +13,6 @@ async function getResourcesForUser(userRoleMapping) {
 
   const userRole = userRoleMapping.role;
 
-  console.log(userRole,"userRole",resources)
 
   if (!userRole) {
     console.error("User not found");

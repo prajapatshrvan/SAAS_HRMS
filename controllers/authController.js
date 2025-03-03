@@ -517,8 +517,6 @@ module.exports.userInfo = async (req, res) => {
 
     const userResources = await getResourcesForUser(userRoleMapping);
 
-    // console.log(userResources, "userResources");
-
     if (userResources)
       return res.status(200).json({
         image: empimg.image,

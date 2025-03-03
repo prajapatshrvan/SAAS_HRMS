@@ -4,34 +4,36 @@ const Employee = require("../models/Employee.model");
 const moment = require("moment");
 const Salary = require("../models/salaryModel.js");
 const EmpDocument = require("../models/EmpDocument.model.js")
+const mongoose = require("mongoose");
 
-module.exports.personalInfo = async (req, res) => {
-  try {
-    const empId = req.user?.userObjectId;
-    const info = await Employee.findOne({ _id: empId },{password : 0,token : 0,inherits : 0,__v : 0});
-    const empDocument = await EmpDocument.findOne({empid : empId},{__v : 0, empid : 0, _id : 0,createdAt : 0, updatedAt : 0  })
-    const First = info.firstname;
-    const Middle = info.middlename;
-    const Last = info.lastname;
-    const fullName = `${First} ${Middle} ${Last}`;
+
+// module.exports.personalInfo = async (req, res) => {
+//   try {
+//     const empId = req.user?.userObjectId;
+//     const info = await Employee.findOne({ _id: empId },{password : 0,token : 0,inherits : 0,__v : 0});
+//     const empDocument = await EmpDocument.findOne({empid : empId},{__v : 0, empid : 0, _id : 0,createdAt : 0, updatedAt : 0  })
+//     const First = info.firstname;
+//     const Middle = info.middlename;
+//     const Last = info.lastname;
+//     const fullName = `${First} ${Middle} ${Last}`;
 
     
 
-    return res.status(200).json({
-      FullName: fullName,
-      Designation: info.designation,
-      EmployeeID: info.employeeID,
-      Department: info.department,
-      empDocument,
-      info
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(200).json({
-      message: "Internal Server Error"
-    });
-  }
-};
+//     return res.status(200).json({
+//       FullName: fullName,
+//       Designation: info.designation,
+//       EmployeeID: info.employeeID,
+//       Department: info.department,
+//       empDocument,
+//       info
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(200).json({
+//       message: "Internal Server Error"
+//     });
+//   }
+// };
 
 module.exports.getWorkingHours = async (req, res) => {
   try {
@@ -724,6 +726,89 @@ module.exports.workingHoursCountList = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in workingHoursCountList:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+module.exports.personalInfo = async (req, res) => {
+  try {
+    const db = mongoose.connection;
+    const empId = req.user?.userObjectId;
+
+    // Fetch Employee and Employee Documents in Parallel
+    const [info, empDocument] = await Promise.all([
+      Employee.findOne(
+        { _id: empId },
+        { password: 0, token: 0, inherits: 0, __v: 0 }
+      ),
+      EmpDocument.findOne(
+        { empid: empId },
+        { __v: 0, empid: 0, _id: 0, createdAt: 0, updatedAt: 0 }
+      ),
+    ]);
+
+    if (!info) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    // Extract Full Name
+    const fullName = `${info.firstname || ""} ${info.middlename || ""} ${info.lastname || ""}`.trim();
+
+    // Fetch Address Details in Parallel using Promise.all
+    const [permanentCity, permanentState, permanentCountry, 
+           currentCity, currentState, currentCountry, 
+           workCity, workState, workCountry] = await Promise.all([
+      db.collection("cities").findOne({ id: Number(info.ParmanentAddress?.city) }, { projection: { name: 1, _id: 0 } }),
+      db.collection("states").findOne({ id: Number(info.ParmanentAddress?.state) }, { projection: { name: 1, _id: 0 } }),
+      db.collection("countries").findOne({ id: Number(info.ParmanentAddress?.country) }, { projection: { name: 1, _id: 0 } }),
+      
+      db.collection("cities").findOne({ id: Number(info.currentAddress?.city) }, { projection: { name: 1, _id: 0 } }),
+      db.collection("states").findOne({ id: Number(info.currentAddress?.state) }, { projection: { name: 1, _id: 0 } }),
+      db.collection("countries").findOne({ id: Number(info.currentAddress?.country) }, { projection: { name: 1, _id: 0 } }),
+
+      db.collection("cities").findOne({ id: Number(info.worklocation?.city) }, { projection: { name: 1, _id: 0 } }),
+      db.collection("states").findOne({ id: Number(info.worklocation?.state) }, { projection: { name: 1, _id: 0 } }),
+      db.collection("countries").findOne({ id: Number(info.worklocation?.country) }, { projection: { name: 1, _id: 0 } }),
+    ]);
+
+    // Construct Address Objects
+    const permanentAddress = {
+      cityname: permanentCity?.name || "",
+      statename: permanentState?.name || "",
+      countryname: permanentCountry?.name || "",
+    };
+
+    const currentAddress = {
+      cityname: currentCity?.name || permanentAddress.cityname,
+      statename: currentState?.name || permanentAddress.statename,
+      countryname: currentCountry?.name || permanentAddress.countryname,
+    };
+
+    const workLocation = {
+      cityname: workCity?.name || permanentAddress.cityname,
+      statename: workState?.name || permanentAddress.statename,
+      countryname: workCountry?.name || permanentAddress.countryname,
+    };
+
+    // Merge Address Data into Employee Info
+    const data = {
+      ...info.toObject(), // Convert Mongoose document to plain object
+      currentAddress: { ...info.currentAddress, ...currentAddress },
+      ParmanentAddress: { ...info.ParmanentAddress, ...permanentAddress },
+      worklocation: { ...info.worklocation, ...workLocation },
+    };
+
+    return res.status(200).json({
+      FullName: fullName,
+      Designation: info.designation,
+      EmployeeID: info.employeeID,
+      Department: info.department,
+      empDocument,
+      info: data,
+    });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
