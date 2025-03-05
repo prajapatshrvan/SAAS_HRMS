@@ -124,12 +124,14 @@ module.exports.candidateAllData = async (req, res, next) => {
   } else {
     newData = modifyLimitedCandidateData({ ...data });
   }
-
+  console.log(newData,"newData")
   return res.status(200).send(newData);
 };
 
 const getEmployeeData = async (empId, keys) => {
   let data = await Employee.findOne({ _id: empId }, keys);
+
+ 
   return data;
 };
 
