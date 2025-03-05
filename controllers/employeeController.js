@@ -1199,7 +1199,8 @@ module.exports.EmployeeRegister = async (req, res) => {
       const capLastName = capitalize(lastname);
     
       const salt = await bcrypt.genSalt(10);
-      const hashPassword = await bcrypt.hash("123456", salt);
+      const password = "123456"
+      const hashPassword = await bcrypt.hash(password, salt);
       const employee = new Employee({
         employeeID,  
         firstname : capFirstName,
