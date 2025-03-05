@@ -4,7 +4,7 @@ const Leave = require("../models/Leave.model");
 const Salaryslab = require("../models/SalarySalb.Model.js");
 const multer = require("multer");
 const { join } = require("path");
-const fs = require("fs");
+const fs = require("fs"); 
 const Validation = require("../validationlable");
 const { storage, fileFilter, updateStorage } = require("../config/multer");
 const ApiCRUDController = require("./ApiCrudController");
@@ -257,10 +257,10 @@ module.exports.updateEmployee = async (req, res, next) => {
       if (err) {
         return res.status(400).json({ error: "File upload failed", err });
       }
-
       const {
         empid,
         firstname,
+
         middlename,
         lastname,
         documentDob,
@@ -343,7 +343,6 @@ module.exports.updateEmployee = async (req, res, next) => {
         role
       };
 
-
       if (req.files.image && req.files.image[0]) {
         if (fs.existsSync(emp.image)) {
           const imagepath = `${directoryPath}/${emp.image.slice(9 + emp.employeeID.length)}`;
@@ -351,7 +350,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         }
         updatePayload.image = `uploads/${employeeID}/${req.files.image[0].filename}`;
       }
-
+   
       if (req.files.aadhar_image && req.files.aadhar_image[0]) {
         if (fs.existsSync(emp.aadhar_image)) {
           const imagepath = `${directoryPath}/${emp.aadhar_image.slice(9 + emp.employeeID.length)}`;
@@ -537,20 +536,20 @@ module.exports.adddepartment = async (req, res) => {
     }
 
     // Validate email domain
-    function isCompanyEmail(email) {
-      const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
-      const domain = email.split("@").pop();
-      return allowedDomains.includes(domain);
-    }
+    // function isCompanyEmail(email) {
+    //   const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
+    //   const domain = email.split("@").pop();
+    //   return allowedDomains.includes(domain);
+    // }
 
     let errors = {};
 
     if (!empid || !empid.trim()) {
       errors.empid = "Please provide empid";
     }
-    if (!isCompanyEmail(company_email)) {
-      errors.company_email = "Please enter a valid email domain (e.g., @singhsoft.com)";
-    }
+    // if (!isCompanyEmail(company_email)) {
+    //   errors.company_email = "Please enter a valid email domain (e.g., @singhsoft.com)";
+    // }
     if (!department || !department.trim()) {
       errors.department = "Department is required";
     }
@@ -725,7 +724,7 @@ module.exports.EmployeeList = async (req, res) => {
     console.error("Error fetching employees:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-};
+}; 
 
 const calculateLeaves = (joiningDate) => {
   const joinDate = new Date(joiningDate);
@@ -840,10 +839,159 @@ module.exports.addctcdetails = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
+      error : error.message
     });
   }
 };
+
+// module.exports.Employeedocument = async (req, res, next) => {
+//   uploaddoc(req, res, async (err) => {
+//     try {
+//       if (err) {
+//         let failedFields = req.files ? req.files.map((file) => file.fieldname) : [];
+//         return next({
+//           message: `File upload failed for fields: ${failedFields.join(", ") || "unknown fields"}`,
+//           status: 400,
+//           error: err.message
+//         });
+//       }
+
+//       const {
+//         empid,
+//         secondary_passing,
+//         senior_passing,
+//         bachelor_passing,
+//         undergraduate_passing,
+//         extraExperience,
+//         extraData,
+//         companyname,
+//         compensation,
+//         experienceletter,
+//         offerletter,
+//         start_date,
+//         end_date,
+//         payslip,
+//         relievingletter,
+//         resignationletter
+//       } = req.body;
+
+//       const empdata = await Employee.findOne({ _id: empid });
+//       if (!empdata) {
+//         return res.status(404).json({ error: "Employee not found" });
+//       }
+
+//       let empId = empdata._id;
+//       let empDocs = await EmpDocument.findOne({ empid: empId });
+
+//       let dataFiles = {};
+//       let extraExperienceData = extraExperience ? JSON.parse(extraExperience) : [];
+//       let extra = extraData ? JSON.parse(extraData) : [];
+
+//       req.files.forEach((file) => {
+//         let filePathName = `uploads/${empdata.employeeID}/${file.filename}`;
+
+//         extra.forEach((item) => {
+//           if (file.fieldname === item.degreeField) {
+//             item.degreefile = filePathName;
+//           }
+//         });
+
+//         extraExperienceData.forEach((item) => {
+//           Object.keys(item).forEach((key) => {
+//             if (key === file.fieldname) {
+//               item[key] = filePathName;
+//             }
+//           });
+//         });
+
+//         if (file.fieldname && filePathName) {
+//           dataFiles[file.fieldname] = filePathName;
+//         }
+//       });
+
+//       let setUpdateData = {
+//         secondary_passing,
+//         senior_passing,
+//         bachelor_passing,
+//         undergraduate_passing,
+//         ...dataFiles,
+//         extra
+//       };
+
+//       if (companyname) {
+//         setUpdateData = {
+//           ...setUpdateData,
+//           companyname,
+//           start_date,
+//           end_date,
+//           extraExperienceData
+//         };
+//         delete setUpdateData.extra;
+//       }
+
+//       let expfiles = [
+//         "compensation",
+//         "experienceletter",
+//         "offerletter",
+//         "payslip",
+//         "relievingletter",
+//         "resignationletter"
+//       ];
+
+//       if (Object.keys(dataFiles).length > 0) {
+//         let includesExpfiles = expfiles.some((file) => dataFiles[file]);
+
+//         if (includesExpfiles) {
+//           let experienceData = {
+//             compensation,
+//             companyname,
+//             experienceletter,
+//             offerletter,
+//             payslip,
+//             relievingletter,
+//             resignationletter,
+//             start_date,
+//             end_date,
+//             ...dataFiles
+//           };
+//           setUpdateData.experienceData = experienceData;
+//        }
+//       }
+
+//       let empDocument;
+//       if (empDocs) {
+//         empDocument = await EmpDocument.findOneAndUpdate(
+//           { _id: empDocs._id },
+//           { $set: setUpdateData },
+//           { new: true, upsert: true }
+//         );
+//       } else {
+//         empDocument = new EmpDocument({
+//           empid: empId,
+//           secondary_passing,
+//           senior_passing,
+//           bachelor_passing,
+//           undergraduate_passing,
+//           ...dataFiles,
+//           extra
+//         });
+//         await empDocument.save();
+//       }
+
+//       return res.status(201).json({
+//         data: { ...empDocument._doc, documents: [setUpdateData] },
+//         message: "Employee document uploaded successfully"
+//       });
+//     } catch (error) {
+//       console.error("Internal server error", error);
+//       return res.status(500).json({
+//         message: "Internal server error"
+//       });
+//     }
+//   });
+// };
+
 
 module.exports.Employeedocument = async (req, res, next) => {
   uploaddoc(req, res, async (err) => {
@@ -939,24 +1087,21 @@ module.exports.Employeedocument = async (req, res, next) => {
         "resignationletter"
       ];
 
-      if (Object.keys(dataFiles).length > 0) {
-        let includesExpfiles = expfiles.some((file) => dataFiles[file]);
-
-        if (includesExpfiles) {
-          let experienceData = {
-            compensation,
-            companyname,
-            experienceletter,
-            offerletter,
-            payslip,
-            relievingletter,
-            resignationletter,
-            start_date,
-            end_date,
-            ...dataFiles
-          };
-          setUpdateData.experienceData = experienceData;
-        }
+      let experienceData = {
+        compensation,
+        companyname,
+        experienceletter,
+        offerletter,
+        payslip,
+        relievingletter,
+        resignationletter,
+        start_date,
+        end_date,
+        ...dataFiles
+      };
+      
+      if (Object.keys(dataFiles).length > 0 || Object.values(experienceData).some(val => val)) {
+        setUpdateData.experienceData = experienceData;
       }
 
       let empDocument;
@@ -997,7 +1142,6 @@ module.exports.EmployeeRegister = async (req, res) => {
     if (Object.keys(req.body).length === 0) {
       throw new Error("Request body is not defined");
     }
-    
       const {
         firstname,
         middlename,
@@ -1018,11 +1162,11 @@ module.exports.EmployeeRegister = async (req, res) => {
         });
       } 
 
-      function isCompanyEmail(email) {
-        const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
-        const domain = email.split("@").pop();
-        return allowedDomains.includes(domain);
-      }
+      // function isCompanyEmail(email) {
+      //   const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
+      //   const domain = email.split("@").pop();
+      //   return allowedDomains.includes(domain);
+      // }
 
       if (!firstname) {
         return res.status(400).json({ message: "Please fill firstname" });
@@ -1036,9 +1180,9 @@ module.exports.EmployeeRegister = async (req, res) => {
       else if (!documentDob) {
         return res.status(400).json({ message: "Please fill date" });
       }
-      else if (!isCompanyEmail(company_email)) {
-       return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
-      }
+      // else if (!isCompanyEmail(company_email)) {
+      //  return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
+      // }
 
      // Generate employee ID based on DOB and mobile number
      const year = documentDob.slice(0, 2);
@@ -1060,7 +1204,7 @@ module.exports.EmployeeRegister = async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash("123456", salt);
       const employee = new Employee({
-        employeeID,
+        employeeID,  
         firstname : capFirstName,
         lastname : capLastName,
         middlename :capMiddleName || "",
@@ -1074,6 +1218,13 @@ module.exports.EmployeeRegister = async (req, res) => {
       return res.status(201).json({
         message: "Employee create successfully"
       });
+
+      // const info = await transporter.sendMail({
+      //   from: process.env.EMAIL_FROM,
+      //   to: employee.email,
+      //   subject: "HR-TOOLS - Email",
+      //   html: emailHtml
+      // });
     
   } catch (error) {
     console.log(error);

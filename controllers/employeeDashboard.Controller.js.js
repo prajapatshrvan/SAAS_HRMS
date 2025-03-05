@@ -475,7 +475,7 @@ module.exports.BirthdaysCurrentDay = async (req, res) => {
           { $eq: [{ $dayOfMonth: { $dateFromString: { dateString: "$originalDob" } } }, day] }
         ]
       }
-    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1});
+    }).select({firstname : 1, lastname : 1, middlename : 1, image : 1,originalDob :1,designation : 1 });
 
     return res.status(200).json({
       data: birthday,
@@ -532,7 +532,8 @@ module.exports.BirthdaysCurrentMonth = async (req, res) => {
           middlename: 1,
           image: 1,
           originalDob: 1,
-          profile: 1
+          profile: 1,
+          designation : 1
         }
       }
     ]);
@@ -575,7 +576,8 @@ module.exports.Work_Anniversary = async (req, res) => {
           firstname: 1,
           lastname: 1,
           joining_date: 1,
-          createdAt: 1
+          createdAt: 1,
+          designation : 1
         }
       }
     ]);
@@ -729,7 +731,6 @@ module.exports.workingHoursCountList = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 module.exports.personalInfo = async (req, res) => {
   try {

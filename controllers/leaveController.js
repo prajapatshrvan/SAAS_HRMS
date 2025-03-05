@@ -78,7 +78,7 @@ module.exports.createLeave = async (req, res) => {
         return res.status(400).json({ message: "Start date should not be older than 30 days from today." });
       }
 
-      if (!type || !type.trim() || !reason.trim() || edate < sdate) {
+      if (!type?.trim() || !reason?.trim() || edate < sdate) {
         return res.status(400).json({ message: "Invalid input data" });
       }
 
@@ -247,85 +247,25 @@ module.exports.leaveDelete = async (req, res) => {
   }
 };
 
-// module.exports.leaveCount = async (req, res) => {
-//   try {
-//     const { userObjectId } = req.user;
-//     const totalLeavesPerYear = 12;
-//     const leavesPerMonth = 1;
-
-//     const currentDate = new Date();
-//     const startOfYear = new Date(currentDate.getFullYear(), 0, 1); 
-//     const monthsElapsed = currentDate.getMonth() + 1;
-
-
-//     const paidLeaves = monthsElapsed * leavesPerMonth;
-//     const leaves = await Leave.find({ empid: userObjectId, status: "approved" }).sort({ createdAt: -1 });
-//     const takenLeaves = leaves.reduce((accumulator, leave) => {
-//       return accumulator + (leave.leave_days || 0); 
-//     }, 0);
-
-//     const remainingLeaves = Math.max(0, paidLeaves - takenLeaves);
-//     const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves); 
-
-//     return res.status(200).json({
-//       totalLeavesPerYear,
-//       paidLeaves,
-//       takenLeaves,
-//       remainingLeaves,
-//       unpaidLeaves,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching leave count:", error.message);
-//     return res.status(500).json({
-//       message: "Internal server error",
-//     });
-//   }
-// };
-
-
 module.exports.leaveCount = async (req, res) => {
   try {
     const { userObjectId } = req.user;
-    const totalLeavesPerYear = 12; 
+    const totalLeavesPerYear = 12;
     const leavesPerMonth = 1;
 
     const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1); 
+    const monthsElapsed = currentDate.getMonth() + 1;
 
-    const employee = await Employee.findById(userObjectId);
-    if (!employee || !employee.joining_date) {
-      return res.status(400).json({ message: "Employee joining date not found" });
-    }
 
-    const joiningDate = new Date(employee.joining_date);
-    const joiningYear = joiningDate.getFullYear();
-    const joiningMonth = joiningDate.getMonth(); 
-
-    if (joiningYear > currentYear) {
-      return res.status(400).json({ message: "Invalid joining date" });
-    }
-
-    let paidLeaves;
-    if (joiningYear === currentYear) {
-      paidLeaves = (currentDate.getMonth() - joiningMonth + 1) * leavesPerMonth;
-    } else {
-
-      paidLeaves = totalLeavesPerYear;
-    }
-
-    const leaves = await Leave.find({
-      empid: userObjectId,
-      status: "approved",
-      createdAt: { 
-        $gte: new Date(currentYear, 0, 1), 
-        $lt: new Date(currentYear + 1, 0, 1) 
-      }
-    }).sort({ createdAt: -1 });
-
-    const takenLeaves = leaves.reduce((acc, leave) => acc + (leave.leave_days || 0), 0);
+    const paidLeaves = monthsElapsed * leavesPerMonth;
+    const leaves = await Leave.find({ empid: userObjectId, status: "approved" }).sort({ createdAt: -1 });
+    const takenLeaves = leaves.reduce((accumulator, leave) => {
+      return accumulator + (leave.leave_days || 0); 
+    }, 0);
 
     const remainingLeaves = Math.max(0, paidLeaves - takenLeaves);
-    const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves);
+    const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves); 
 
     return res.status(200).json({
       totalLeavesPerYear,
@@ -336,9 +276,69 @@ module.exports.leaveCount = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching leave count:", error.message);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
+
+
+// module.exports.leaveCount = async (req, res) => {
+//   try {
+//     const { userObjectId } = req.user;
+//     const totalLeavesPerYear = 12; 
+//     const leavesPerMonth = 1;
+
+//     const currentDate = new Date();
+//     const currentYear = currentDate.getFullYear();
+
+//     const employee = await Employee.findById(userObjectId);
+//     if (!employee || !employee.joining_date) {
+//       return res.status(400).json({ message: "Employee joining date not found" });
+//     }
+
+//     const joiningDate = new Date(employee.joining_date);
+//     const joiningYear = joiningDate.getFullYear();
+//     const joiningMonth = joiningDate.getMonth(); 
+
+//     if (joiningYear > currentYear) {
+//       return res.status(400).json({ message: "Invalid joining date" });
+//     }
+
+//     let paidLeaves;
+//     if (joiningYear === currentYear) {
+//       paidLeaves = (currentDate.getMonth() - joiningMonth + 1) * leavesPerMonth;
+//     } else {
+
+//       paidLeaves = totalLeavesPerYear;
+//     }
+
+//     const leaves = await Leave.find({
+//       empid: userObjectId,
+//       status: "approved",
+//       createdAt: { 
+//         $gte: new Date(currentYear, 0, 1), 
+//         $lt: new Date(currentYear + 1, 0, 1) 
+//       }
+//     }).sort({ createdAt: -1 });
+
+//     const takenLeaves = leaves.reduce((acc, leave) => acc + (leave.leave_days || 0), 0);
+
+//     const remainingLeaves = Math.max(0, paidLeaves - takenLeaves);
+//     const unpaidLeaves = Math.max(0, takenLeaves - paidLeaves);
+
+//     return res.status(200).json({
+//       totalLeavesPerYear,
+//       paidLeaves,
+//       takenLeaves,
+//       remainingLeaves,
+//       unpaidLeaves,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching leave count:", error.message);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 
 

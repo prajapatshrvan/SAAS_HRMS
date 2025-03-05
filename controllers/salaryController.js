@@ -131,11 +131,8 @@ const createSalary = async (req, res) => {
     const startDate = moment(`${Year}-${Month}-26`)
       .subtract(1, "month")
       .startOf("day");
-    // .toDate();
-    const endDate = moment(`${Year}-${Month}-25`).endOf("day");
-    // .toDate();
 
-    // const totalDaysInCurrentMonth = moment(`${Year}-${Month}`).daysInMonth();
+    const endDate = moment(`${Year}-${Month}-25`).endOf("day");
 
     const totalDaysInCurrentMonth = endDate.diff(startDate, "days") + 1;
 
