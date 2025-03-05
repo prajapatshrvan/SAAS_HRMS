@@ -1215,16 +1215,26 @@ module.exports.EmployeeRegister = async (req, res) => {
       });
 
       await employee.save();
+      // return res.status(201).json({
+      //   message: "Employee create successfully"
+      // });
+
+      const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
+    try {
+      const info = await transporter.sendMail({
+        from: process.env.EMAIL_FROM,
+        to: employee.email,
+        subject: "HR-TOOLS - Email",
+        html: emailHtml
+      });
+
       return res.status(201).json({
         message: "Employee create successfully"
       });
-
-      // const info = await transporter.sendMail({
-      //   from: process.env.EMAIL_FROM,
-      //   to: employee.email,
-      //   subject: "HR-TOOLS - Email",
-      //   html: emailHtml
-      // });
+  
+    } catch (error) {
+      return res.status(500).json({ message: "internal server error", error : error.message });
+    }
     
   } catch (error) {
     console.log(error);
