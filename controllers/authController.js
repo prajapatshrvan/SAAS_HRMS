@@ -223,9 +223,9 @@ module.exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email field is required" });
     }
     const user = await Employee.findOne({
-      company_email: email,
-      status: "completed"
+      company_email: email
     });
+
     if (!user) {
       return res
         .status(404)
