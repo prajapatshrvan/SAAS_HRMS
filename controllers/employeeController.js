@@ -6,7 +6,8 @@ const { join } = require("path");
 const fs = require("fs"); 
 const Validation = require("../validationlable");
 const { storage, fileFilter, updateStorage } = require("../config/multer");
-const util = require("util");
+
+const util = require("util"); 
 const unlinkAsync = util.promisify(fs.unlink);   
 const transporter = require("../config/email_config.js");
 const bcrypt = require("bcrypt");
@@ -15,6 +16,7 @@ const generatePassword = require("../utility/generatePassword.js");
 const {addEmployees} = require("../utility/esslFunction.js");
 const { CLIENT_RENEG_LIMIT } = require("tls");
 const Company = require("../models/Company.model");
+const Biometric = require("../models/Biometric.model");
 const { default: mongoose } = require("mongoose");
 const { generateEmailHtml } = require("../utility/emailtemplet.js");
 require("dotenv").config();
@@ -191,7 +193,7 @@ module.exports.EmployeeAdd = async (req, res, next) => {
       // }
 
 
-
+      // Create employee object
       const imagePaths = req.files
         ? {
           image: req.files.image ? `uploads/${employeeID}/${req.files.image[0].filename}` : null,
@@ -1148,7 +1150,6 @@ module.exports.EmployeeRegister = async (req, res) => {
         company_email,
         documentDob,
         mobile_number
-       
       } = req.body;
 
       const exist = await Employee.findOne({
@@ -1178,30 +1179,15 @@ module.exports.EmployeeRegister = async (req, res) => {
       else if (!documentDob) {
         return res.status(400).json({ message: "Please fill date" });
       }   
-      // else if (!isCompanyEmail(company_email)) {
-      //  return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
-      // }
-
-     // Generate employee ID based on DOB and mobile number
-    //  const year = documentDob.slice(0, 2);
-    //  const mobileLast4 = mobile_number.slice(-4);
-    //  const base_empId = `${year}${mobileLast4}`;
-    //  let employeeID = base_empId;
-    //  let numCount = 1;
-
-    //  while (await Employee.findOne({ employeeID })) {
-    //    employeeID = `${base_empId}${numCount++}`;
-    //  }
-
+      
     let base_empId = "STEK";
     let numCount = 155;
-   let employeeID = `${base_empId}${String(numCount).padStart(4, "0")}`;
+    let employeeID = `${base_empId}${String(numCount).padStart(4, "0")}`;
 
   while (await Employee.findOne({ employeeID })) {
     numCount++;
     employeeID = `${base_empId}${String(numCount).padStart(4, "0")}`;
   }
-
 
      const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
 
@@ -1217,7 +1203,6 @@ module.exports.EmployeeRegister = async (req, res) => {
        .filter(name => name && name.trim() !== "") 
        .join(" "); 
 
-  
        const data = [{
          employeename : employeename,
          SerialNumber : "TDBD241100590",
