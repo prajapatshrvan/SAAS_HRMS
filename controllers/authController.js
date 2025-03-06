@@ -11,6 +11,7 @@ const {
   getResourcesForUser
 } = require("../utility/permit_utilities/user_permits_utility.js");
 const Employee = require("../models/Employee.model.js");
+const { generateEmailHtml } = require("../utility/emailtemplet.js");
 
 module.exports.register = async (req, res) => {
   try {
@@ -242,13 +243,14 @@ module.exports.forgotPassword = async (req, res) => {
       email: email,
       otp: userOtp
     });
-
+    const otpProps="otp"
+    const emailotp = generateEmailHtml(email ,userOtp ,otpProps);
     try {
       const info = await transporter.sendMail({
         from: process.env.EMAIL_FROM,
         to: user.company_email,
         subject: "HR-TOOLS - Email OTP",
-        html: `OTP: ${userOtp}`
+        html: emailotp
       });
       res.status(200).json({
         message: "OTP sent successfully",
