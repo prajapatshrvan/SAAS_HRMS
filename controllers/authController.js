@@ -6,6 +6,7 @@ const Role = require("../models/Role.model.js");
 const transporter = require("../config/email_config.js");
 const { authLabels } = require("../Label.js");
 const Otp = require("../models/Otp.model.js");
+const Biometric = require("../models/Biometric.model.js");
 const randomstring = require("randomstring");
 const {
   getResourcesForUser
@@ -543,5 +544,34 @@ module.exports.ViewRoleApi = async (req, res) => {
     return res.status(200).send(roles);
   } catch (error) {
     return res.status(500).send("internal server error");
+  }
+};
+
+module.exports.Biometric_user_password = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "Username and password required" });
+    }
+    const usernameExist = await Biometric.findOne();
+
+    if (usernameExist) {
+      await Biometric.findByIdAndUpdate(usernameExist._id, {
+        username: username,
+        password: password
+      });
+    } else {
+      await Biometric.create({
+        username: username,
+        password: password
+      });
+    }
+    return res.status(200).json({ message: "Biometric user created" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };

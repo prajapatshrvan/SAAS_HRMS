@@ -33,6 +33,8 @@ router.get("/emp_attendance", auth, employeeAttendanceReport);
 // router.get("/emp_attendance_report_test", auth, attendanceReportTesting);
 router.post("/biometric_attendance", auth, biometricAttendance);
 
+router.post("/biometric_user_password", auth, user.Biometric_user_password);
+
 router.get("/roles", auth, user.ViewRoleApi);
 
 module.exports = router;
