@@ -1,20 +1,20 @@
 const Employee = require("../models/Employee.model");
 const EmpDocument = require("../models/EmpDocument.model");
-const Leave = require("../models/Leave.model");
-const Salaryslab = require("../models/SalarySalb.Model.js");
+
 const multer = require("multer");
 const { join } = require("path");
 const fs = require("fs"); 
 const Validation = require("../validationlable");
 const { storage, fileFilter, updateStorage } = require("../config/multer");
-const ApiCRUDController = require("./ApiCrudController");
-const unlinkfile = require("../helpers/unlinkfile");
+
+
 const util = require("util");
 const unlinkAsync = util.promisify(fs.unlink);   
 const transporter = require("../config/email_config.js");
 const bcrypt = require("bcrypt");
 const logger = require("../helpers/logger.js");
 const generatePassword = require("../utility/generatePassword.js");
+const {addEmployees} = require("../utility/esslFunction.js");
 const { CLIENT_RENEG_LIMIT } = require("tls");
 const Company = require("../models/Company.model");
 const { default: mongoose } = require("mongoose");
@@ -1149,7 +1149,6 @@ module.exports.EmployeeRegister = async (req, res) => {
        
       } = req.body;
 
-
       const exist = await Employee.findOne({
         company_email: req.body.company_email
       });
@@ -1176,21 +1175,31 @@ module.exports.EmployeeRegister = async (req, res) => {
       }
       else if (!documentDob) {
         return res.status(400).json({ message: "Please fill date" });
-      }
+      }   
       // else if (!isCompanyEmail(company_email)) {
       //  return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
       // }
 
      // Generate employee ID based on DOB and mobile number
-     const year = documentDob.slice(0, 2);
-     const mobileLast4 = mobile_number.slice(-4);
-     const base_empId = `${year}${mobileLast4}`;
-     let employeeID = base_empId;
-     let numCount = 1;
+    //  const year = documentDob.slice(0, 2);
+    //  const mobileLast4 = mobile_number.slice(-4);
+    //  const base_empId = `${year}${mobileLast4}`;
+    //  let employeeID = base_empId;
+    //  let numCount = 1;
 
-     while (await Employee.findOne({ employeeID })) {
-       employeeID = `${base_empId}${numCount++}`;
-     }
+    //  while (await Employee.findOne({ employeeID })) {
+    //    employeeID = `${base_empId}${numCount++}`;
+    //  }
+
+    let base_empId = "STEK";
+    let numCount = 155;
+   let employeeID = `${base_empId}${String(numCount).padStart(4, "0")}`;
+
+  while (await Employee.findOne({ employeeID })) {
+    numCount++;
+    employeeID = `${base_empId}${String(numCount).padStart(4, "0")}`;
+  }
+
 
      const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
 
@@ -1201,6 +1210,28 @@ module.exports.EmployeeRegister = async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const password = "123456"
       const hashPassword = await bcrypt.hash(password, salt);
+
+      const employeename = [capFirstName, capMiddleName, capLastName]
+       .filter(name => name && name.trim() !== "") 
+       .join(" "); 
+
+  
+       const data = [{
+         employeename : employeename,
+         SerialNumber : "TDBD241100590",
+         EmployeeCode : employeeID,
+         UserName : "hrmsapi",
+         UserPassword : "Hrms@123"
+        },
+      {
+        employeename : employeename,
+        SerialNumber : "TDBD241100946",
+        EmployeeCode : employeeID,
+        UserName : "hrmsapi",
+        UserPassword : "Hrms@123"
+       }
+    ]
+  
       const employee = new Employee({
         employeeID,  
         firstname : capFirstName,
@@ -1213,18 +1244,17 @@ module.exports.EmployeeRegister = async (req, res) => {
       });
 
       await employee.save();
-      // return res.status(201).json({
-      //   message: "Employee create successfully"
-      // });
 
       const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
     try {
       const info = await transporter.sendMail({
         from: process.env.EMAIL_FROM,
-        to: employee.email,
+        to: employee.company_email,
         subject: "HR-TOOLS - Email",
         html: emailHtml
       });
+
+      addEmployees(data);
 
       return res.status(201).json({
         message: "Employee create successfully"
@@ -1244,6 +1274,14 @@ module.exports.EmployeeRegister = async (req, res) => {
     );
   }
 };
+
+
+
+
+
+
+
+
 
 
 
