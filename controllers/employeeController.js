@@ -4,13 +4,13 @@ const Leave = require("../models/Leave.model");
 const Salaryslab = require("../models/SalarySalb.Model.js");
 const multer = require("multer");
 const { join } = require("path");
-const fs = require("fs");
+const fs = require("fs"); 
 const Validation = require("../validationlable");
 const { storage, fileFilter, updateStorage } = require("../config/multer");
 const ApiCRUDController = require("./ApiCrudController");
 const unlinkfile = require("../helpers/unlinkfile");
 const util = require("util");
-const unlinkAsync = util.promisify(fs.unlink);
+const unlinkAsync = util.promisify(fs.unlink);   
 const transporter = require("../config/email_config.js");
 const bcrypt = require("bcrypt");
 const logger = require("../helpers/logger.js");
@@ -55,11 +55,11 @@ const updateupload = multer({
 module.exports.companyList = async (req, res, next) => {
   try {
     const company = await Company.find()
-    if (!company) {
-      return res.status(400).json({ message: "Data not found" })
+    if(!company){
+      return res.status(400).json({message : "Data not found"})
     }
-    return res.status(200).json({
-      data: company,
+      return res.status(200).json({
+        data: company,
     });
   } catch (error) {
     console.error(error);
@@ -100,13 +100,13 @@ module.exports.EmployeeAdd = async (req, res, next) => {
         company_email,
         uan_number,
         role
-
+    
       } = req.body;
 
-      const employee = await Employee.findOne({ company_email: company_email })
+      const employee = await Employee.findOne({company_email : company_email})
 
-      if (!employee) {
-        return res.status(400).json({ message: "Employee not found" })
+      if(!employee){
+        return res.status(400).json({message : "Employee not found"})
       }
 
       const employeeID = employee.employeeID
@@ -152,7 +152,7 @@ module.exports.EmployeeAdd = async (req, res, next) => {
           field: "pancard_no",
           message: "Please provide a valid PAN card number"
         },
-
+        
       ];
 
       validations.forEach(({ valid, field, message }) => {
@@ -297,9 +297,9 @@ module.exports.updateEmployee = async (req, res, next) => {
           return res.status(409).json({ errors: "Email already exists" });
         }
       }
-
-
-
+   
+     
+     
       if (emp.aadharcard_no !== Number(aadharcard_no)) {
         const aadharExist = await Employee.findOne({ aadharcard_no });
         if (aadharExist) {
@@ -350,7 +350,7 @@ module.exports.updateEmployee = async (req, res, next) => {
         }
         updatePayload.image = `uploads/${employeeID}/${req.files.image[0].filename}`;
       }
-
+   
       if (req.files.aadhar_image && req.files.aadhar_image[0]) {
         if (fs.existsSync(emp.aadhar_image)) {
           const imagepath = `${directoryPath}/${emp.aadhar_image.slice(9 + emp.employeeID.length)}`;
@@ -617,8 +617,8 @@ let modifyEmpData = (alldata, req) => {
 
 module.exports.EmployeeList = async (req, res) => {
   let { status, search, month, year } = req.query;
-  let userId = req.user?.userObjectId;
-  let role = req.role_name;
+  let userId = req.user?.userObjectId; 
+  let role = req.role_name; 
 
   let statusList = {
     active: ["completed", "InNoticePeriod"],
@@ -631,10 +631,10 @@ module.exports.EmployeeList = async (req, res) => {
     let matchStage = {};
 
     if (role !== "ADMIN") {
-      matchStage._id = new mongoose.Types.ObjectId(userId);
+      matchStage._id = new mongoose.Types.ObjectId(userId); 
     }
 
-
+    
     if (empstatus) {
       matchStage.status = { $in: empstatus };
     }
@@ -669,7 +669,7 @@ module.exports.EmployeeList = async (req, res) => {
       matchStage.joining_date = { $gte: startDate, $lt: endDate };
     }
 
-
+    
     let employeeList = await Employee.aggregate([
       { $match: matchStage },
       { $sort: { createdAt: -1 } },
@@ -686,8 +686,8 @@ module.exports.EmployeeList = async (req, res) => {
       {
         $project: {
           firstname: 1,
-          company_email: 1,
-          documentDob: 1,
+          company_email : 1,
+          documentDob : 1,
           lastname: 1,
           middlename: 1,
           mobile_number: 1,
@@ -724,18 +724,18 @@ module.exports.EmployeeList = async (req, res) => {
     console.error("Error fetching employees:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-};
+}; 
 
 const calculateLeaves = (joiningDate) => {
   const joinDate = new Date(joiningDate);
   const currentYear = new Date().getFullYear();
-
+  
   if (joinDate.getFullYear() === currentYear) {
-    const joinMonth = joinDate.getMonth() + 1;
-    return 13 - joinMonth;
-  }
-
-  return 12;
+    const joinMonth = joinDate.getMonth() + 1; 
+    return 13 - joinMonth; 
+  } 
+  
+  return 12; 
 };
 
 // employee status
@@ -758,14 +758,14 @@ module.exports.employeeStatus = async (req, res) => {
 
     // const joiningDate = new Date(employee.joining_date || employee.createdAt).toLocaleDateString();
 
-
+  
     // const totalLeave = calculateLeaves(joiningDate);
 
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
       empid,
-      { $set: { status: status } },
-      { new: true }
+      { $set: { status : status} },
+      { new: true } 
     );
 
     res.status(200).json({
@@ -840,7 +840,7 @@ module.exports.addctcdetails = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       message: "Internal server error",
-      error: error.message
+      error : error.message
     });
   }
 };
@@ -1099,7 +1099,7 @@ module.exports.Employeedocument = async (req, res, next) => {
         end_date,
         ...dataFiles
       };
-
+      
       if (Object.keys(dataFiles).length > 0 || Object.values(experienceData).some(val => val)) {
         setUpdateData.experienceData = experienceData;
       }
@@ -1142,160 +1142,85 @@ module.exports.EmployeeRegister = async (req, res) => {
     if (Object.keys(req.body).length === 0) {
       throw new Error("Request body is not defined");
     }
-    const {
-      firstname,
-      middlename,
-      lastname,
-      company_email,
-      documentDob,
-      mobile_number
+      const {
+        firstname,
+        middlename,
+        lastname,
+        company_email,
+        documentDob,
+        mobile_number
+       
+      } = req.body;
 
-    } = req.body;
 
-
-    const exist = await Employee.findOne({
-      company_email: req.body.company_email
-    });
-    if (exist) {
-      return res.status(409).json({
-        message: "Email Already Exist"
+      const exist = await Employee.findOne({
+        company_email: req.body.company_email
       });
-    }
+      if (exist) {
+        return res.status(409).json({
+          message: "Email Already Exist"
+        });
+      } 
 
-    // function isCompanyEmail(email) {
-    //   const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
-    //   const domain = email.split("@").pop();
-    //   return allowedDomains.includes(domain);
-    // }
+      // function isCompanyEmail(email) {
+      //   const allowedDomains = ["singhsoft.com", "infovices.com", "singhtek.com"];
+      //   const domain = email.split("@").pop();
+      //   return allowedDomains.includes(domain);
+      // }
 
-    if (!firstname) {
-      return res.status(400).json({ message: "Please fill firstname" });
-    }
-    else if (!mobile_number) {
-      return res.status(400).json({ message: "Please fill mobile number" });
-    }
-    else if (!company_email) {
-      return res.status(400).json({ message: "Please fill role name" });
-    }
-    else if (!documentDob) {
-      return res.status(400).json({ message: "Please fill date" });
-    }
-    // else if (!isCompanyEmail(company_email)) {
-    //  return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
-    // }
+      if (!firstname) {
+        return res.status(400).json({ message: "Please fill firstname" });
+      } 
+      else if (!mobile_number) {
+        return res.status(400).json({ message: "Please fill mobile number" });
+      } 
+       else if (!company_email) {
+        return res.status(400).json({ message: "Please fill role name" });
+      }
+      else if (!documentDob) {
+        return res.status(400).json({ message: "Please fill date" });
+      }
+      // else if (!isCompanyEmail(company_email)) {
+      //  return res.status(400).json({message : "Please enter a valid email domain (e.g., @singhsoft.com)"});
+      // }
 
-    // Generate employee ID based on DOB and mobile number
-    const year = documentDob.slice(0, 2);
-    const mobileLast4 = mobile_number.slice(-4);
-    const base_empId = `${year}${mobileLast4}`;
-    let employeeID = base_empId;
-    let numCount = 1;
+     // Generate employee ID based on DOB and mobile number
+     const year = documentDob.slice(0, 2);
+     const mobileLast4 = mobile_number.slice(-4);
+     const base_empId = `${year}${mobileLast4}`;
+     let employeeID = base_empId;
+     let numCount = 1;
 
-    while (await Employee.findOne({ employeeID })) {
-      employeeID = `${base_empId}${numCount++}`;
-    }
+     while (await Employee.findOne({ employeeID })) {
+       employeeID = `${base_empId}${numCount++}`;
+     }
 
-    const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
+     const capitalize = (string) => (string ? string.charAt(0).toUpperCase() + string.slice(1).toLowerCase() : "");
 
-    const capFirstName = capitalize(firstname);
-    const capMiddleName = capitalize(middlename);
-    const capLastName = capitalize(lastname);
+      const capFirstName = capitalize(firstname);
+      const capMiddleName = capitalize(middlename);
+      const capLastName = capitalize(lastname);
+    
+      const salt = await bcrypt.genSalt(10);
+      const password = "123456"
+      const hashPassword = await bcrypt.hash(password, salt);
+      const employee = new Employee({
+        employeeID,  
+        firstname : capFirstName,
+        lastname : capLastName,
+        middlename :capMiddleName || "",
+        mobile_number,
+        company_email : company_email.trim(),
+        documentDob,
+        password: hashPassword,
+      });
 
-    const salt = await bcrypt.genSalt(10);
-    const password = "123456"
-    const hashPassword = await bcrypt.hash(password, salt);
-    const employee = new Employee({
-      employeeID,
-      firstname: capFirstName,
-      lastname: capLastName,
-      middlename: capMiddleName || "",
-      mobile_number,
-      company_email: company_email.trim(),
-      documentDob,
-      password: hashPassword,
-    });
+      await employee.save();
+      // return res.status(201).json({
+      //   message: "Employee create successfully"
+      // });
 
-    await employee.save();
-    // return res.status(201).json({
-    //   message: "Employee create successfully"
-    // });
-
-    // const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
-    const generateEmailHtml = (company_email, password) => {
-      return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>HR-TOOLS - Account Credentials</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    background-color: #f4f4f4;
-                    margin: 0;
-                    padding: 20px;
-                }
-                .container {
-                    max-width: 600px;
-                    margin: auto;
-                    background: #ffffff;
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                }
-                .header {
-                    background: #007bff;
-                    color: white;
-                    padding: 15px;
-                    text-align: center;
-                    font-size: 20px;
-                    border-radius: 10px 10px 0 0;
-                }
-                .content {
-                    padding: 20px;
-                    text-align: center;
-                }
-                .content p {
-                    font-size: 16px;
-                    color: #333;
-                }
-                .credentials {
-                    background: #f8f9fa;
-                    padding: 15px;
-                    border-radius: 5px;
-                    margin-top: 10px;
-                }
-                .footer {
-                    text-align: center;
-                    font-size: 14px;
-                    color: #666;
-                    margin-top: 20px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">Welcome to HR-TOOLS</div>
-                <div class="content">
-                    <p>Hello,</p>
-                    <p>Your account has been successfully created. Below are your login credentials:</p>
-                    <div class="credentials">
-                        <p><strong>Email:</strong> ${company_email}</p>
-                        <p><strong>Password:</strong> ${password}</p>
-                    </div>
-                    <p>Please change your password after logging in for security reasons.</p>
-                </div>
-                <div class="footer">
-                    &copy; 2025 HR-TOOLS. All rights reserved.
-                </div>
-            </div>
-        </body>
-        </html>
-        `;
-    };
-
-    const emailHtml = generateEmailHtml(company_email, password);
+      const emailHtml = `your company email is: ${company_email} <br/> and Password is: ${password}`;
     try {
       const info = await transporter.sendMail({
         from: process.env.EMAIL_FROM,
@@ -1307,17 +1232,17 @@ module.exports.EmployeeRegister = async (req, res) => {
       return res.status(201).json({
         message: "Employee create successfully"
       });
-
+  
     } catch (error) {
-      return res.status(500).json({ message: "internal server error", error: error.message });
+      return res.status(500).json({ message: "internal server error", error : error.message });
     }
-
+    
   } catch (error) {
     console.log(error);
     res.status(500).json(
       {
-        message: "Internal server error",
-        error: error.message
+        message : "Internal server error",
+        error : error.message
       }
     );
   }
