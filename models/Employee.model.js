@@ -240,9 +240,9 @@ const EmployeeSchema = new mongoose.Schema(
     },
 
     worklocation: {
-      country: Number,
-      state: Number,
-      city: Number,
+      country: String,
+      state: String,
+      city: String,
       zip: String
     },
 
