@@ -78,6 +78,7 @@ const modifyCandidateData = (data) => {
   delete data.password;
   delete data.__v;
   delete data.token;
+
   return data;
 };
 
@@ -124,14 +125,13 @@ module.exports.candidateAllData = async (req, res, next) => {
   } else {
     newData = modifyLimitedCandidateData({ ...data });
   }
-  console.log(newData,"newData")
+  // console.log(newData,"newData")
   return res.status(200).send(newData);
 };
 
 const getEmployeeData = async (empId, keys) => {
   let data = await Employee.findOne({ _id: empId }, keys);
 
- 
   return data;
 };
 
@@ -142,6 +142,7 @@ const getEmployeeDocsData = async (empId, keys) => {
   } else {
     data = await EmpDocument.findOne({ empid: empId });
   }
+
   return data;
 };
 
