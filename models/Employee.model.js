@@ -256,7 +256,7 @@ const EmployeeSchema = new mongoose.Schema(
     ],
 
     pf_number: {
-      type: Number,
+      type: String,
       default: null
     },
     company_name: {

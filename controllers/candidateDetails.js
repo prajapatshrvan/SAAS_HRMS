@@ -1,6 +1,6 @@
-const EmpDocument = require("../../models/EmpDocument.model.js");
-const Employee = require("../../models/Employee.model.js");
-const ApiCRUDController = require("../ApiCrudController.js");
+const EmpDocument = require("../models/EmpDocument.model.js");
+const Employee = require("../models/Employee.model.js");
+const ApiCRUDController = require("./ApiCrudController.js");
 
 module.exports.candidateDetails = async (req, res, next) => {
   let empId = req?.params?.empid;
@@ -9,7 +9,7 @@ module.exports.candidateDetails = async (req, res, next) => {
   }
 
   let keys =
-    "firstname middlename joining_date marital_status lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email aadhar_image pancard_no pan_image status,pf_number uan_number company_name";
+    "firstname middlename joining_date marital_status lastname image documentDob originalDob gender email mobile_number emergency_number aadharcard_no family_member_first_name family_member_last_name relationship family_member_dob family_member_phone family_member_email aadhar_image pancard_no pan_image status,pf_number uan_number company_name pf_number uan_number ctcDetails ParmanentAddress currentAddress worklocation";
 
   let data = await getEmployeeData(empId, keys);
 

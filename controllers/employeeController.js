@@ -1057,8 +1057,8 @@ module.exports.EmployeeRegister = async (req, res) => {
        .join(" "); 
 
        const biometric = await Biometric.findOne()
-       const username = biometric.username
-       const Password = biometric.password
+       const username = biometric ? biometric.username : "hrmsapi"
+       const Password = biometric ? biometric.password : "Hrms@123"
 
        const data = [{
          employeename : employeename,
@@ -1099,7 +1099,7 @@ module.exports.EmployeeRegister = async (req, res) => {
         html: emailHtml
       });
 
-      addEmployees(data);
+      // addEmployees(data);
 
       return res.status(201).json({
         message: "Employee create successfully"

@@ -3,7 +3,7 @@ const {
   candidateAddressDetails,
   candidateDocuments,
   candidateAllData
-} = require("../controllers/admin/candidateDetails.js");
+} = require("../controllers/candidateDetails.js");
 
 const employee = require("../controllers/employeeController");
 const { auth } = require("../middleware/AuthMiddleware");

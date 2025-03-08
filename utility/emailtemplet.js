@@ -1,16 +1,16 @@
 const generateEmailHtml = (company_email, password, otpProps) => {
-    const credentialField = otpProps
-        ? `<p><strong>OTP:</strong> ${password}</p>`
-        : `<p><strong>Password:</strong> ${password}</p>`;
+  const credentialField = otpProps
+    ? `<p><strong>OTP:</strong> ${password}</p>`
+    : `<p><strong>Password:</strong> ${password}</p>`;
 
-    const emailHtml = `
+  const emailHtml = `
     <div class="credentials">
         <p><strong>Email:</strong> ${company_email}</p>
         ${credentialField}
     </div>
-`
+`;
 
-    return `
+  return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -82,4 +82,5 @@ const generateEmailHtml = (company_email, password, otpProps) => {
     </html>
     `;
 };
+
 module.exports = { generateEmailHtml };
